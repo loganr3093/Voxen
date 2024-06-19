@@ -6,6 +6,10 @@ extern Voxen::Application* Voxen::CreateApplication();
 
 int main(int argc, char** argv)
 {
+	Voxen::Log::Init();
+	VOX_CORE_TRACE("Init Core!");
+	VOX_TRACE("Init Client!");
+
 	auto app = Voxen::CreateApplication();
 	app->Run();
 	delete app;
