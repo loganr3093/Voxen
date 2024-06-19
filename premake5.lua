@@ -10,6 +10,12 @@ workspace "Voxen"
 
 outputdir = "%{cfg.buildcfg}=%{cfg.system}-%{cfg.architecture}"
 
+-- Include directories relative to root folder (solution directory)
+IncludeDir = {}
+IncludeDir["GLFW"] = "Voxen/vendor/GLFW/include"
+
+include "Voxen/vendor/GLFW"
+
 project "Voxen"
     location "Voxen"
     kind "SharedLib"
@@ -17,6 +23,9 @@ project "Voxen"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+    pchheader "voxpch.h"
+    pchsource "Voxen/src/voxpch.cpp"
 
     files
     {
@@ -26,7 +35,15 @@ project "Voxen"
 
     includedirs
     {
-        "%{prj.name}/vendor/spdlog/include"
+        "%{prj.name}/src",
+        "%{prj.name}/vendor/spdlog/include",
+        "%{IncludeDir.GLFW}"
+    }
+
+    links
+    {
+        "GLFW",
+        "opengl32.lib"
     }
 
     filter "system:windows"
