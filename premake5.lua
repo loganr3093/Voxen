@@ -13,8 +13,10 @@ outputdir = "%{cfg.buildcfg}=%{cfg.system}-%{cfg.architecture}"
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
 IncludeDir["GLFW"] = "Voxen/vendor/GLFW/include"
+IncludeDir["glad"] = "Voxen/vendor/glad/include"
 
 include "Voxen/vendor/GLFW"
+include "Voxen/vendor/glad"
 
 project "Voxen"
     location "Voxen"
@@ -37,12 +39,14 @@ project "Voxen"
     {
         "%{prj.name}/src",
         "%{prj.name}/vendor/spdlog/include",
-        "%{IncludeDir.GLFW}"
+        "%{IncludeDir.GLFW}",
+        "%{IncludeDir.glad}"
     }
 
     links
     {
         "GLFW",
+        "glad",
         "opengl32.lib"
     }
 
@@ -54,7 +58,8 @@ project "Voxen"
         defines
         {
             "VOX_PLATFORM_WINDOWS",
-            "VOX_BUILD_DLL"
+            "VOX_BUILD_DLL",
+            "GLFW_INCLUDE_NONE"
         }
 
         postbuildcommands
