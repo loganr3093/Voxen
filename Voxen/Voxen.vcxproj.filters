@@ -40,6 +40,12 @@
     <ClInclude Include="src\Voxen\Events\MouseEvent.h">
       <Filter>Voxen\Events</Filter>
     </ClInclude>
+    <ClInclude Include="src\Voxen\Layer.h">
+      <Filter>Voxen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Voxen\LayerStack.h">
+      <Filter>Voxen</Filter>
+    </ClInclude>
     <ClInclude Include="src\Voxen\Log.h">
       <Filter>Voxen</Filter>
     </ClInclude>
@@ -47,8 +53,6 @@
       <Filter>Voxen</Filter>
     </ClInclude>
     <ClInclude Include="src\voxpch.h" />
-    <ClInclude Include="src\Voxen\Layer.h" />
-    <ClInclude Include="src\Voxen\LayerStack.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp">
@@ -57,11 +61,15 @@
     <ClCompile Include="src\Voxen\Application.cpp">
       <Filter>Voxen</Filter>
     </ClCompile>
+    <ClCompile Include="src\Voxen\Layer.cpp">
+      <Filter>Voxen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Voxen\LayerStack.cpp">
+      <Filter>Voxen</Filter>
+    </ClCompile>
     <ClCompile Include="src\Voxen\Log.cpp">
       <Filter>Voxen</Filter>
     </ClCompile>
     <ClCompile Include="src\voxpch.cpp" />
-    <ClCompile Include="src\Voxen\Layer.cpp" />
-    <ClCompile Include="src\Voxen\LayerStack.cpp" />
   </ItemGroup>
 </Project>

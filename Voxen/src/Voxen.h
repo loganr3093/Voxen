@@ -2,6 +2,7 @@
 
 // For use by Voxen applications
 #include "Voxen/Application.h"
+#include "Voxen/Layer.h"
 #include "Voxen/Log.h"
 
 // Entry Point
