@@ -1,5 +1,6 @@
 workspace "Voxen"
     architecture "x64"
+    startproject "Sandbox"
 
     configurations
     {
@@ -14,9 +15,11 @@ outputdir = "%{cfg.buildcfg}=%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["GLFW"] = "Voxen/vendor/GLFW/include"
 IncludeDir["glad"] = "Voxen/vendor/glad/include"
+IncludeDir["imgui"] = "Voxen/vendor/imgui"
 
 include "Voxen/vendor/GLFW"
 include "Voxen/vendor/glad"
+include "Voxen/vendor/imgui"
 
 project "Voxen"
     location "Voxen"
@@ -40,13 +43,15 @@ project "Voxen"
         "%{prj.name}/src",
         "%{prj.name}/vendor/spdlog/include",
         "%{IncludeDir.GLFW}",
-        "%{IncludeDir.glad}"
+        "%{IncludeDir.glad}",
+        "%{IncludeDir.imgui}"
     }
 
     links
     {
         "GLFW",
         "glad",
+        "imgui",
         "opengl32.lib"
     }
 

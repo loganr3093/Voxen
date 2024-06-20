@@ -4,6 +4,7 @@
 #include "Voxen/Application.h"
 #include "Voxen/Layer.h"
 #include "Voxen/Log.h"
+#include "Voxen/ImGui/ImGuiLayer.h"
 
 // Entry Point
 // ****************************
