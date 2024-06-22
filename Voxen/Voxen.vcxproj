@@ -168,9 +168,11 @@
     <ClInclude Include="src\Voxen\Events\MouseEvent.h" />
     <ClInclude Include="src\Voxen\ImGui\ImGuiLayer.h" />
     <ClInclude Include="src\Voxen\Input.h" />
+    <ClInclude Include="src\Voxen\KeyCodes.h" />
     <ClInclude Include="src\Voxen\Layer.h" />
     <ClInclude Include="src\Voxen\LayerStack.h" />
     <ClInclude Include="src\Voxen\Log.h" />
+    <ClInclude Include="src\Voxen\MouseButtonCodes.h" />
     <ClInclude Include="src\Voxen\Window.h" />
     <ClInclude Include="src\voxpch.h" />
   </ItemGroup>

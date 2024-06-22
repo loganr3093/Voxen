@@ -58,6 +58,9 @@
     <ClInclude Include="src\Voxen\Input.h">
       <Filter>Voxen</Filter>
     </ClInclude>
+    <ClInclude Include="src\Voxen\KeyCodes.h">
+      <Filter>Voxen</Filter>
+    </ClInclude>
     <ClInclude Include="src\Voxen\Layer.h">
       <Filter>Voxen</Filter>
     </ClInclude>
@@ -65,6 +68,9 @@
       <Filter>Voxen</Filter>
     </ClInclude>
     <ClInclude Include="src\Voxen\Log.h">
+      <Filter>Voxen</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Voxen\MouseButtonCodes.h">
       <Filter>Voxen</Filter>
     </ClInclude>
     <ClInclude Include="src\Voxen\Window.h">

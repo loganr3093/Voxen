@@ -9,11 +9,11 @@ public:
 
 	void OnUpdate() override
 	{
-		VOX_INFO("ExampleLayer::Update");
+		//VOX_INFO("ExampleLayer::Update");
 	}
 	void OnEvent(Voxen::Event& event) override
 	{
-		VOX_TRACE("{0}", event.ToString());
+		//VOX_TRACE("{0}", event.ToString());
 	}
 };
 
