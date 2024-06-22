@@ -156,6 +156,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.h" />
+    <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
     <ClInclude Include="src\Platform\Windows\WindowsWindow.h" />
     <ClInclude Include="src\Voxen.h" />
     <ClInclude Include="src\Voxen\Application.h" />
@@ -166,6 +167,7 @@
     <ClInclude Include="src\Voxen\Events\KeyEvent.h" />
     <ClInclude Include="src\Voxen\Events\MouseEvent.h" />
     <ClInclude Include="src\Voxen\ImGui\ImGuiLayer.h" />
+    <ClInclude Include="src\Voxen\Input.h" />
     <ClInclude Include="src\Voxen\Layer.h" />
     <ClInclude Include="src\Voxen\LayerStack.h" />
     <ClInclude Include="src\Voxen\Log.h" />
@@ -174,6 +176,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Platform\OpenGL\ImGuiOpenGLRenderer.cpp" />
+    <ClCompile Include="src\Platform\Windows\WindowsInput.cpp" />
     <ClCompile Include="src\Platform\Windows\WindowsWindow.cpp" />
     <ClCompile Include="src\Voxen\Application.cpp" />
     <ClCompile Include="src\Voxen\ImGui\ImGuiLayer.cpp" />

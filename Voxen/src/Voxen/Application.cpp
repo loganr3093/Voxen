@@ -32,6 +32,7 @@ namespace Voxen
 			{
 				layer->OnUpdate();
 			}
+
 			m_Window->OnUpdate();
 		}
 	}
