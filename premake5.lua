@@ -16,6 +16,7 @@ IncludeDir = {}
 IncludeDir["GLFW"] = "Voxen/vendor/GLFW/include"
 IncludeDir["glad"] = "Voxen/vendor/glad/include"
 IncludeDir["imgui"] = "Voxen/vendor/imgui"
+IncludeDir["glm"] = "Voxen/vendor/glm"
 
 include "Voxen/vendor/GLFW"
 include "Voxen/vendor/glad"
@@ -35,7 +36,9 @@ project "Voxen"
     files
     {
         "%{prj.name}/src/**.h",
-        "%{prj.name}/src/**.cpp"
+        "%{prj.name}/src/**.cpp",
+        "%{prj.name}/vendor/glm/glm/**.inl",
+        "%{prj.name}/vendor/glm/glm/**.hpp",
     }
 
     includedirs
@@ -44,6 +47,7 @@ project "Voxen"
         "%{prj.name}/vendor/spdlog/include",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.glad}",
+        "%{IncludeDir.glm}",
         "%{IncludeDir.imgui}"
     }
 
@@ -104,7 +108,8 @@ project "Sandbox"
     includedirs
     {
         "Voxen/vendor/spdlog/include",
-        "Voxen/src"
+        "Voxen/src",
+        "%{IncludeDir.glm}"
     }
 
     links
