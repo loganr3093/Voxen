@@ -109,6 +109,7 @@ project "Sandbox"
     {
         "Voxen/vendor/spdlog/include",
         "Voxen/src",
+        "Voxen/vendor",
         "%{IncludeDir.glm}"
     }
 

@@ -1,10 +1,13 @@
 #pragma once
 
 #include "Core.h"
-#include "Events/Event.h"
-#include "Voxen/Events/ApplicationEvent.h"
+
 #include "Window.h"
 #include "Voxen/LayerStack.h"
+#include "Voxen/Events/Event.h"
+#include "Voxen/Events/ApplicationEvent.h"
+
+#include "Voxen/ImGui/ImGuiLayer.h"
 
 namespace Voxen
 {
@@ -21,13 +24,15 @@ namespace Voxen
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* layer);
 
-		inline static Application& Get() { return *s_Instance; }
 		inline Window& GetWindow() { return *m_Window; }
+
+		inline static Application& Get() { return *s_Instance; }
 	private:
-		static Application* s_Instance;
 		bool OnWindowClose(WindowCloseEvent& e);
 
+		static Application* s_Instance;
 		std::unique_ptr<Window> m_Window;
+		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;
 		LayerStack m_LayerStack;
 	};

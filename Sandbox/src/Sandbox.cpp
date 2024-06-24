@@ -9,11 +9,12 @@ public:
 
 	void OnUpdate() override
 	{
-		//VOX_INFO("ExampleLayer::Update");
+	}
+	virtual void OnImGuiRender() override
+	{
 	}
 	void OnEvent(Voxen::Event& event) override
 	{
-		//VOX_TRACE("{0}", event.ToString());
 	}
 };
 
@@ -23,7 +24,6 @@ public:
 	Sandbox()
 	{
 		PushLayer(new ExampleLayer());
-		PushOverlay(new Voxen::ImGuiLayer());
 	}
 	~Sandbox()
 	{

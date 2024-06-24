@@ -5,10 +5,14 @@
 		#define VOXEN_API __declspec(dllexport)
 	#else
 		#define VOXEN_API __declspec(dllimport)
-	#endif // !VOX_BUILD_DLL
+	#endif
 #else
 	#error Voxen only supports Windows
-#endif // !VOX_PLATFORM_WINDOWS
+#endif
+
+#ifdef VOX_DEBUG
+	#define VOX_ENABLE_ASSERTS
+#endif
 
 #ifdef HZ_ENABLE_ASSERTS
 	#define VOX_ASSERT(x, ...) { if(!(x)) { HZ_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }

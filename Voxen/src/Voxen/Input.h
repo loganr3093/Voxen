@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Voxen/Core.h"
-#include "voxpch.h"
 
 namespace Voxen
 {
