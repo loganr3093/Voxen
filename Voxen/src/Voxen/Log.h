@@ -25,7 +25,6 @@ namespace Voxen
 #define VOX_CORE_INFO(...)	::Voxen::Log::GetCoreLogger()->info(__VA_ARGS__)
 #define VOX_CORE_WARN(...)	::Voxen::Log::GetCoreLogger()->warn(__VA_ARGS__)
 #define VOX_CORE_ERROR(...)	::Voxen::Log::GetCoreLogger()->error(__VA_ARGS__)
-#define VOX_CORE_DEBUG(...) ::Voxen::Log::GetCoreLogger()->debug(__VA_ARGS__)
 #define VOX_CORE_FATAL(...)	::Voxen::Log::GetCoreLogger()->critical(__VA_ARGS__)
 
 // Client log macros
@@ -33,5 +32,4 @@ namespace Voxen
 #define VOX_INFO(...)		::Voxen::Log::GetClientLogger()->info(__VA_ARGS__)
 #define VOX_WARN(...)		::Voxen::Log::GetClientLogger()->warn(__VA_ARGS__)
 #define VOX_ERROR(...)		::Voxen::Log::GetClientLogger()->error(__VA_ARGS__)
-#define VOX_DEBUG(...)		::Voxen::Log::GetClientLogger()->debug(__VA_ARGS__)
 #define VOX_FATAL(...)		::Voxen::Log::GetClientLogger()->critical(__VA_ARGS__)

@@ -1,10 +1,14 @@
 #pragma once
 
 #ifdef VOX_PLATFORM_WINDOWS
-	#ifdef VOX_BUILD_DLL
-		#define VOXEN_API __declspec(dllexport)
+	#if VOX_DYNAMIC_LINK
+		#ifdef VOX_BUILD_DLL
+			#define VOXEN_API __declspec(dllexport)
+		#else
+			#define VOXEN_API __declspec(dllimport)
+		#endif
 	#else
-		#define VOXEN_API __declspec(dllimport)
+		#define VOXEN_API	
 	#endif
 #else
 	#error Voxen only supports Windows
