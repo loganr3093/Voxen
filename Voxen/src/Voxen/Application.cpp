@@ -11,37 +11,6 @@ namespace Voxen
 {
 	Application* Application::s_Instance = nullptr;
 
-	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
-	{
-		switch (type)
-		{
-		case ShaderDataType::None:     return GL_NONE;
-		case ShaderDataType::Bool:     return GL_BOOL;
-		case ShaderDataType::Int:      return GL_INT;
-		case ShaderDataType::Float:    return GL_FLOAT;
-		case ShaderDataType::Vector2:  return GL_FLOAT;
-		case ShaderDataType::Vector3:  return GL_FLOAT;
-		case ShaderDataType::Vector4:  return GL_FLOAT;
-		case ShaderDataType::IVector2: return GL_INT;
-		case ShaderDataType::IVector3: return GL_INT;
-		case ShaderDataType::IVector4: return GL_INT;
-		case ShaderDataType::UVector2: return GL_UNSIGNED_INT;
-		case ShaderDataType::UVector3: return GL_UNSIGNED_INT;
-		case ShaderDataType::UVector4: return GL_UNSIGNED_INT;
-		case ShaderDataType::DVector2: return GL_DOUBLE;
-		case ShaderDataType::DVector3: return GL_DOUBLE;
-		case ShaderDataType::DVector4: return GL_DOUBLE;
-		case ShaderDataType::Matrix2:  return GL_FLOAT;
-		case ShaderDataType::Matrix3:  return GL_FLOAT;
-		case ShaderDataType::Matrix4:  return GL_FLOAT;
-		case ShaderDataType::DMatrix2: return GL_DOUBLE;
-		case ShaderDataType::DMatrix3: return GL_DOUBLE;
-		case ShaderDataType::DMatrix4: return GL_DOUBLE;
-		}
-		VOX_CORE_ASSERT(false, "Unknown shader data type");
-		return 0;
-	}
-
 	Application::Application()
 	{
 		VOX_CORE_INFO("Initializing Application");
@@ -54,8 +23,7 @@ namespace Voxen
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
 
-		glGenVertexArrays(1, &m_VertexArray);
-		glBindVertexArray(m_VertexArray);
+		m_VertexArray.reset(VertexArray::Create());
 
 		float vertices[3 * 7]
 		{
@@ -64,38 +32,48 @@ namespace Voxen
 			 0.0f,  0.5f, 0.0f, 0.5f, 0.5f, 1.0f, 1.0f,
 		};
 
-		m_VertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
+		std::shared_ptr<VertexBuffer> vertexBuffer;
+		vertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
 
+		BufferLayout layout =
 		{
-			BufferLayout layout =
-			{
-				{ ShaderDataType::Vector3, "a_Position" },
-				{ ShaderDataType::Vector4, "a_Color" },
-			};
+			{ ShaderDataType::Vector3, "a_Position" },
+			{ ShaderDataType::Vector4, "a_Color" },
+		};
 
-			m_VertexBuffer->SetLayout(layout);
-		}
-
-		uint32 index = 0;
-		const auto& layout = m_VertexBuffer->GetLayout();
-		for (const auto& element : layout)
-		{
-			glEnableVertexAttribArray(index);
-			glVertexAttribPointer
-			(
-				index,
-				element.GetComponentCount(),
-				ShaderDataTypeToOpenGLBaseType(element.Type),
-				element.Normalized ? GL_TRUE : GL_FALSE,
-				layout.GetStride(),
-				(const void*)element.Offset
-			);
-			index++;
-		}
-
+		vertexBuffer->SetLayout(layout);
+		m_VertexArray->AddVertexBuffer(vertexBuffer);
 
 		uint32 indices[3] = { 0, 1, 2 };
-		m_IndexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32)));
+		std::shared_ptr<IndexBuffer> indexBuffer;
+		indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32)));
+		m_VertexArray->SetIndexBuffer(indexBuffer);
+
+		m_SquareVA.reset(VertexArray::Create());
+
+		float squareVertices[3 * 4] =
+		{
+			-0.75f, -0.75f, 0.0f,
+			 0.75f, -0.75f, 0.0f,
+			 0.75f,  0.75f, 0.0f,
+			-0.75f,  0.75f, 0.0f
+		};
+
+		std::shared_ptr<VertexBuffer> squareVB;
+		squareVB.reset(VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
+
+		BufferLayout layout2 =
+		{
+			{ ShaderDataType::Vector3, "a_Position" }
+		};
+
+		squareVB->SetLayout(layout2);
+		m_SquareVA->AddVertexBuffer(squareVB);
+
+		uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
+		std::shared_ptr<IndexBuffer> squareIB;
+		squareIB.reset(IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32)));
+		m_SquareVA->SetIndexBuffer(squareIB);
 
 		std::string vertexSrc = R"(
 			#version 460 core
@@ -126,6 +104,32 @@ namespace Voxen
 		)";
 
 		m_Shader.reset(new Shader(vertexSrc, fragmentSrc));
+
+		std::string vertexSrc2 = R"(
+			#version 460 core
+			
+			layout(location = 0) in vec3 a_Position;
+
+			out vec3 v_Position;
+			void main()
+			{
+				v_Position = a_Position;
+				gl_Position = vec4(a_Position, 1.0);	
+			}
+		)";
+
+		std::string fragmentSrc2 = R"(
+			#version 460 core
+			
+			layout(location = 0) out vec4 color;
+			in vec3 v_Position;
+			void main()
+			{
+				color = vec4(v_Position * 0.5 + 0.5, 1.0);
+			}
+		)";
+
+		m_Shader2.reset(new Shader(vertexSrc2, fragmentSrc2));
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -158,9 +162,13 @@ namespace Voxen
 			glClearColor(0.1f, 0.1f, 0.1f, 1);
 			glClear(GL_COLOR_BUFFER_BIT);
 
+			m_Shader2->Bind();
+			m_SquareVA->Bind();
+			glDrawElements(GL_TRIANGLES, m_SquareVA->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+
 			m_Shader->Bind();
-			glBindVertexArray(m_VertexArray);
-			glDrawElements(GL_TRIANGLES, m_IndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
+			m_VertexArray->Bind();
+			glDrawElements(GL_TRIANGLES, m_VertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
 
 			for (Layer* layer : m_LayerStack)
 			{

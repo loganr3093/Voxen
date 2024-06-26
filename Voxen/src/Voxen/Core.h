@@ -18,9 +18,9 @@
 	#define VOX_ENABLE_ASSERTS
 #endif
 
-#ifdef HZ_ENABLE_ASSERTS
-	#define VOX_ASSERT(x, ...) { if(!(x)) { HZ_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
-	#define VOX_CORE_ASSERT(x, ...) { if(!(x)) { HZ_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+#ifdef VOX_ENABLE_ASSERTS
+	#define VOX_ASSERT(x, ...) { if(!(x)) { VOX_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+	#define VOX_CORE_ASSERT(x, ...) { if(!(x)) { VOX_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
 #else
 	#define VOX_ASSERT(x, ...)
 	#define VOX_CORE_ASSERT(x, ...)
