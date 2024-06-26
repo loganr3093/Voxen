@@ -39,4 +39,4 @@ struct UV
 
 typedef UV TexCoord;
 
-typedef uint32 VOX_ID;
+typedef uint32 ID;

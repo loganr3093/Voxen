@@ -15,7 +15,7 @@ namespace Voxen
 		void Bind() const;
 		void Unbind() const;
 	private:
-		uint32 m_RendererID;
+		ID m_RendererID;
 	};
 
 }
