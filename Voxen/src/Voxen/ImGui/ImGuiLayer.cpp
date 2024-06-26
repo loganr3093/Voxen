@@ -17,10 +17,6 @@ namespace Voxen
 	{
 	}
 
-	ImGuiLayer::~ImGuiLayer()
-	{
-	}
-
 	void ImGuiLayer::OnAttach()
 	{
 		// Setup Dear ImGui context
