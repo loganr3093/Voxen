@@ -108,6 +108,9 @@
     <ClInclude Include="src\Voxen\Renderer\GraphicsContext.h">
       <Filter>src\Voxen\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="src\Voxen\Renderer\Shader.h">
+      <Filter>src\Voxen\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\Voxen\Types\EngineTypes.h">
       <Filter>src\Voxen\Types</Filter>
     </ClInclude>
@@ -1402,6 +1405,9 @@
     </ClCompile>
     <ClCompile Include="src\Voxen\Log.cpp">
       <Filter>src\Voxen</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Voxen\Renderer\Shader.cpp">
+      <Filter>src\Voxen\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="src\voxpch.cpp">
       <Filter>src</Filter>

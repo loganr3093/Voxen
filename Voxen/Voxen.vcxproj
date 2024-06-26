@@ -162,6 +162,7 @@
     <ClInclude Include="src\Voxen\Log.h" />
     <ClInclude Include="src\Voxen\MouseButtonCodes.h" />
     <ClInclude Include="src\Voxen\Renderer\GraphicsContext.h" />
+    <ClInclude Include="src\Voxen\Renderer\Shader.h" />
     <ClInclude Include="src\Voxen\Types\EngineTypes.h" />
     <ClInclude Include="src\Voxen\Types\FixedWidthTypes.h" />
     <ClInclude Include="src\Voxen\Types\MathTypes.h" />
@@ -595,6 +596,7 @@
     <ClCompile Include="src\Voxen\Layer.cpp" />
     <ClCompile Include="src\Voxen\LayerStack.cpp" />
     <ClCompile Include="src\Voxen\Log.cpp" />
+    <ClCompile Include="src\Voxen\Renderer\Shader.cpp" />
     <ClCompile Include="src\voxpch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
