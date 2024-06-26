@@ -10,13 +10,13 @@ namespace Voxen
 	struct WindowProps
 	{
 		std::string Title;
-		unsigned int Width;
-		unsigned int Height;
+		uint32 Width;
+		uint32 Height;
 
 		WindowProps(
 			const std::string& title = "Voxen Engine",
-			unsigned int width = 1280,
-			unsigned int height = 720)
+			uint32 width = 1280,
+			uint32 height = 720)
 			: Title(title), Width(width), Height(height)
 		{
 		}

@@ -13,6 +13,7 @@
 #include <unordered_set>
 
 #include "Voxen/Log.h"
+#include "Voxen/Types/Types.h"
 
 #ifdef VOX_PLATFORM_WINDOWS
 	#include <Windows.h>

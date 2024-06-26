@@ -33,7 +33,7 @@ namespace Voxen
 								virtual EventType GetEventType() const override { return GetStaticType(); }\
 								virtual const char* GetName() const override { return #type; }
 
-#define EVENT_CLASS_CATEGORY(category) virtual int GetCategoryFlags() const override { return category; }
+#define EVENT_CLASS_CATEGORY(category) virtual int32 GetCategoryFlags() const override { return category; }
 
 	class VOXEN_API Event
 	{
@@ -41,7 +41,7 @@ namespace Voxen
 		bool Handled = false;
 		virtual EventType GetEventType() const = 0;
 		virtual const char* GetName() const = 0;
-		virtual int GetCategoryFlags() const = 0;
+		virtual int32 GetCategoryFlags() const = 0;
 		virtual std::string ToString() const { return GetName(); }
 
 		inline bool IsInCategory(EventCategory category)

@@ -162,6 +162,10 @@
     <ClInclude Include="src\Voxen\Log.h" />
     <ClInclude Include="src\Voxen\MouseButtonCodes.h" />
     <ClInclude Include="src\Voxen\Renderer\GraphicsContext.h" />
+    <ClInclude Include="src\Voxen\Types\EngineTypes.h" />
+    <ClInclude Include="src\Voxen\Types\FixedWidthTypes.h" />
+    <ClInclude Include="src\Voxen\Types\MathTypes.h" />
+    <ClInclude Include="src\Voxen\Types\Types.h" />
     <ClInclude Include="src\Voxen\Window.h" />
     <ClInclude Include="src\voxpch.h" />
     <ClInclude Include="vendor\glm\glm\common.hpp" />

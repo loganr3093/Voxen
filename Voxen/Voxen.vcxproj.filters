@@ -25,6 +25,9 @@
     <Filter Include="src\Voxen\Renderer">
       <UniqueIdentifier>{F27CCF7E-DE60-90D4-47C1-8A2733C47A56}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Voxen\Types">
+      <UniqueIdentifier>{70A0A8E8-DC2B-16AD-E53C-99A1514772AD}</UniqueIdentifier>
+    </Filter>
     <Filter Include="vendor">
       <UniqueIdentifier>{B3738122-9F15-ACF8-88D0-BF4C74113349}</UniqueIdentifier>
     </Filter>
@@ -104,6 +107,18 @@
     </ClInclude>
     <ClInclude Include="src\Voxen\Renderer\GraphicsContext.h">
       <Filter>src\Voxen\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Voxen\Types\EngineTypes.h">
+      <Filter>src\Voxen\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Voxen\Types\FixedWidthTypes.h">
+      <Filter>src\Voxen\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Voxen\Types\MathTypes.h">
+      <Filter>src\Voxen\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Voxen\Types\Types.h">
+      <Filter>src\Voxen\Types</Filter>
     </ClInclude>
     <ClInclude Include="src\Voxen\Window.h">
       <Filter>src\Voxen</Filter>
