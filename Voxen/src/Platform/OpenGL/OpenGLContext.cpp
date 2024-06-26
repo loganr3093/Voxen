@@ -12,6 +12,7 @@ namespace Voxen
 	}
 	void OpenGLContext::Init()
 	{
+		VOX_CORE_INFO("Initializing OpenGLContext");
 		glfwMakeContextCurrent(m_WindowHandle);
 		int32 status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 		VOX_CORE_ASSERT(status, "Failed to initialize Glad!");

@@ -13,6 +13,7 @@ namespace Voxen
 
 	Application::Application()
 	{
+		VOX_CORE_INFO("Initializing Application");
 		VOX_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
@@ -102,6 +103,7 @@ namespace Voxen
 
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
+		VOX_CORE_INFO("Window Closing");
 		m_Running = false;
 		return true;
 	}

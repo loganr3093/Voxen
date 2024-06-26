@@ -15,6 +15,7 @@ namespace Voxen
 
 	void LayerStack::PushLayer(Layer* layer)
 	{
+		VOX_CORE_TRACE("Pushing layer \'{0}\'", layer->GetName().c_str());
 		m_Layers.emplace(m_Layers.begin() + m_LayerInsertIndex, layer);
 		m_LayerInsertIndex++;
 		layer->OnAttach();
@@ -22,12 +23,14 @@ namespace Voxen
 
 	void LayerStack::PushOverlay(Layer* overlay)
 	{
+		VOX_CORE_TRACE("Pushing overlay \'{0}\'", overlay->GetName().c_str());
 		m_Layers.emplace_back(overlay);
 		overlay->OnAttach();
 	}
 
 	void LayerStack::PopLayer(Layer* layer)
 	{
+		VOX_CORE_TRACE("Popping layer \'{0}\'", layer->GetName().c_str());
 		auto it = std::find(m_Layers.begin(), m_Layers.end(), layer);
 		if (it != m_Layers.end())
 		{
@@ -39,6 +42,7 @@ namespace Voxen
 
 	void LayerStack::PopOverlay(Layer* overlay)
 	{
+		VOX_CORE_TRACE("Popping overlay \'{0}\'", overlay->GetName().c_str());
 		auto it = std::find(m_Layers.begin(), m_Layers.end(), overlay);
 		if (it != m_Layers.end())
 		{
