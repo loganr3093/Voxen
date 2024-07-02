@@ -12,6 +12,8 @@
 #include "Voxen/Renderer/Buffer.h"
 #include "Voxen/Renderer/VertexArray.h"
 
+#include "Voxen/Renderer/OrthographicCamera.h"
+
 namespace Voxen
 {
 	class VOXEN_API Application
@@ -45,6 +47,8 @@ namespace Voxen
 
 		std::shared_ptr<VertexArray> m_SquareVA;
 		std::shared_ptr<Shader> m_Shader2;
+
+		OrthographicCamera m_Camera;
 
 	};
 

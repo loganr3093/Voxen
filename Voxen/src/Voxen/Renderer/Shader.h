@@ -3,6 +3,8 @@
 #include <string>
 #include "Voxen/Types/Types.h"
 
+#include "glm/glm.hpp"
+
 namespace Voxen
 {
 
@@ -14,6 +16,8 @@ namespace Voxen
 
 		void Bind() const;
 		void Unbind() const;
+
+		void UploadUniformMat4(const std::string name, const glm::mat4& matrix);
 	private:
 		ID m_RendererID;
 	};
