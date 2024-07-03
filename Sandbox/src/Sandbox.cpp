@@ -4,7 +4,7 @@ class ExampleLayer : public Voxen::Layer
 {
 public:
 	ExampleLayer() 
-		: Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f)
+		: Layer("Example"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f)
 	{
 		m_VertexArray.reset(Voxen::VertexArray::Create());
 
@@ -121,11 +121,38 @@ public:
 
 	void OnUpdate() override
 	{
+		if (Voxen::Input::IsKeyPressed(VOX_KEY_LEFT))
+		{
+			m_CameraPosition.x -= m_CameraMoveSpeed;
+		}
+		else if (Voxen::Input::IsKeyPressed(VOX_KEY_RIGHT))
+		{
+			m_CameraPosition.x += m_CameraMoveSpeed;
+		}
+
+		if (Voxen::Input::IsKeyPressed(VOX_KEY_DOWN))
+		{
+			m_CameraPosition.y -= m_CameraMoveSpeed;
+		}
+		else if (Voxen::Input::IsKeyPressed(VOX_KEY_UP))
+		{
+			m_CameraPosition.y += m_CameraMoveSpeed;
+		}
+
+		if (Voxen::Input::IsKeyPressed(VOX_KEY_A))
+		{
+			m_CameraRotation += m_CameraRotationSpeed;
+		}
+		else if (Voxen::Input::IsKeyPressed(VOX_KEY_D))
+		{
+			m_CameraRotation -= m_CameraRotationSpeed;
+		}
+
 		Voxen::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Voxen::RenderCommand::Clear();
 
-		m_Camera.SetPosition({ 0.5f, 0.5f, 0.0f });
-		m_Camera.SetRotation(45.0f);
+		m_Camera.SetPosition(m_CameraPosition);
+		m_Camera.SetRotation(m_CameraRotation);
 
 		Voxen::Renderer::BeginScene(m_Camera);
 
@@ -149,6 +176,10 @@ private:
 	std::shared_ptr<Voxen::Shader> m_Shader2;
 
 	Voxen::OrthographicCamera m_Camera;
+	glm::vec3 m_CameraPosition;
+	float m_CameraMoveSpeed = 0.1f;
+	float m_CameraRotation = 0;
+	float m_CameraRotationSpeed = 1.0f;
 };
 
 class Sandbox : public Voxen::Application
