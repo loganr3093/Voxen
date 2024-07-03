@@ -3,6 +3,8 @@
 #include "Voxen/Core.h"
 #include "Voxen/Events/Event.h"
 
+#include "Voxen/Core/Timestep.h"
+
 namespace Voxen
 {
 	class VOXEN_API Layer
@@ -13,7 +15,7 @@ namespace Voxen
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
-		virtual void OnUpdate() {}
+		virtual void OnUpdate(Timestep ts) {}
 		virtual void OnImGuiRender() {}
 		virtual void OnEvent(Event& event) {}
 

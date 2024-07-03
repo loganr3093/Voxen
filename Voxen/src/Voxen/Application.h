@@ -14,6 +14,8 @@
 
 #include "Voxen/Renderer/OrthographicCamera.h"
 
+#include "Voxen/Core/Timestep.h"
+
 namespace Voxen
 {
 	class VOXEN_API Application
@@ -33,10 +35,11 @@ namespace Voxen
 
 		inline static Application& Get() { return *s_Instance; }
 	private:
-		static Application* s_Instance;
-
 		bool OnWindowClose(WindowCloseEvent& e);
 
+		static Application* s_Instance;
+
+		float m_LastFrameTime = 0.0f;
 		std::unique_ptr<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
 		bool m_Running = true;

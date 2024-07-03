@@ -10,6 +10,8 @@
 #include "Voxen/Layer.h"
 #include "Voxen/Log.h"
 
+#include "Voxen/Core/Timestep.h"
+
 // Macro files
 // ****************************
 #include "Voxen/KeyCodes.h"
