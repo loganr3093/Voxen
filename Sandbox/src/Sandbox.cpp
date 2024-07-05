@@ -91,7 +91,7 @@ public:
 
 		m_Shader.reset(new Voxen::Shader(vertexSrc, fragmentSrc));
 
-		std::string vertexSrc2 = R"(
+		std::string flatColorShaderVertexSrc = R"(
 			#version 460 core
 			
 			layout(location = 0) in vec3 a_Position;
@@ -107,18 +107,22 @@ public:
 			}
 		)";
 
-		std::string fragmentSrc2 = R"(
+		std::string flatColorShaderFragmentSrc = R"(
 			#version 460 core
 			
 			layout(location = 0) out vec4 color;
+
 			in vec3 v_Position;
+
+			uniform vec4 u_Color;
+
 			void main()
 			{
-				color = vec4(v_Position * 0.5 + 0.5, 1.0);
+				color = u_Color;
 			}
 		)";
 
-		m_Shader2.reset(new Voxen::Shader(vertexSrc2, fragmentSrc2));
+		m_Shader2.reset(new Voxen::Shader(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
 	}
 
 	void OnUpdate(Voxen::Timestep ts) override
@@ -158,20 +162,31 @@ public:
 
 		Voxen::Renderer::BeginScene(m_Camera);
 
+		Voxen::Renderer::Submit(m_Shader, m_VertexArray);
+
 		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
+		glm::vec4 redColor(0.8f, 0.2f, 0.2f, 1.0f);
+		glm::vec4 blueColor(0.2f, 0.2f, 0.8f, 1.0f);
 
-		for (int  j = -8; j < 8; j++)
+		for (int  j = 0; j < 10; j++)
 		{
-			for (int  i = -8; i < 8; i++)
+			for (int  i = 0; i < 10; i++)
 			{
 				glm::vec3 pos(i * 0.11f, j * 0.11f, 0.0f);
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
+				if (i % 2 == j % 2)
+				{
+					m_Shader2->UploadUniformVector4("u_Color", redColor);
+				}
+				else
+				{
+					m_Shader2->UploadUniformVector4("u_Color", blueColor);
+				}
 				Voxen::Renderer::Submit(m_Shader2, m_SquareVA, transform);
 			}
 
 		}
-		Voxen::Renderer::Submit(m_Shader, m_VertexArray);
 
 		Voxen::Renderer::EndScene();
 	}

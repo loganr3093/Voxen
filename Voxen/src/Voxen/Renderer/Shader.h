@@ -18,6 +18,7 @@ namespace Voxen
 		void Unbind() const;
 
 		void UploadUniformMat4(const std::string name, const glm::mat4& matrix);
+		void UploadUniformVector4(const std::string name, const glm::vec4& values);
 	private:
 		ID m_RendererID;
 	};
