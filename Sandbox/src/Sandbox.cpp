@@ -1,5 +1,9 @@
 #include <Voxen.h>
 
+#include "Platform/OpenGL/OpenGLShader.h"
+#include <imgui/imgui.h>
+#include <glm/gtc/type_ptr.hpp>
+
 class ExampleLayer : public Voxen::Layer
 {
 public:
@@ -89,7 +93,7 @@ public:
 			}
 		)";
 
-		m_Shader.reset(new Voxen::Shader(vertexSrc, fragmentSrc));
+		m_Shader.reset(Voxen::Shader::Create(vertexSrc, fragmentSrc));
 
 		std::string flatColorShaderVertexSrc = R"(
 			#version 460 core
@@ -114,15 +118,15 @@ public:
 
 			in vec3 v_Position;
 
-			uniform vec4 u_Color;
+			uniform vec3 u_Color;
 
 			void main()
 			{
-				color = u_Color;
+				color = vec4(u_Color, 1.0f);
 			}
 		)";
 
-		m_Shader2.reset(new Voxen::Shader(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
+		m_Shader2.reset(Voxen::Shader::Create(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
 	}
 
 	void OnUpdate(Voxen::Timestep ts) override
@@ -166,8 +170,8 @@ public:
 
 		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
-		glm::vec4 redColor(0.8f, 0.2f, 0.2f, 1.0f);
-		glm::vec4 blueColor(0.2f, 0.2f, 0.8f, 1.0f);
+		std::dynamic_pointer_cast<Voxen::OpenGLShader>(m_Shader2)->Bind();
+		std::dynamic_pointer_cast<Voxen::OpenGLShader>(m_Shader2)->UploadUniformVector3("u_Color", m_SquareColor);
 
 		for (int  j = 0; j < 10; j++)
 		{
@@ -175,23 +179,17 @@ public:
 			{
 				glm::vec3 pos(i * 0.11f, j * 0.11f, 0.0f);
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
-				if (i % 2 == j % 2)
-				{
-					m_Shader2->UploadUniformVector4("u_Color", redColor);
-				}
-				else
-				{
-					m_Shader2->UploadUniformVector4("u_Color", blueColor);
-				}
 				Voxen::Renderer::Submit(m_Shader2, m_SquareVA, transform);
 			}
-
 		}
 
 		Voxen::Renderer::EndScene();
 	}
 	virtual void OnImGuiRender() override
 	{
+		ImGui::Begin("Settings");
+		ImGui::ColorEdit3("Square Color", glm::value_ptr(m_SquareColor));
+		ImGui::End();
 	}
 	void OnEvent(Voxen::Event& event) override
 	{
@@ -209,6 +207,8 @@ private:
 	float m_CameraMoveSpeed = 5.0f;
 	float m_CameraRotation = 0;
 	float m_CameraRotationSpeed = 180.0f;
+
+	glm::vec3 m_SquareColor = { 0.2f, 0.8f, 0.2f };
 };
 
 class Sandbox : public Voxen::Application

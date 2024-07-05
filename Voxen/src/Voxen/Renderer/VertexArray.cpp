@@ -6,7 +6,6 @@
 
 namespace Voxen
 {
-
 	VertexArray* VertexArray::Create()
 	{
 		switch (Renderer::GetAPI())
@@ -18,5 +17,4 @@ namespace Voxen
 		VOX_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
-
 }
