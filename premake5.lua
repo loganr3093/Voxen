@@ -17,10 +17,14 @@ IncludeDir["GLFW"] = "Voxen/vendor/GLFW/include"
 IncludeDir["glad"] = "Voxen/vendor/glad/include"
 IncludeDir["imgui"] = "Voxen/vendor/imgui"
 IncludeDir["glm"] = "Voxen/vendor/glm"
+IncludeDir["stb"] = "Voxen/vendor/stb"
 
-include "Voxen/vendor/GLFW"
-include "Voxen/vendor/glad"
-include "Voxen/vendor/imgui"
+group "Dependencies"
+    include "Voxen/vendor/GLFW"
+    include "Voxen/vendor/glad"
+    include "Voxen/vendor/imgui"
+
+group ""
 
 project "Voxen"
     location "Voxen"
@@ -39,6 +43,8 @@ project "Voxen"
     {
         "%{prj.name}/src/**.h",
         "%{prj.name}/src/**.cpp",
+        "%{prj.name}/vendor/stb/**.h",
+        "%{prj.name}/vendor/stb/**.cpp",
         "%{prj.name}/vendor/glm/glm/**.inl",
         "%{prj.name}/vendor/glm/glm/**.hpp",
     }
@@ -50,7 +56,8 @@ project "Voxen"
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.glad}",
         "%{IncludeDir.glm}",
-        "%{IncludeDir.imgui}"
+        "%{IncludeDir.imgui}",
+        "%{IncludeDir.stb}"
     }
 
     links

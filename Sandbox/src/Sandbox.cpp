@@ -38,12 +38,12 @@ public:
 
 		m_SquareVA.reset(Voxen::VertexArray::Create());
 
-		float squareVertices[3 * 4] =
+		float squareVertices[5 * 4] =
 		{
-			-0.5f, -0.5f, 0.0f,
-			 0.5f, -0.5f, 0.0f,
-			 0.5f,  0.5f, 0.0f,
-			-0.5f,  0.5f, 0.0f
+			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f,
 		};
 
 		Voxen::Ref<Voxen::VertexBuffer> squareVB;
@@ -51,7 +51,8 @@ public:
 
 		Voxen::BufferLayout layout2 =
 		{
-			{ Voxen::ShaderDataType::Vector3, "a_Position" }
+			{ Voxen::ShaderDataType::Vector3, "a_Position" },
+			{ Voxen::ShaderDataType::Vector2, "a_TexCoord" }
 		};
 
 		squareVB->SetLayout(layout2);
@@ -126,7 +127,47 @@ public:
 			}
 		)";
 
-		m_Shader2.reset(Voxen::Shader::Create(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
+		m_FlatColorShader.reset(Voxen::Shader::Create(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
+
+		std::string textureShaderVertexSrc = R"(
+			#version 460 core
+			
+			layout(location = 0) in vec3 a_Position;
+			layout(location = 1) in vec2 a_TexCoord;
+
+			uniform mat4 u_ViewProjection;
+			uniform mat4 u_Transform;
+
+			out vec2 v_TexCoord;
+
+			void main()
+			{
+				v_TexCoord = a_TexCoord;
+				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);	
+			}
+		)";
+
+		std::string textureShaderFragmentSrc = R"(
+			#version 460 core
+			
+			layout(location = 0) out vec4 color;
+
+			in vec2 v_TexCoord;
+
+			uniform sampler2D u_Texture;
+
+			void main()
+			{
+				color = texture(u_Texture, v_TexCoord);
+			}
+		)";
+
+		m_TextureShader.reset(Voxen::Shader::Create(textureShaderVertexSrc, textureShaderFragmentSrc));
+
+		m_Texture = (Voxen::Texture2D::Create("assets/textures/TestTexture.png"));
+
+		std::dynamic_pointer_cast<Voxen::OpenGLShader>(m_TextureShader)->Bind();
+		std::dynamic_pointer_cast<Voxen::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
 	}
 
 	void OnUpdate(Voxen::Timestep ts) override
@@ -166,12 +207,13 @@ public:
 
 		Voxen::Renderer::BeginScene(m_Camera);
 
-		Voxen::Renderer::Submit(m_Shader, m_VertexArray);
+		// Triangle
+		//Voxen::Renderer::Submit(m_Shader, m_VertexArray);
 
 		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
-		std::dynamic_pointer_cast<Voxen::OpenGLShader>(m_Shader2)->Bind();
-		std::dynamic_pointer_cast<Voxen::OpenGLShader>(m_Shader2)->UploadUniformVector3("u_Color", m_SquareColor);
+		std::dynamic_pointer_cast<Voxen::OpenGLShader>(m_FlatColorShader)->Bind();
+		std::dynamic_pointer_cast<Voxen::OpenGLShader>(m_FlatColorShader)->UploadUniformVector3("u_Color", m_SquareColor);
 
 		for (int  j = 0; j < 10; j++)
 		{
@@ -179,9 +221,12 @@ public:
 			{
 				glm::vec3 pos(i * 0.11f, j * 0.11f, 0.0f);
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
-				Voxen::Renderer::Submit(m_Shader2, m_SquareVA, transform);
+				Voxen::Renderer::Submit(m_FlatColorShader, m_SquareVA, transform);
 			}
 		}
+
+		m_Texture->Bind();
+		Voxen::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
 		Voxen::Renderer::EndScene();
 	}
@@ -199,8 +244,10 @@ private:
 	Voxen::Ref<Voxen::Shader> m_Shader;
 	Voxen::Ref<Voxen::VertexArray> m_VertexArray;
 
+	Voxen::Ref<Voxen::Shader> m_FlatColorShader, m_TextureShader;
 	Voxen::Ref<Voxen::VertexArray> m_SquareVA;
-	Voxen::Ref<Voxen::Shader> m_Shader2;
+
+	Voxen::Ref<Voxen::Texture2D> m_Texture;
 
 	Voxen::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;
@@ -208,7 +255,7 @@ private:
 	float m_CameraRotation = 0;
 	float m_CameraRotationSpeed = 180.0f;
 
-	glm::vec3 m_SquareColor = { 0.2f, 0.8f, 0.2f };
+	glm::vec3 m_SquareColor = { 0.2f, 0.2f, 0.8f };
 };
 
 class Sandbox : public Voxen::Application
