@@ -207,9 +207,6 @@ public:
 
 		Voxen::Renderer::BeginScene(m_Camera);
 
-		// Triangle
-		//Voxen::Renderer::Submit(m_Shader, m_VertexArray);
-
 		glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 
 		std::dynamic_pointer_cast<Voxen::OpenGLShader>(m_FlatColorShader)->Bind();
@@ -219,7 +216,7 @@ public:
 		{
 			for (int  i = 0; i < 10; i++)
 			{
-				glm::vec3 pos(i * 0.11f, j * 0.11f, 0.0f);
+				glm::vec3 pos(i * 0.11f, j * 0.11f, -0.1f);
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * scale;
 				Voxen::Renderer::Submit(m_FlatColorShader, m_SquareVA, transform);
 			}
@@ -247,7 +244,7 @@ private:
 	Voxen::Ref<Voxen::Shader> m_FlatColorShader, m_TextureShader;
 	Voxen::Ref<Voxen::VertexArray> m_SquareVA;
 
-	Voxen::Ref<Voxen::Texture2D> m_Texture;
+	Voxen::Ref<Voxen::Texture2D> m_Texture, m_ChernoLogoTexture;
 
 	Voxen::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;
