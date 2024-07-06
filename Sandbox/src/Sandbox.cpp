@@ -19,7 +19,7 @@ public:
 			 0.0f,  0.5f, 0.0f, 0.5f, 0.5f, 1.0f, 1.0f,
 		};
 
-		std::shared_ptr<Voxen::VertexBuffer> vertexBuffer;
+		Voxen::Ref<Voxen::VertexBuffer> vertexBuffer;
 		vertexBuffer.reset(Voxen::VertexBuffer::Create(vertices, sizeof(vertices)));
 
 		Voxen::BufferLayout layout =
@@ -32,7 +32,7 @@ public:
 		m_VertexArray->AddVertexBuffer(vertexBuffer);
 
 		uint32 indices[3] = { 0, 1, 2 };
-		std::shared_ptr<Voxen::IndexBuffer> indexBuffer;
+		Voxen::Ref<Voxen::IndexBuffer> indexBuffer;
 		indexBuffer.reset(Voxen::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32)));
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
@@ -46,7 +46,7 @@ public:
 			-0.5f,  0.5f, 0.0f
 		};
 
-		std::shared_ptr<Voxen::VertexBuffer> squareVB;
+		Voxen::Ref<Voxen::VertexBuffer> squareVB;
 		squareVB.reset(Voxen::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
 
 		Voxen::BufferLayout layout2 =
@@ -58,7 +58,7 @@ public:
 		m_SquareVA->AddVertexBuffer(squareVB);
 
 		uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
-		std::shared_ptr<Voxen::IndexBuffer> squareIB;
+		Voxen::Ref<Voxen::IndexBuffer> squareIB;
 		squareIB.reset(Voxen::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32)));
 		m_SquareVA->SetIndexBuffer(squareIB);
 
@@ -196,11 +196,11 @@ public:
 	}
 
 private:
-	std::shared_ptr<Voxen::Shader> m_Shader;
-	std::shared_ptr<Voxen::VertexArray> m_VertexArray;
+	Voxen::Ref<Voxen::Shader> m_Shader;
+	Voxen::Ref<Voxen::VertexArray> m_VertexArray;
 
-	std::shared_ptr<Voxen::VertexArray> m_SquareVA;
-	std::shared_ptr<Voxen::Shader> m_Shader2;
+	Voxen::Ref<Voxen::VertexArray> m_SquareVA;
+	Voxen::Ref<Voxen::Shader> m_Shader2;
 
 	Voxen::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;

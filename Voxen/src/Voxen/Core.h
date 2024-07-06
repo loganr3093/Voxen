@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #ifdef VOX_PLATFORM_WINDOWS
 	#if VOX_DYNAMIC_LINK
@@ -28,3 +29,12 @@
 
 #define BIT(x) (1 << x)
 #define VOX_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)
+
+namespace Voxen
+{
+	template<typename T>
+	using Scope = std::unique_ptr<T>;
+
+	template<typename T>
+	using Ref = std::shared_ptr<T>;
+}
