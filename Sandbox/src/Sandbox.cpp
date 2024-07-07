@@ -94,7 +94,7 @@ public:
 			}
 		)";
 
-		m_Shader.reset(Voxen::Shader::Create(vertexSrc, fragmentSrc));
+		m_Shader = Voxen::Shader::Create("VertexPosColor", vertexSrc, fragmentSrc);
 
 		std::string flatColorShaderVertexSrc = R"(
 			#version 460 core
@@ -127,14 +127,14 @@ public:
 			}
 		)";
 
-		m_FlatColorShader.reset(Voxen::Shader::Create(flatColorShaderVertexSrc, flatColorShaderFragmentSrc));
+		m_FlatColorShader = Voxen::Shader::Create("FlatColor", flatColorShaderVertexSrc, flatColorShaderFragmentSrc);
 
-		m_TextureShader.reset(Voxen::Shader::Create("assets/shaders/Texture.glsl"));
+		auto textureShader = m_ShaderLibrary.Load("assets/shaders/Texture.glsl");
 
 		m_Texture = (Voxen::Texture2D::Create("assets/textures/TestTexture.png"));
 
-		std::dynamic_pointer_cast<Voxen::OpenGLShader>(m_TextureShader)->Bind();
-		std::dynamic_pointer_cast<Voxen::OpenGLShader>(m_TextureShader)->UploadUniformInt("u_Texture", 0);
+		std::dynamic_pointer_cast<Voxen::OpenGLShader>(textureShader)->Bind();
+		std::dynamic_pointer_cast<Voxen::OpenGLShader>(textureShader)->UploadUniformInt("u_Texture", 0);
 	}
 
 	void OnUpdate(Voxen::Timestep ts) override
@@ -189,8 +189,10 @@ public:
 			}
 		}
 
+		auto textureShader = m_ShaderLibrary.Get("Texture");
+
 		m_Texture->Bind();
-		Voxen::Renderer::Submit(m_TextureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+		Voxen::Renderer::Submit(textureShader, m_SquareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
 		Voxen::Renderer::EndScene();
 	}
@@ -205,13 +207,14 @@ public:
 	}
 
 private:
+	Voxen::ShaderLibrary m_ShaderLibrary;
 	Voxen::Ref<Voxen::Shader> m_Shader;
 	Voxen::Ref<Voxen::VertexArray> m_VertexArray;
 
-	Voxen::Ref<Voxen::Shader> m_FlatColorShader, m_TextureShader;
+	Voxen::Ref<Voxen::Shader> m_FlatColorShader;
 	Voxen::Ref<Voxen::VertexArray> m_SquareVA;
 
-	Voxen::Ref<Voxen::Texture2D> m_Texture, m_ChernoLogoTexture;
+	Voxen::Ref<Voxen::Texture2D> m_Texture;
 
 	Voxen::OrthographicCamera m_Camera;
 	glm::vec3 m_CameraPosition;
