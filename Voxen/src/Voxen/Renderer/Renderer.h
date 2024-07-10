@@ -11,6 +11,7 @@ namespace Voxen
 	{
 	public:
 		static void Init();
+		static void OnWindowResize(uint32 width, uint32 height);
 
 		static void BeginScene(OrthographicCamera& camera);
 		static void EndScene();
