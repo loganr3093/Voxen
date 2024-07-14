@@ -28,6 +28,7 @@
 #include "Voxen/Renderer/VertexArray.h"
 
 #include "Voxen/Renderer/OrthographicCamera.h"
+#include "Voxen/OrthographicCameraController.h"
 
 // Entry Point
 // ****************************
