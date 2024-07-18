@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Voxen/Window.h"
+#include "Voxen/Core/Window.h"
 #include "Voxen/Renderer/GraphicsContext.h"
 
 #include <GLFW/glfw3.h>

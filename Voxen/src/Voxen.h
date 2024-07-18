@@ -4,18 +4,18 @@
 
 // Engine
 // ****************************
-#include "Voxen/Application.h"
+#include "Voxen/Core/Application.h"
 #include "Voxen/ImGui/ImGuiLayer.h"
-#include "Voxen/Input.h"
-#include "Voxen/Layer.h"
-#include "Voxen/Log.h"
+#include "Voxen/Core/Input.h"
+#include "Voxen/Core/Layer.h"
+#include "Voxen/Core/Log.h"
 
 #include "Voxen/Core/Timestep.h"
 
 // Macro files
 // ****************************
-#include "Voxen/KeyCodes.h"
-#include "Voxen/MouseButtonCodes.h"
+#include "Voxen/Core/KeyCodes.h"
+#include "Voxen/Core/MouseButtonCodes.h"
 
 // Renderer
 // ****************************
@@ -28,8 +28,8 @@
 #include "Voxen/Renderer/VertexArray.h"
 
 #include "Voxen/Renderer/OrthographicCamera.h"
-#include "Voxen/OrthographicCameraController.h"
+#include "Voxen/Renderer/OrthographicCameraController.h"
 
 // Entry Point
 // ****************************
-#include "Voxen/EntryPoint.h"
+#include "Voxen/Core/EntryPoint.h"

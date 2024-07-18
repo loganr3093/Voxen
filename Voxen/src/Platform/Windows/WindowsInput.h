@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Voxen/Input.h"
+#include "Voxen/Core/Input.h"
 
 namespace Voxen
 {

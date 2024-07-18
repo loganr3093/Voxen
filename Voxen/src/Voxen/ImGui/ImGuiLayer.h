@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Voxen/Layer.h"
+#include "Voxen/Core/Layer.h"
 #include "Voxen/Events/ApplicationEvent.h"
 #include "Voxen/Events/KeyEvent.h"
 #include "Voxen/Events/MouseEvent.h"

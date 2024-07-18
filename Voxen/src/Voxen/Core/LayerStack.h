@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Voxen/Core.h"
+#include "Voxen/Core/Core.h"
 #include "Layer.h"
 
 #include <vector>

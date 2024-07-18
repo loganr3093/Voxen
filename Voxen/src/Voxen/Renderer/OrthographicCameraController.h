@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Renderer/OrthographicCamera.h"
+#include "Voxen/Renderer/OrthographicCamera.h"
 #include "Voxen/Core/Timestep.h"
 
 #include "Voxen/Events/ApplicationEvent.h"

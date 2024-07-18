@@ -3,7 +3,7 @@
 #include "Core.h"
 
 #include "Window.h"
-#include "Voxen/LayerStack.h"
+#include "Voxen/Core/LayerStack.h"
 #include "Voxen/Events/Event.h"
 #include "Voxen/Events/ApplicationEvent.h"
 

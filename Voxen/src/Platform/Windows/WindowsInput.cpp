@@ -1,6 +1,6 @@
 #include "voxpch.h"
 #include "WindowsInput.h"
-#include "Voxen/Application.h"
+#include "Voxen/Core/Application.h"
 
 #include <GLFW/glfw3.h>
 

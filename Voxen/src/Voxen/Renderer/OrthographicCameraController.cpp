@@ -1,8 +1,8 @@
 #include "voxpch.h"
 #include "OrthographicCameraController.h"
 
-#include "Voxen/Input.h"
-#include "Voxen/KeyCodes.h"
+#include "Voxen/Core/Input.h"
+#include "Voxen/Core/KeyCodes.h"
 
 namespace Voxen
 {

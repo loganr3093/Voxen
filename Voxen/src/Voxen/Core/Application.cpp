@@ -1,7 +1,7 @@
 #include "voxpch.h"
 #include "Application.h"
 
-#include "Voxen/Log.h"
+#include "Voxen/Core/Log.h"
 
 #include "Voxen/Renderer/Renderer.h"
 
