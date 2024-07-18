@@ -30,6 +30,6 @@ namespace Voxen
 			s_RendererAPI->DrawIndexed(vertexArray);
 		}
 	private:
-		static RendererAPI* s_RendererAPI;
+		static Scope<RendererAPI> s_RendererAPI;
 	};
 }

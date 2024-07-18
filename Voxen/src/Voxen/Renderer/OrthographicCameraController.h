@@ -47,6 +47,7 @@ namespace Voxen
 		glm::vec3 m_CameraPosition = { 0.0f, 0.0f, 0.0f };
 		float m_CameraTranslationSpeed = 5.0f;
 
+		// Rotation of the camera in degrees (counter-clockwise)
 		float m_CameraRotation = 0.0f;
 		float m_CameraRotationSpeed = 90.0f;
 	};

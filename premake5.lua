@@ -73,7 +73,6 @@ project "Voxen"
 
         defines
         {
-            "VOX_PLATFORM_WINDOWS",
             "VOX_BUILD_DLL",
             "GLFW_INCLUDE_NONE",
             "_CRT_SECURE_NO_WARNINGS"
@@ -125,11 +124,6 @@ project "Sandbox"
 
     filter "system:windows"
         systemversion "latest"
-
-        defines
-        {
-            "VOX_PLATFORM_WINDOWS"
-        }
 
     filter "configurations:Debug"
         defines "VOX_DEBUG"
