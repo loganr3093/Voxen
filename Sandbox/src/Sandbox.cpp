@@ -1,8 +1,11 @@
 #include <Voxen.h>
+#include "Voxen/Core/EntryPoint.h"
 
 #include "Platform/OpenGL/OpenGLShader.h"
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Sandbox2D.h"
 
 class ExampleLayer : public Voxen::Layer
 {
@@ -10,7 +13,7 @@ public:
 	ExampleLayer() 
 		: Layer("Example"), m_CameraController(1280.0f / 720.0f)
 	{
-		m_VertexArray.reset(Voxen::VertexArray::Create());
+		m_VertexArray = Voxen::VertexArray::Create();
 
 		float vertices[3 * 7]
 		{
@@ -20,7 +23,7 @@ public:
 		};
 
 		Voxen::Ref<Voxen::VertexBuffer> vertexBuffer;
-		vertexBuffer.reset(Voxen::VertexBuffer::Create(vertices, sizeof(vertices)));
+		vertexBuffer = Voxen::VertexBuffer::Create(vertices, sizeof(vertices));
 
 		Voxen::BufferLayout layout =
 		{
@@ -33,10 +36,10 @@ public:
 
 		uint32 indices[3] = { 0, 1, 2 };
 		Voxen::Ref<Voxen::IndexBuffer> indexBuffer;
-		indexBuffer.reset(Voxen::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32)));
+		indexBuffer = Voxen::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32));
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
-		m_SquareVA.reset(Voxen::VertexArray::Create());
+		m_SquareVA = Voxen::VertexArray::Create();
 
 		float squareVertices[5 * 4] =
 		{
@@ -47,7 +50,7 @@ public:
 		};
 
 		Voxen::Ref<Voxen::VertexBuffer> squareVB;
-		squareVB.reset(Voxen::VertexBuffer::Create(squareVertices, sizeof(squareVertices)));
+		squareVB = Voxen::VertexBuffer::Create(squareVertices, sizeof(squareVertices));
 
 		Voxen::BufferLayout layout2 =
 		{
@@ -60,7 +63,7 @@ public:
 
 		uint32_t squareIndices[6] = { 0, 1, 2, 2, 3, 0 };
 		Voxen::Ref<Voxen::IndexBuffer> squareIB;
-		squareIB.reset(Voxen::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32)));
+		squareIB = Voxen::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32));
 		m_SquareVA->SetIndexBuffer(squareIB);
 
 		std::string vertexSrc = R"(
@@ -201,7 +204,8 @@ class Sandbox : public Voxen::Application
 public:
 	Sandbox()
 	{
-		PushLayer(new ExampleLayer());
+		//PushLayer(new ExampleLayer());
+		PushLayer(new Sandbox2D());
 	}
 	~Sandbox()
 	{

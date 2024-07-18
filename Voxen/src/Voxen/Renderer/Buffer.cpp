@@ -6,7 +6,7 @@
 
 namespace Voxen
 {
-	VertexBuffer* VertexBuffer::Create(float* vertices, uint32 size)
+	Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32 size)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -15,7 +15,7 @@ namespace Voxen
 			return nullptr;
 			break;
 		case RendererAPI::API::OpenGL:
-			return new OpenGLVertexBuffer(vertices, size);
+			return CreateRef<OpenGLVertexBuffer>(vertices, size);
 			break;
 		}
 
@@ -23,7 +23,7 @@ namespace Voxen
 		return nullptr;
 	}
 
-	IndexBuffer* IndexBuffer::Create(uint32* indices, uint32 size)
+	Ref<IndexBuffer> IndexBuffer::Create(uint32* indices, uint32 size)
 	{
 		switch (Renderer::GetAPI())
 		{
@@ -32,7 +32,7 @@ namespace Voxen
 			return nullptr;
 			break;
 		case RendererAPI::API::OpenGL:
-			return new OpenGLIndexBuffer(indices, size);
+			return CreateRef<OpenGLIndexBuffer>(indices, size);
 			break;
 		}
 

@@ -29,7 +29,3 @@
 
 #include "Voxen/Renderer/OrthographicCamera.h"
 #include "Voxen/Renderer/OrthographicCameraController.h"
-
-// Entry Point
-// ****************************
-#include "Voxen/Core/EntryPoint.h"
