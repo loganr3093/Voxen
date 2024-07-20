@@ -174,6 +174,21 @@ namespace Voxen
 		glUseProgram(0);
 	}
 
+	void OpenGLShader::SetVector3(const std::string& name, const glm::vec3& value)
+	{
+		UploadUniformVector3(name, value);
+	}
+
+	void OpenGLShader::SetVector4(const std::string& name, const glm::vec4& value)
+	{
+		UploadUniformVector4(name, value);
+	}
+
+	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
+	{
+		UploadUniformMat4(name, value);
+	}
+
 	void OpenGLShader::UploadUniformInt(const std::string& name, const int value)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
