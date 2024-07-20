@@ -19,6 +19,7 @@
 
 // Renderer
 // ****************************
+#include "Voxen/Renderer/Renderer2D.h"
 #include "Voxen/Renderer/Renderer.h"
 #include "Voxen/Renderer/RenderCommand.h"
 
