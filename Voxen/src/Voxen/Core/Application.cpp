@@ -15,6 +15,8 @@ namespace Voxen
 
 	Application::Application()
 	{
+		VOX_PROFILE_FUNCTION();
+
 		VOX_CORE_INFO("Initializing Application");
 		VOX_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
@@ -30,16 +32,24 @@ namespace Voxen
 
 	void Application::PushLayer(Layer* layer)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		m_LayerStack.PushLayer(layer);
+		layer->OnAttach();
 	}
 
 	void Application::PushOverlay(Layer* layer)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		m_LayerStack.PushOverlay(layer);
+		layer->OnAttach();
 	}
 
 	void Application::OnEvent(Event& e)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(VOX_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(VOX_BIND_EVENT_FN(Application::OnWindowResize));
@@ -54,27 +64,36 @@ namespace Voxen
 
 	void Application::Run()
 	{
+		VOX_PROFILE_FUNCTION();
 
 		while (m_Running)
 		{
+			VOX_PROFILE_SCOPE("Run Loop");
+
 			float time = (float)glfwGetTime();
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
 
 			if (!m_Minimized)
 			{
-				for (Layer* layer : m_LayerStack)
 				{
-					layer->OnUpdate(timestep);
+					VOX_PROFILE_SCOPE("LayerStack OnUpdates");
+					for (Layer* layer : m_LayerStack)
+					{
+						layer->OnUpdate(timestep);
+					}
 				}
-			}
 
-			m_ImGuiLayer->Begin();
-			for (Layer* layer : m_LayerStack)
-			{
-				layer->OnImGuiRender();
+				m_ImGuiLayer->Begin();
+				{
+					VOX_PROFILE_SCOPE("LayerStack OnImGuiRender");
+					for (Layer* layer : m_LayerStack)
+					{
+						layer->OnImGuiRender();
+					}
+				}
+				m_ImGuiLayer->End();
 			}
-			m_ImGuiLayer->End();
 
 			m_Window->OnUpdate();
 		}
@@ -88,6 +107,8 @@ namespace Voxen
 	}
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		if (e.GetWidth() == 0 || e.GetHeight() == 0)
 		{
 			m_Minimized = true;

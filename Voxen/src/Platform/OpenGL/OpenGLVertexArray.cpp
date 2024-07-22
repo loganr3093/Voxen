@@ -40,6 +40,8 @@ namespace Voxen
 
 	OpenGLVertexArray::OpenGLVertexArray()
 	{
+		VOX_PROFILE_FUNCTION();
+
 		glCreateVertexArrays(1, &m_RendererID);
 	}
 	OpenGLVertexArray::~OpenGLVertexArray()
@@ -48,14 +50,20 @@ namespace Voxen
 	}
 	void OpenGLVertexArray::Bind() const
 	{
+		VOX_PROFILE_FUNCTION();
+
 		glBindVertexArray(m_RendererID);
 	}
 	void OpenGLVertexArray::Unbind() const
 	{
+		VOX_PROFILE_FUNCTION();
+
 		glBindVertexArray(0);
 	}
 	void OpenGLVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		VOX_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "Vertex buffer has no layout");
 		glBindVertexArray(m_RendererID);
 		vertexBuffer->Bind();

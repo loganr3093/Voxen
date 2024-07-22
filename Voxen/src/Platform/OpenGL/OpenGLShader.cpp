@@ -21,6 +21,8 @@ namespace Voxen
 
 	OpenGLShader::OpenGLShader(const std::string& filePath)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		std::string source = ReadFile(filePath);
 		auto shaderSources = PreProcess(source);
 		VOX_TRACE("Compiling shader '{0}'", filePath);
@@ -38,6 +40,8 @@ namespace Voxen
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 		: m_Name(name)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		std::unordered_map<GLenum, std::string> sources;
 		sources[GL_VERTEX_SHADER] = vertexSrc;
 		sources[GL_FRAGMENT_SHADER] = fragmentSrc;
@@ -47,11 +51,15 @@ namespace Voxen
 
 	OpenGLShader::~OpenGLShader()
 	{
+		VOX_PROFILE_FUNCTION();
+
 		glDeleteProgram(m_RendererID);
 	}
 
 	std::string OpenGLShader::ReadFile(const std::string& filePath)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		std::string result;
 		std::ifstream in(filePath, std::ios::in | std::ios::binary);
 		if (in)
@@ -72,6 +80,8 @@ namespace Voxen
 
 	std::unordered_map<GLenum, std::string> OpenGLShader::PreProcess(const std::string& source)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		std::unordered_map<GLenum, std::string> shaderSources;
 
 		const char* typeToken = "#type";
@@ -95,6 +105,8 @@ namespace Voxen
 
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		GLuint program = glCreateProgram();
 		VOX_CORE_ASSERT(shaderSources.size() <= 2, "Unsupported behavior, have at least a fragment and vertex shader.");
 		std::array<GLenum, 2> glShaderIDs;
@@ -166,6 +178,8 @@ namespace Voxen
 
 	void OpenGLShader::Bind() const
 	{
+		VOX_PROFILE_FUNCTION();
+
 		glUseProgram(m_RendererID);
 	}
 
@@ -176,21 +190,29 @@ namespace Voxen
 
 	void OpenGLShader::SetInt(const std::string& name, int value)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		UploadUniformInt(name, value);
 	}
 
 	void OpenGLShader::SetVector3(const std::string& name, const glm::vec3& value)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		UploadUniformVector3(name, value);
 	}
 
 	void OpenGLShader::SetVector4(const std::string& name, const glm::vec4& value)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		UploadUniformVector4(name, value);
 	}
 
 	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		UploadUniformMat4(name, value);
 	}
 

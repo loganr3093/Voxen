@@ -10,6 +10,8 @@ namespace Voxen
 
 	void Renderer::Init()
 	{
+		VOX_PROFILE_FUNCTION();
+
 		RenderCommand::Init();
 		Renderer2D::Init();
 	}

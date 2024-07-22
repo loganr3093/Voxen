@@ -22,14 +22,12 @@ namespace Voxen
 		VOX_CORE_TRACE("Pushing layer \'{0}\'", layer->GetName().c_str());
 		m_Layers.emplace(m_Layers.begin() + m_LayerInsertIndex, layer);
 		m_LayerInsertIndex++;
-		layer->OnAttach();
 	}
 
 	void LayerStack::PushOverlay(Layer* overlay)
 	{
 		VOX_CORE_TRACE("Pushing overlay \'{0}\'", overlay->GetName().c_str());
 		m_Layers.emplace_back(overlay);
-		overlay->OnAttach();
 	}
 
 	void LayerStack::PopLayer(Layer* layer)

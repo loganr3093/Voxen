@@ -12,6 +12,8 @@ namespace Voxen
 	}
 	void OpenGLContext::Init()
 	{
+		VOX_PROFILE_FUNCTION();
+
 		VOX_CORE_INFO("Initializing OpenGLContext");
 		glfwMakeContextCurrent(m_WindowHandle);
 		int32 status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
@@ -32,6 +34,8 @@ namespace Voxen
 	}
 	void OpenGLContext::SwapBuffers()
 	{
+		VOX_PROFILE_FUNCTION();
+
 		glfwSwapBuffers(m_WindowHandle);
 	}
 }

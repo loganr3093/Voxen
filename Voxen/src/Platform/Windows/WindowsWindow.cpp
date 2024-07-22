@@ -28,11 +28,15 @@ namespace Voxen
 
 	WindowsWindow::~WindowsWindow()
 	{
+		VOX_PROFILE_FUNCTION();
+
 		Shutdown();
 	}
 
 	void WindowsWindow::Init(const WindowProps& props)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		VOX_CORE_INFO("Initializing Window's window");
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
@@ -152,17 +156,25 @@ namespace Voxen
 
 	void WindowsWindow::Shutdown()
 	{
+		VOX_PROFILE_FUNCTION();
+
 		glfwDestroyWindow(m_Window);
+
+		glfwTerminate();
 	}
 
 	void WindowsWindow::OnUpdate()
 	{
+		VOX_PROFILE_FUNCTION();
+
 		glfwPollEvents();
 		m_Context->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)
 	{
+		VOX_PROFILE_FUNCTION();
+
 		if (enabled)
 			glfwSwapInterval(1);
 		else

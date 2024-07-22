@@ -123,7 +123,7 @@ namespace Voxen
 	};
 }
 
-#define VOX_PROFILE 1
+#define VOX_PROFILE 0
 #if VOX_PROFILE
 	#define VOX_PROFILE_BEGIN_SESSION(name, filepath) ::Voxen::Instrumentor::Get().BeginSession(name, filepath)
 	#define VOX_PROFILE_END_SESSION() ::Voxen::Instrumentor::Get().EndSession()
