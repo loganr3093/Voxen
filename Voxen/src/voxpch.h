@@ -15,6 +15,7 @@
 
 #include "Voxen/Core/Log.h"
 #include "Voxen/Types/Types.h"
+#include "Voxen/Debug/Instrumentor.h"
 
 #ifdef VOX_PLATFORM_WINDOWS
 	#include <Windows.h>
