@@ -13,11 +13,14 @@ Sandbox2D::Sandbox2D()
 
 void Sandbox2D::OnAttach()
 {
+	VOX_PROFILE_FUNCTION();
+
 	m_TestTexture = (Voxen::Texture2D::Create("assets/textures/TestTexture.png"));
 }
 
 void Sandbox2D::OnDetach()
 {
+	VOX_PROFILE_FUNCTION();
 }
 
 void Sandbox2D::OnUpdate(Voxen::Timestep ts)
@@ -25,10 +28,7 @@ void Sandbox2D::OnUpdate(Voxen::Timestep ts)
 	VOX_PROFILE_FUNCTION();
 
 	// Update
-	{
-		VOX_PROFILE_SCOPE("CameraController::OnUpdate");
-		m_CameraController.OnUpdate(ts);
-	}
+	m_CameraController.OnUpdate(ts);
 
 	// Render
 	Voxen::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
