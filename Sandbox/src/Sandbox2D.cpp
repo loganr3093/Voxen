@@ -13,6 +13,7 @@ Sandbox2D::Sandbox2D()
 
 void Sandbox2D::OnAttach()
 {
+	m_TestTexture = (Voxen::Texture2D::Create("assets/textures/TestTexture.png"));
 }
 
 void Sandbox2D::OnDetach()
@@ -30,8 +31,10 @@ void Sandbox2D::OnUpdate(Voxen::Timestep ts)
 
 	Voxen::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
-	Voxen::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 1.0f, 1.0f }, { 0.8f, 0.2f, 0.3f, 1.0f });
+	Voxen::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 0.5f, 0.5f }, { 0.8f, 0.2f, 0.3f, 1.0f });
 	Voxen::Renderer2D::DrawQuad({ -1.1f, 0.5f }, { 1.0f, 0.5f }, { 0.3f, 0.2f, 0.8f, 1.0f });
+
+	Voxen::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, m_TestTexture);
 
 	Voxen::Renderer2D::EndScene();
 }

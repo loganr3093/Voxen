@@ -22,5 +22,7 @@ private:
 	Voxen::Ref<Voxen::VertexArray> m_SquareVA;
 	Voxen::Ref<Voxen::Shader> m_FlatColorShader;
 
+	Voxen::Ref<Voxen::Texture2D> m_TestTexture;
+
 	glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
 };

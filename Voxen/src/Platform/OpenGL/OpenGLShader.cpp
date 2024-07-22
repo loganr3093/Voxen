@@ -174,6 +174,11 @@ namespace Voxen
 		glUseProgram(0);
 	}
 
+	void OpenGLShader::SetInt(const std::string& name, int value)
+	{
+		UploadUniformInt(name, value);
+	}
+
 	void OpenGLShader::SetVector3(const std::string& name, const glm::vec3& value)
 	{
 		UploadUniformVector3(name, value);
