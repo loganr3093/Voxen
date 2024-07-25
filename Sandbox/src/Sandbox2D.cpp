@@ -39,7 +39,7 @@ void Sandbox2D::OnUpdate(Voxen::Timestep ts)
 	Voxen::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 0.5f, 0.5f }, m_SquareColor);
 	Voxen::Renderer2D::DrawQuad({ -1.1f, 0.5f }, { 1.0f, 0.5f }, { 0.3f, 0.2f, 0.8f, 1.0f });
 
-	Voxen::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, m_TestTexture);
+	// Voxen::Renderer2D::DrawQuad({ 0.0f, 0.0f, -0.1f }, { 10.0f, 10.0f }, m_TestTexture);
 
 	Voxen::Renderer2D::EndScene();
 }
