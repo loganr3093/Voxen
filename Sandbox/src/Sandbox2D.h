@@ -24,5 +24,5 @@ private:
 
 	Voxen::Ref<Voxen::Texture2D> m_TestTexture;
 
-	glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
+	glm::vec4 m_SquareColor = { 0.8f, 0.3f, 0.3f, 1.0f };
 };

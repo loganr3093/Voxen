@@ -17,6 +17,9 @@ namespace Voxen
 		virtual void SetData(void* data, uint32 size) = 0;
 
 		virtual void Bind(uint32 slot = 0) const = 0;
+
+		virtual bool operator==(const Texture& other) const = 0;
+
 	};
 
 	class Texture2D : public Texture
