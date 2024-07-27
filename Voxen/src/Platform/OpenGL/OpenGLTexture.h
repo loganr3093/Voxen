@@ -15,6 +15,7 @@ namespace Voxen
 
 		virtual uint32 GetWidth() const override { return m_Width; }
 		virtual uint32 GetHeight() const override { return m_Height; }
+		virtual ID GetRendererID() const override { return m_RendererID; }
 
 		virtual void SetData(void* data, uint32 size) override;
 

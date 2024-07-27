@@ -33,6 +33,8 @@ namespace Voxen
 
 		inline Window& GetWindow() { return *m_Window; }
 
+		void Close();
+
 		inline static Application& Get() { return *s_Instance; }
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
