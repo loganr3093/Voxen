@@ -1,6 +1,6 @@
 workspace "Voxen"
     architecture "x64"
-    startproject "Sandbox"
+    startproject "Voxen-Editor"
 
     configurations
     {
