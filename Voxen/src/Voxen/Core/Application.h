@@ -21,7 +21,7 @@ namespace Voxen
 	class VOXEN_API Application
 	{
 	public:
-		Application();
+		Application(const std::string& name = "Voxen");
 		virtual ~Application() = default;
 
 		void Run();

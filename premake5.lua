@@ -93,8 +93,56 @@ project "Voxen"
         runtime "Release"
         optimize "on"
 
+
 project "Sandbox"
     location "Sandbox"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++20"
+    staticruntime "on"
+
+    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+    files
+    {
+        "%{prj.name}/src/**.h",
+        "%{prj.name}/src/**.cpp"
+    }
+
+    includedirs
+    {
+        "Voxen/vendor/spdlog/include",
+        "Voxen/src",
+        "Voxen/vendor",
+        "%{IncludeDir.glm}"
+    }
+
+    links
+    {
+        "Voxen"
+    }
+
+    filter "system:windows"
+        systemversion "latest"
+
+    filter "configurations:Debug"
+        defines "VOX_DEBUG"
+        runtime "Debug"
+        symbols "on"
+
+    filter "configurations:Release"
+        defines "VOX_RELEASE"
+        runtime "Release"
+        optimize "on"
+
+    filter "configurations:Dist"
+        defines "VOX_DIST"
+        runtime "Release"
+        optimize "on"
+
+project "Voxen-Editor"
+    location "Voxen-Editor"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++20"

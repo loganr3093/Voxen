@@ -15,7 +15,7 @@
 // Macro files
 // ****************************
 #include "Voxen/Core/KeyCodes.h"
-#include "Voxen/Core/MouseButtonCodes.h"
+#include "Voxen/Core/MouseCodes.h"
 
 // Renderer
 // ****************************

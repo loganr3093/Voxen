@@ -1,30 +1,30 @@
 #pragma once
 
-#include "Event.h"
+#include "Voxen/Events/Event.h"
+#include "Voxen/Core/Input.h"
 
 namespace Voxen
 {
-
-	class VOXEN_API KeyEvent : public Event
+	class KeyEvent : public Event
 	{
 	public:
-		inline int32 GetKeyCode() const { return m_KeyCode; }
+		KeyCode GetKeyCode() const { return m_KeyCode; }
 
 		EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
 	protected:
-		KeyEvent(int32 keycode)
+		KeyEvent(KeyCode keycode)
 			: m_KeyCode(keycode) {}
 
-		int32 m_KeyCode;
+		KeyCode m_KeyCode;
 	};
 
-	class VOXEN_API KeyPressedEvent : public KeyEvent
+	class KeyPressedEvent : public KeyEvent
 	{
 	public:
-		KeyPressedEvent(int32 keycode, int32 repeatCount)
+		KeyPressedEvent(KeyCode keycode, int repeatCount)
 			: KeyEvent(keycode), m_RepeatCount(repeatCount) {}
 
-		inline int32 GetRepeatCount() const { return m_RepeatCount; }
+		int GetRepeatCount() const { return m_RepeatCount; }
 
 		std::string ToString() const override
 		{
@@ -35,13 +35,13 @@ namespace Voxen
 
 		EVENT_CLASS_TYPE(KeyPressed)
 	private:
-		int32 m_RepeatCount;
+		int m_RepeatCount;
 	};
 
-	class VOXEN_API KeyReleasedEvent : public KeyEvent
+	class KeyReleasedEvent : public KeyEvent
 	{
 	public:
-		KeyReleasedEvent(int32 keycode)
+		KeyReleasedEvent(KeyCode keycode)
 			: KeyEvent(keycode) {}
 
 		std::string ToString() const override
@@ -54,10 +54,10 @@ namespace Voxen
 		EVENT_CLASS_TYPE(KeyReleased)
 	};
 
-	class VOXEN_API KeyTypedEvent : public KeyEvent
+	class KeyTypedEvent : public KeyEvent
 	{
 	public:
-		KeyTypedEvent(int32 keycode)
+		KeyTypedEvent(KeyCode keycode)
 			: KeyEvent(keycode) {}
 
 		std::string ToString() const override
