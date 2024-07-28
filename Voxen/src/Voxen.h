@@ -24,6 +24,7 @@
 #include "Voxen/Renderer/RenderCommand.h"
 
 #include "Voxen/Renderer/Shader.h"
+#include "Voxen/Renderer/Framebuffer.h"
 #include "Voxen/Renderer/Texture.h"
 #include "Voxen/Renderer/Buffer.h"
 #include "Voxen/Renderer/VertexArray.h"

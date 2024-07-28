@@ -15,7 +15,13 @@ void Sandbox2D::OnAttach()
 {
 	VOX_PROFILE_FUNCTION();
 
-	m_TestTexture = (Voxen::Texture2D::Create("assets/textures/TestTexture.png"));
+	m_TestTexture = Voxen::Texture2D::Create("assets/textures/TestTexture.jpg");
+
+	Voxen::FramebufferSpecification fbSpec;
+	fbSpec.Width = 1280;
+	fbSpec.Height = 720;
+
+	m_Framebuffer = Voxen::Framebuffer::Create(fbSpec);
 }
 
 void Sandbox2D::OnDetach()
@@ -32,9 +38,15 @@ void Sandbox2D::OnUpdate(Voxen::Timestep ts)
 
 	Voxen::Renderer2D::ResetStats();
 
-	// Render
-	Voxen::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-	Voxen::RenderCommand::Clear();
+	{
+		VOX_PROFILE_SCOPE("Renderer Prep");
+
+		m_Framebuffer->Bind();
+
+		// Render
+		Voxen::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		Voxen::RenderCommand::Clear();
+	}
 
 	Voxen::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
@@ -47,9 +59,10 @@ void Sandbox2D::OnUpdate(Voxen::Timestep ts)
 	rotation += ts * 45.0f;
 
 	Voxen::Renderer2D::DrawRotatedQuad({ 0.5f, -1.0f }, { 1.0f, 1.0f }, rotation, m_TestTexture);
-	Voxen::Renderer2D::DrawRotatedQuad({ 1.0f, 1.0f }, { 0.5f, 0.5f }, rotation, {0.9f, 0.7f, 0.1f, 1.0f});
+	Voxen::Renderer2D::DrawRotatedQuad({ 1.0f, -1.0f, 0.1f }, { 0.5f, 0.5f }, rotation, {0.9f, 0.4f, 0.2f, 0.5f});
 
 	Voxen::Renderer2D::EndScene();
+	m_Framebuffer->Unbind();
 }
 
 void Sandbox2D::OnImGuiRender()
@@ -107,10 +120,6 @@ void Sandbox2D::OnImGuiRender()
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				// Disabling fullscreen would allow the window to be moved to the front of other windows, 
-				// which we can't undo at the moment without finer window depth/z control.
-				//ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
-
 				if (ImGui::MenuItem("Exit")) Voxen::Application::Get().Close();
 				ImGui::EndMenu();
 			}
@@ -129,8 +138,8 @@ void Sandbox2D::OnImGuiRender()
 
 		ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
 
-		uint32_t textureID = m_TestTexture->GetRendererID();
-		ImGui::Image((void*)textureID, ImVec2{ 256.0f, 256.0f });
+		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+		ImGui::Image((void*)textureID, ImVec2{ 1280.0f, 720.0f }, ImVec2{ 0,1 }, ImVec2{ 1,0 });
 		ImGui::End();
 
 		ImGui::End();
@@ -148,8 +157,8 @@ void Sandbox2D::OnImGuiRender()
 
 		ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
 
-		uint32_t textureID = m_TestTexture->GetRendererID();
-		ImGui::Image((void*)textureID, ImVec2{ 256.0f, 256.0f });
+		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+		ImGui::Image((void*)textureID, ImVec2{ 1820.0f, 720.0f }, ImVec2{ 0,1 }, ImVec2{ 1,0 });
 		ImGui::End();
 	}
 }

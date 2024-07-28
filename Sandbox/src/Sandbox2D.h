@@ -21,6 +21,7 @@ private:
 	// Temporary
 	Voxen::Ref<Voxen::VertexArray> m_SquareVA;
 	Voxen::Ref<Voxen::Shader> m_FlatColorShader;
+	Voxen::Ref<Voxen::Framebuffer> m_Framebuffer;
 
 	Voxen::Ref<Voxen::Texture2D> m_TestTexture;
 
