@@ -5,6 +5,8 @@
 
 namespace Voxen
 {
+	static const uint32 s_MaxFramebufferSize = 8192;
+
 	OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec) : m_Specification(spec)
 	{
 		Invalidate();
@@ -60,6 +62,11 @@ namespace Voxen
 
 	void OpenGLFramebuffer::Resize(uint32 width, uint32 height)
 	{
+		if (width == 0 || height == 0 || width > s_MaxFramebufferSize || height > s_MaxFramebufferSize)
+		{
+			VOX_CORE_WARN("Attempting to resize framebuffer to {0}, {1}", width, height);
+			return;
+		}
 		m_Specification.Width = width;
 		m_Specification.Height = height;
 		Invalidate();
