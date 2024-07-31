@@ -27,6 +27,7 @@ namespace Voxen
 
 		Ref<Texture2D> m_TestTexture;
 
+		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 
 
