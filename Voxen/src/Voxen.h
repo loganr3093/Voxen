@@ -12,6 +12,9 @@
 
 #include "Voxen/Core/Timestep.h"
 
+#include "Voxen/Scene/Scene.h"
+#include "Voxen/Scene/Components.h"
+
 // Macro files
 // ****************************
 #include "Voxen/Core/KeyCodes.h"

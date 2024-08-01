@@ -24,6 +24,11 @@ namespace Voxen
 		fbSpec.Height = 720;
 
 		m_Framebuffer = Framebuffer::Create(fbSpec);
+
+		m_ActiveScene = CreateRef<Scene>();
+		m_SquareEntity = m_ActiveScene->CreateEntity();
+		m_ActiveScene->Reg().emplace<TransformComponent>(m_SquareEntity);
+		m_ActiveScene->Reg().emplace<SpriteRendererComponent>(m_SquareEntity, glm::vec4{ 0.2f, 0.8f, 0.3f, 1.0f });
 	}
 
 	void EditorLayer::OnDetach()
@@ -38,32 +43,23 @@ namespace Voxen
 		// Update
 		if (m_ViewportFocused) m_CameraController.OnUpdate(ts);
 
+		// Render
 		Renderer2D::ResetStats();
 
-		{
-			VOX_PROFILE_SCOPE("Renderer Prep");
+		m_Framebuffer->Bind();
 
-			m_Framebuffer->Bind();
+		// Render
+		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		RenderCommand::Clear();
 
-			// Render
-			RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-			RenderCommand::Clear();
-		}
 
 		Renderer2D::BeginScene(m_CameraController.GetCamera());
 
-		Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 0.5f, 0.5f }, m_SquareColor);
-		Renderer2D::DrawQuad({ -1.1f, 0.5f }, { 1.0f, 0.5f }, { 0.3f, 0.2f, 0.8f, 1.0f });
-
-		Renderer2D::DrawQuad({ -5.0f, -5.0f, -0.1f }, { 10.0f, 10.0f }, m_TestTexture);
-
-		static float rotation = 0;
-		rotation += ts * 45.0f;
-
-		Renderer2D::DrawRotatedQuad({ 0.5f, -1.0f }, { 1.0f, 1.0f }, rotation, m_TestTexture);
-		Renderer2D::DrawRotatedQuad({ 1.0f, -1.0f, 0.1f }, { 0.5f, 0.5f }, rotation, { 0.9f, 0.4f, 0.2f, 0.5f });
+		// Update Scene
+		m_ActiveScene->OnUpdate(ts);
 
 		Renderer2D::EndScene();
+
 		m_Framebuffer->Unbind();
 	}
 
@@ -135,7 +131,8 @@ namespace Voxen
 		ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
 
-		ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
+		auto& squareColor = m_ActiveScene->Reg().get<SpriteRendererComponent>(m_SquareEntity).Color;
+		ImGui::ColorEdit4("Square Color", glm::value_ptr(squareColor));
 
 		ImGui::End();
 
