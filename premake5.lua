@@ -18,6 +18,7 @@ IncludeDir["glad"] = "Voxen/vendor/glad/include"
 IncludeDir["imgui"] = "Voxen/vendor/imgui"
 IncludeDir["glm"] = "Voxen/vendor/glm"
 IncludeDir["stb"] = "Voxen/vendor/stb"
+IncludeDir["entt"] = "Voxen/vendor/entt"
 
 group "Dependencies"
     include "Voxen/vendor/GLFW"
@@ -57,7 +58,8 @@ project "Voxen"
         "%{IncludeDir.glad}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.imgui}",
-        "%{IncludeDir.stb}"
+        "%{IncludeDir.stb}",
+        "%{IncludeDir.entt}"
     }
 
     links
@@ -115,7 +117,8 @@ project "Sandbox"
         "Voxen/vendor/spdlog/include",
         "Voxen/src",
         "Voxen/vendor",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.entt}"
     }
 
     links
@@ -162,7 +165,8 @@ project "Voxen-Editor"
         "Voxen/vendor/spdlog/include",
         "Voxen/src",
         "Voxen/vendor",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.entt}"
     }
 
     links
