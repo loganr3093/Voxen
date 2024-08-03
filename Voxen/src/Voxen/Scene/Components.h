@@ -2,7 +2,9 @@
 
 #include <glm/glm.hpp>
 
+#include "Voxen/Renderer/Camera.h"
 
+// TODO Change to Component namespace and remove postfix 'Component' from every component
 namespace Voxen
 {
     struct TagComponent
@@ -37,10 +39,22 @@ namespace Voxen
 
         SpriteRendererComponent() = default;
         SpriteRendererComponent(const SpriteRendererComponent&) = default;
-        SpriteRendererComponent(const glm::vec4 color)
+        SpriteRendererComponent(const glm::vec4& color)
             : Color(color) {}
 
         operator glm::vec4& () { return Color; }
         operator const glm::vec4& () const { return Color; }
+    };
+
+    struct CameraComponent
+    {
+        Camera Camera;
+        bool Primary = true; // TODO move this to scene
+
+        CameraComponent() = default;
+        CameraComponent(const CameraComponent&) = default;
+        CameraComponent(const glm::mat4& projection)
+            : Camera(projection) {}
+
     };
 }
