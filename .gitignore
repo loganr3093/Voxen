@@ -5,6 +5,9 @@ Intermediates/
 bin/
 bin-int/
 
+# Exceptions
+!Vendor/Binaries/
+
 # Files
 *.vcxproj
 *.vcxproj.user
