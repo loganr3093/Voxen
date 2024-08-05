@@ -1,4 +1,4 @@
-#include "Sandbox2D.h"
+#include "Demo.h"
 #include "imgui/imgui.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -6,12 +6,12 @@
 
 #include "Platform/OpenGL/OpenGLShader.h"
 
-Sandbox2D::Sandbox2D()
-	: Layer("Sandbox2D"), m_CameraController(1280.0f / 720.0f)
+Demo::Demo()
+	: Layer("Demo"), m_CameraController(1280.0f / 720.0f)
 {
 }
 
-void Sandbox2D::OnAttach()
+void Demo::OnAttach()
 {
 	VOX_PROFILE_FUNCTION();
 
@@ -22,12 +22,12 @@ void Sandbox2D::OnAttach()
 	fbSpec.Height = 720;
 }
 
-void Sandbox2D::OnDetach()
+void Demo::OnDetach()
 {
 	VOX_PROFILE_FUNCTION();
 }
 
-void Sandbox2D::OnUpdate(Voxen::Timestep ts)
+void Demo::OnUpdate(Voxen::Timestep ts)
 {
 	VOX_PROFILE_FUNCTION();
 
@@ -57,7 +57,7 @@ void Sandbox2D::OnUpdate(Voxen::Timestep ts)
 	Voxen::Renderer2D::EndScene();
 }
 
-void Sandbox2D::OnImGuiRender()
+void Demo::OnImGuiRender()
 {
 	VOX_PROFILE_FUNCTION();
 
@@ -74,7 +74,7 @@ void Sandbox2D::OnImGuiRender()
 	ImGui::End();
 }
 
-void Sandbox2D::OnEvent(Voxen::Event& e)
+void Demo::OnEvent(Voxen::Event& e)
 {
 	m_CameraController.OnEvent(e);
 }

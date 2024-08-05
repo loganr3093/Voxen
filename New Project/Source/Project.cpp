@@ -5,16 +5,16 @@
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Sandbox2D.h"
+#include "Demo.h"
 
-class Sandbox : public Voxen::Application
+class Project : public Voxen::Application
 {
 public:
-	Sandbox()
+	Project()
 	{
-		PushLayer(new Sandbox2D());
+		PushLayer(new Demo());
 	}
-	~Sandbox()
+	~Project()
 	{
 
 	}
@@ -22,5 +22,5 @@ public:
 
 Voxen::Application* Voxen::CreateApplication()
 {
-	return new Sandbox();
+	return new Project();
 }

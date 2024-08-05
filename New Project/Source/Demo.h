@@ -2,11 +2,11 @@
 
 #include "Voxen.h"
 
-class Sandbox2D : public Voxen::Layer
+class Demo : public Voxen::Layer
 {
 public:
-	Sandbox2D();
-	virtual ~Sandbox2D() = default;
+	Demo();
+	virtual ~Demo() = default;
 
 	virtual void OnAttach() override;
 	virtual void OnDetach() override;
