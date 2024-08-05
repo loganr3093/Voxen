@@ -1,12 +1,12 @@
-[submodule "Voxen/Vendor/spdlog"]
-	path = Voxen/Vendor/spdlog
+[submodule "Voxen/vendor/spdlog"]
+	path = Voxen/vendor/spdlog
 	url = https://github.com/gabime/spdlog
-[submodule "Voxen/Vendor/GLFW"]
-	path = Voxen/Vendor/GLFW
+[submodule "Voxen/vendor/GLFW"]
+	path = Voxen/vendor/GLFW
 	url = https://github.com/loganr3093/glfw
-[submodule "Voxen/Vendor/imgui"]
-	path = Voxen/Vendor/imgui
+[submodule "Voxen/vendor/imgui"]
+	path = Voxen/vendor/imgui
 	url = https://github.com/loganr3093/imgui
-[submodule "Voxen/Vendor/glm"]
-	path = Voxen/Vendor/glm
+[submodule "Voxen/vendor/glm"]
+	path = Voxen/vendor/glm
 	url = https://github.com/g-truc/glm

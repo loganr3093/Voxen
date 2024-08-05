@@ -13,9 +13,9 @@ workspace "Voxen"
 OutputDir = "%{cfg.system}-%{cfg.architecture}/%{cfg.buildcfg}"
 
 group "Dependencies"
-    include "Voxen/Vendor/GLFW"
-    include "Voxen/Vendor/glad"
-    include "Voxen/Vendor/imgui"
+    include "Voxen/vendor/GLFW"
+    include "Voxen/vendor/glad"
+    include "Voxen/vendor/imgui"
 group ""
 
 -- Build for Voxen

@@ -1,12 +1,12 @@
 -- Build Voxen
 -- Include directories relative to root folder (solution directory)
 IncludeDir = {}
-IncludeDir["GLFW"]  = "Vendor/GLFW/include"
-IncludeDir["glad"]  = "Vendor/glad/include"
-IncludeDir["imgui"] = "Vendor/imgui"
-IncludeDir["glm"]   = "Vendor/glm"
-IncludeDir["stb"]   = "Vendor/stb"
-IncludeDir["entt"]  = "Vendor/entt"
+IncludeDir["GLFW"]  = "vendor/GLFW/include"
+IncludeDir["glad"]  = "vendor/glad/include"
+IncludeDir["imgui"] = "vendor/imgui"
+IncludeDir["glm"]   = "vendor/glm"
+IncludeDir["stb"]   = "vendor/stb"
+IncludeDir["entt"]  = "vendor/entt"
 
 project "Voxen"
     kind "StaticLib"
@@ -19,10 +19,10 @@ project "Voxen"
     {
         "Source/**.h",
         "Source/**.cpp",
-        "Vendor/stb/**.h",
-        "Vendor/stb/**.cpp",
-        "Vendor/glm/glm/**.inl",
-        "Vendor/glm/glm/**.hpp",
+        "vendor/stb/**.h",
+        "vendor/stb/**.cpp",
+        "vendor/glm/glm/**.inl",
+        "vendor/glm/glm/**.hpp",
     }
 
     pchheader "voxpch.h"
@@ -31,13 +31,13 @@ project "Voxen"
     includedirs
     {
         "Source",
-        "Vendor/spdlog/include",
-        "Vendor/GLFW/include",
-        "Vendor/glad/include",
-        "Vendor/glm",
-        "Vendor/imgui",
-        "Vendor/stb",
-        "Vendor/entt"
+        "vendor/spdlog/include",
+        "vendor/GLFW/include",
+        "vendor/glad/include",
+        "vendor/glm",
+        "vendor/imgui",
+        "vendor/stb",
+        "vendor/entt"
     }
 
     links

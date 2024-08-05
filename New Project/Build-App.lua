@@ -15,11 +15,11 @@ project "New Project"
     includedirs
     {
         "Source",
-        "../Voxen/Vendor/spdlog/include",
+        "../Voxen/vendor/spdlog/include",
         "../Voxen/Source",
-        "../Voxen/Vendor",
-        "../Voxen/Vendor/glm",
-        "../Voxen/Vendor/entt"
+        "../Voxen/vendor",
+        "../Voxen/vendor/glm",
+        "../Voxen/vendor/entt"
     }
 
     links
