@@ -18,7 +18,7 @@
 
 namespace Voxen
 {
-	class VOXEN_API Application
+	class Application
 	{
 	public:
 		Application(const std::string& name = "Voxen");

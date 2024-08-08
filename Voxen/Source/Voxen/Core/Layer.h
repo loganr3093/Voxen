@@ -7,7 +7,7 @@
 
 namespace Voxen
 {
-	class VOXEN_API Layer
+	class Layer
 	{
 	public:
 		Layer(const std::string& name = "Layer");

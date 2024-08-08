@@ -5,7 +5,7 @@
 namespace Voxen
 {
 
-	class VOXEN_API WindowResizeEvent : public Event
+	class WindowResizeEvent : public Event
 	{
 	public:
 		WindowResizeEvent(uint32 width, uint32 height)
@@ -27,7 +27,7 @@ namespace Voxen
 		uint32 m_Width, m_Height;
 	};
 
-	class VOXEN_API WindowCloseEvent : public Event
+	class WindowCloseEvent : public Event
 	{
 	public:
 		WindowCloseEvent() {}
@@ -36,7 +36,7 @@ namespace Voxen
 			EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
-	class VOXEN_API AppTickEvent : public Event
+	class AppTickEvent : public Event
 	{
 	public:
 		AppTickEvent() {}
@@ -45,7 +45,7 @@ namespace Voxen
 			EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
-	class VOXEN_API AppUpdateEvent : public Event
+	class AppUpdateEvent : public Event
 	{
 	public:
 		AppUpdateEvent() {}
@@ -54,7 +54,7 @@ namespace Voxen
 			EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
 
-	class VOXEN_API AppRenderEvent : public Event
+	class AppRenderEvent : public Event
 	{
 	public:
 		AppRenderEvent() {}

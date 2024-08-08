@@ -40,15 +40,7 @@
 #endif // End of platform detection
 
 #ifdef VOX_PLATFORM_WINDOWS
-	#if VOX_DYNAMIC_LINK
-		#ifdef VOX_BUILD_DLL
-			#define VOXEN_API __declspec(dllexport)
-		#else
-			#define VOXEN_API __declspec(dllimport)
-		#endif
-	#else
-		#define VOXEN_API	
-	#endif
+	// Nothing
 #else
 	#error Voxen only supports Windows
 #endif

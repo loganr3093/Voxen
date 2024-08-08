@@ -1,12 +1,4 @@
 -- Build Voxen
--- Include directories relative to root folder (solution directory)
-IncludeDir = {}
-IncludeDir["GLFW"]  = "vendor/GLFW/include"
-IncludeDir["glad"]  = "vendor/glad/include"
-IncludeDir["imgui"] = "vendor/imgui"
-IncludeDir["glm"]   = "vendor/glm"
-IncludeDir["stb"]   = "vendor/stb"
-IncludeDir["entt"]  = "vendor/entt"
 
 project "Voxen"
     kind "StaticLib"

@@ -7,7 +7,7 @@
 
 namespace Voxen 
 {
-	class VOXEN_API LayerStack
+	class LayerStack
 	{
 	public:
 		LayerStack();
