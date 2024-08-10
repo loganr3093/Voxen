@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Voxen/Renderer/Camera.h"
+#include "SceneCamera.h"
 
 // TODO Change to Component namespace and remove postfix 'Component' from every component
 namespace Voxen
@@ -48,13 +48,11 @@ namespace Voxen
 
     struct CameraComponent
     {
-        Camera Camera;
+        SceneCamera Camera;
         bool Primary = true; // TODO move this to scene
+        bool FixedAspectRatio = false;
 
         CameraComponent() = default;
         CameraComponent(const CameraComponent&) = default;
-        CameraComponent(const glm::mat4& projection)
-            : Camera(projection) {}
-
     };
 }
