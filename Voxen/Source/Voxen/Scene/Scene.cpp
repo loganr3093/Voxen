@@ -32,16 +32,18 @@ namespace Voxen
         // Render 2D
         Camera* mainCamera = nullptr;
         glm::mat4* cameraTransform = nullptr;
-        auto group = m_Registry.group<CameraComponent>(entt::get<TransformComponent>);
-        for (auto entity : group)
         {
-            auto [camera, transform] = group.get<CameraComponent, TransformComponent>(entity);
-
-            if (camera.Primary)
+            auto view = m_Registry.view<TransformComponent, CameraComponent>();
+            for (auto entity : view)
             {
-                mainCamera = &camera.Camera;
-                cameraTransform = &transform.Transform;
-                break;
+                auto [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
+
+                if (camera.Primary)
+                {
+                    mainCamera = &camera.Camera;
+                    cameraTransform = &transform.Transform;
+                    break;
+                }
             }
         }
 
