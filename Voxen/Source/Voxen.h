@@ -13,8 +13,9 @@
 #include "Voxen/Core/Timestep.h"
 
 #include "Voxen/Scene/Scene.h"
-#include "Voxen/Scene/Components.h"
 #include "Voxen/Scene/Entity.h"
+#include "Voxen/Scene/ScriptableEntity.h"
+#include "Voxen/Scene/Components.h"
 
 // Macro files
 // ****************************

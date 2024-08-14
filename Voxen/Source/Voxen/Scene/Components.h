@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "SceneCamera.h"
+#include "ScriptableEntity.h"
 
 // TODO Change to Component namespace and remove postfix 'Component' from every component
 namespace Voxen
@@ -54,5 +55,28 @@ namespace Voxen
 
         CameraComponent() = default;
         CameraComponent(const CameraComponent&) = default;
+    };
+
+    struct NativeScriptComponent
+    {
+        ScriptableEntity* Instance = nullptr;
+
+        void(*InstantiateFunction)(ScriptableEntity*&) = nullptr;
+        void(*DestroyInstanceFunction)(ScriptableEntity*&) = nullptr;
+
+        void(*OnCreateFunction)(ScriptableEntity*) = nullptr;
+        void(*OnDestroyFunction)(ScriptableEntity*) = nullptr;
+        void(*OnUpdateFunction)(ScriptableEntity*, Timestep) = nullptr;
+
+        template<typename T>
+        void Bind()
+        {
+            InstantiateFunction = [](ScriptableEntity*& instance) { instance = new T(); };
+            DestroyInstanceFunction = [](ScriptableEntity*& instance) { delete static_cast<T*>(instance); instance = nullptr; };
+
+            OnCreateFunction = [](ScriptableEntity* instance) { static_cast<T*>(instance)->OnCreate(); };
+            OnDestroyFunction = [](ScriptableEntity* instance) { static_cast<T*>(instance)->OnDestroy(); };
+            OnUpdateFunction = [](ScriptableEntity* instance, Timestep ts) { static_cast<T*>(instance)->OnUpdate(ts); };
+        }
     };
 }
