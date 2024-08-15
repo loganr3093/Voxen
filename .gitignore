@@ -15,4 +15,9 @@ bin-int/
 *.sln
 *.log
 *.user
+
+# Ignore all .ini files
 *.ini
+
+# Exception: Do not ignore imgui.ini
+!imgui.ini
