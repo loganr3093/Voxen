@@ -26,15 +26,15 @@ namespace Voxen
 
 		// Entity
 		auto redSquare = m_ActiveScene->CreateEntity("Red Square");
-		redSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.8f, 0.2f, 0.2f, 1.0f });
+		redSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.8f, 0.3f, 0.2f, 1.0f });
 		auto& redSquareTransform = redSquare.GetComponent<TransformComponent>().Transform;
 		redSquareTransform[3][1] = 2.0f;
 
 		auto greenSquare = m_ActiveScene->CreateEntity("Green Square");
-		greenSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.2f, 0.8f, 0.2f, 1.0f });
+		greenSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.25f, 0.8f, 0.25f, 1.0f });
 
 		auto blueSquare = m_ActiveScene->CreateEntity("Blue Square");
-		blueSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.2f, 0.2f, 0.8f, 1.0f });
+		blueSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.2f, 0.3f, 0.8f, 1.0f });
 		auto& blueSquareTransform = blueSquare.GetComponent<TransformComponent>().Transform;
 		blueSquareTransform[3][1] = -2.0f;
 
@@ -181,7 +181,7 @@ namespace Voxen
 
 		m_SceneHierarchyPanel.OnImGuiRender();
 
-		ImGui::Begin("Settings");
+		ImGui::Begin("Render Stats");
 
 		auto stats = Renderer2D::GetStats();
 		ImGui::Text("Renderer2D Stats:");
@@ -189,12 +189,6 @@ namespace Voxen
 		ImGui::Text("Quads: %d", stats.QuadCount);
 		ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-
-		if (ImGui::Checkbox("Camera A", &m_PrimaryCamera))
-		{
-			m_CameraEntity.GetComponent<CameraComponent>().Primary = m_PrimaryCamera;
-			m_SecondCamera.GetComponent<CameraComponent>().Primary = !m_PrimaryCamera;
-		}
 
 		ImGui::End();
 
