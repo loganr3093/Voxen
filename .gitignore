@@ -18,6 +18,3 @@ bin-int/
 
 # Ignore all .ini files
 *.ini
-
-# Exception: Do not ignore imgui.ini
-!imgui.ini
