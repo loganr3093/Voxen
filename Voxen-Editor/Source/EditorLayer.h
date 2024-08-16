@@ -28,7 +28,6 @@ namespace Voxen
 
 		Ref<Scene> m_ActiveScene;
 		Entity m_CameraEntity;
-		Entity m_SecondCamera;
 
 		bool m_PrimaryCamera = true;
 

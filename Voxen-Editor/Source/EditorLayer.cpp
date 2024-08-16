@@ -27,23 +27,19 @@ namespace Voxen
 		// Entity
 		auto redSquare = m_ActiveScene->CreateEntity("Red Square");
 		redSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.8f, 0.3f, 0.2f, 1.0f });
-		auto& redSquareTransform = redSquare.GetComponent<TransformComponent>().Transform;
-		redSquareTransform[3][1] = 2.0f;
+		auto& redTranslation = redSquare.GetComponent<TransformComponent>().Translation;
+		redTranslation.y = 2.0f;
 
 		auto greenSquare = m_ActiveScene->CreateEntity("Green Square");
 		greenSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.25f, 0.8f, 0.25f, 1.0f });
 
 		auto blueSquare = m_ActiveScene->CreateEntity("Blue Square");
 		blueSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.2f, 0.3f, 0.8f, 1.0f });
-		auto& blueSquareTransform = blueSquare.GetComponent<TransformComponent>().Transform;
-		blueSquareTransform[3][1] = -2.0f;
+		auto& blueTranslation = blueSquare.GetComponent<TransformComponent>().Translation;
+		blueTranslation.y = -2.0f;
 
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera A");
 		m_CameraEntity.AddComponent<CameraComponent>();
-
-		m_SecondCamera = m_ActiveScene->CreateEntity("Camera B");
-		auto& cc = m_SecondCamera.AddComponent<CameraComponent>();
-		cc.Primary = false;
 
 		class CameraController : public ScriptableEntity
 		{
@@ -58,23 +54,22 @@ namespace Voxen
 
 			virtual void OnUpdate(Timestep ts) override
 			{
-				auto& transform = GetComponent<TransformComponent>().Transform;
+				auto& translation = GetComponent<TransformComponent>().Translation;
 
 				float speed = 5.0f;
 
 				if (Input::IsKeyPressed(Key::A))
-					transform[3][0] -= speed * ts;
+					translation.x -= speed * ts;
 				if (Input::IsKeyPressed(Key::D))
-					transform[3][0] += speed * ts;
+					translation.x += speed * ts;
 				if (Input::IsKeyPressed(Key::W))
-					transform[3][1] += speed * ts;
+					translation.y += speed * ts;
 				if (Input::IsKeyPressed(Key::S))
-					transform[3][1] -= speed * ts;
+					translation.y -= speed * ts;
 			}
 		};
 
 		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
-		m_SecondCamera.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
