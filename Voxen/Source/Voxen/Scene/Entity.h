@@ -3,6 +3,8 @@
 #include "Scene.h"
 #include <entt.hpp>
 
+#include "Voxen/Types/Types.h"
+
 namespace Voxen
 {
 	class Entity
@@ -16,7 +18,11 @@ namespace Voxen
 		T& AddComponent(Args&&... args)
 		{
 			VOX_CORE_ASSERT(!HasComponent<T>(), "Entity already has component");
-			return m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			T& component =  m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+
+			m_Scene->OnComponentAdded<T>(*this, component);
+
+			return component;
 		}
 
 		template<typename T>
@@ -40,7 +46,8 @@ namespace Voxen
 		}
 
 		operator bool() const { return m_EntityHandle != entt::null; }
-		operator uint32_t() const { return (uint32_t)m_EntityHandle; }
+		operator entt::entity() const { return m_EntityHandle; }
+		operator uint32() const { return (uint32)m_EntityHandle; }
 
 		bool operator==(const Entity& other) const
 		{
