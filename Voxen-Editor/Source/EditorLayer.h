@@ -5,6 +5,7 @@
 
 namespace Voxen
 {
+
 	class EditorLayer : public Layer
 	{
 	public:
@@ -17,7 +18,6 @@ namespace Voxen
 		void OnUpdate(Timestep ts) override;
 		virtual void OnImGuiRender() override;
 		void OnEvent(Event& e) override;
-
 	private:
 		OrthographicCameraController m_CameraController;
 
@@ -33,8 +33,6 @@ namespace Voxen
 
 		bool m_PrimaryCamera = true;
 
-		Ref<Texture2D> m_TestTexture;
-
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 
@@ -42,4 +40,3 @@ namespace Voxen
 		SceneHierarchyPanel m_SceneHierarchyPanel;
 	};
 }
-
