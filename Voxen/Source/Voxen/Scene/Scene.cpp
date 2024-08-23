@@ -15,7 +15,6 @@ namespace Voxen
 
     Scene::~Scene()
     {
-
     }
 
     Entity Scene::CreateEntity(const std::string& name)

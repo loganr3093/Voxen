@@ -11,3 +11,6 @@
 [submodule "Voxen/vendor/glm"]
 	path = Voxen/vendor/glm
 	url = https://github.com/g-truc/glm
+[submodule "Voxen/vendor/yaml-cpp"]
+	path = Voxen/vendor/yaml-cpp
+	url = https://github.com/loganr3093/yaml-cpp.git

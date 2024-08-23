@@ -3,7 +3,7 @@ workspace "Voxen"
    architecture "x64"
    configurations { "Debug", "Release", "Dist" }
    --***
-   startproject "New Project"
+   startproject "Voxen-Editor"
 
    -- Workspace-wide build options for MSVC
    filter "system:windows"
@@ -16,6 +16,7 @@ group "Dependencies"
     include "Voxen/vendor/GLFW"
     include "Voxen/vendor/glad"
     include "Voxen/vendor/imgui"
+    include "Voxen/vendor/yaml-cpp"
 group ""
 
 -- Build for Voxen

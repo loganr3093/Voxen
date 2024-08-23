@@ -29,7 +29,8 @@ project "Voxen"
         "vendor/glm",
         "vendor/imgui",
         "vendor/stb",
-        "vendor/entt"
+        "vendor/entt",
+        "vendor/yaml-cpp/include"
     }
 
     links
@@ -37,6 +38,7 @@ project "Voxen"
         "GLFW",
         "glad",
         "imgui",
+        "yaml-cpp",
         "opengl32.lib"
     }
 
@@ -50,7 +52,8 @@ project "Voxen"
         {
             "VOX_BUILD_DLL",
             "GLFW_INCLUDE_NONE",
-            "_CRT_SECURE_NO_WARNINGS"
+            "_CRT_SECURE_NO_WARNINGS",
+            "YAML_CPP_STATIC_DEFINE"
         }
 
     filter "configurations:Debug"
