@@ -4,7 +4,6 @@
 #include <chrono>
 #include <algorithm>
 #include <fstream>
-
 #include <thread>
 
 namespace Voxen

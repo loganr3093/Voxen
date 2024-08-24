@@ -1,7 +1,8 @@
 #include "voxpch.h"
-#include "Shader.h"
+#include "Voxen/Renderer/Shader.h"
 
-#include "Renderer.h"
+#include "Voxen/Renderer/Renderer.h"
+
 #include "Platform/OpenGL/OpenGLShader.h"
 
 namespace Voxen

@@ -9,12 +9,12 @@ namespace Voxen
 {
 	Scope<Window> Window::Create(const WindowProps& props)
 	{
-#ifdef VOX_PLATFORM_WINDOWS
-		return CreateScope<WindowsWindow>(props);
-#else
-		VOX_CORE_ASSERT(false, "Unknown platform!");
-		return nullptr;
-#endif
+		#ifdef VOX_PLATFORM_WINDOWS
+				return CreateScope<WindowsWindow>(props);
+		#else
+				VOX_CORE_ASSERT(false, "Unknown platform!");
+				return nullptr;
+		#endif
 	}
 
 }

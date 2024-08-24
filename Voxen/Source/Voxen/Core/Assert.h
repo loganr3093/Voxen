@@ -2,6 +2,7 @@
 
 #include "Voxen/Core/Core.h"
 #include "Voxen/Core/Log.h"
+
 #include <filesystem>
 
 #ifdef VOX_ENABLE_ASSERTS

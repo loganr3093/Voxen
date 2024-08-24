@@ -1,8 +1,8 @@
 #pragma once
 
-#include <memory>
-
 #include "Voxen/Core/PlatformDetection.h"
+
+#include <memory>
 
 #ifdef VOX_DEBUG
 	#if defined(VOX_PLATFORM_WINDOWS)

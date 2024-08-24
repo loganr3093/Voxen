@@ -1,5 +1,5 @@
 #include "voxpch.h"
-#include "OrthographicCameraController.h"
+#include "Voxen/Renderer/OrthographicCameraController.h"
 
 #include "Voxen/Core/Input.h"
 #include "Voxen/Core/KeyCodes.h"

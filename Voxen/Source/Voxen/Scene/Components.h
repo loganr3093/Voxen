@@ -1,13 +1,13 @@
 #pragma once
 
+#include "Voxen/Scene/SceneCamera.h"
+#include "Voxen/Scene/ScriptableEntity.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
-
-#include "SceneCamera.h"
-#include "ScriptableEntity.h"
 
 // TODO Change to Component namespace and remove postfix 'Component' from every component
 namespace Voxen

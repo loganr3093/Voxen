@@ -1,12 +1,12 @@
 #pragma once
 
-#include "voxpch.h"
-
 #include "Voxen/Core/Core.h"
 #include "Voxen/Events/Event.h"
 
-namespace Voxen {
+#include <sstream>
 
+namespace Voxen
+{
 	struct WindowProps
 	{
 		std::string Title;
@@ -43,5 +43,4 @@ namespace Voxen {
 
 		static Scope<Window> Create(const WindowProps& props = WindowProps());
 	};
-
 }

@@ -1,5 +1,5 @@
 #include "voxpch.h"
-#include "OrthographicCamera.h"
+#include "Voxen/Renderer/OrthographicCamera.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 

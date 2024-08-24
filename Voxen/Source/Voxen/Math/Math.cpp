@@ -1,5 +1,5 @@
 #include "voxpch.h"
-#include "Math.h"
+#include "Voxen/Math/Math.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>

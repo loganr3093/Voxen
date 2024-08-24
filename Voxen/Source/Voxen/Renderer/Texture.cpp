@@ -1,7 +1,8 @@
 #include "voxpch.h"
-#include "Texture.h"
+#include "Voxen/Renderer/Texture.h"
 
-#include "Renderer.h"
+#include "Voxen/Renderer/Renderer.h"
+
 #include "Platform/OpenGL/OpenGLTexture.h"
 
 namespace Voxen

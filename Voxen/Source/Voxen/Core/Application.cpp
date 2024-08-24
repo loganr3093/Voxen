@@ -1,11 +1,10 @@
 #include "voxpch.h"
-#include "Application.h"
+#include "Voxen/Core/Application.h"
 
 #include "Voxen/Core/Log.h"
+#include "Voxen/Core/Input.h"
 
 #include "Voxen/Renderer/Renderer.h"
-
-#include "Input.h"
 
 #include <GLFW/glfw3.h>
 

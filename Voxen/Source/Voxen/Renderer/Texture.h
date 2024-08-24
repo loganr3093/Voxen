@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
-
 #include "Voxen/Core/Core.h"
+
+#include <string>
 
 namespace Voxen
 {

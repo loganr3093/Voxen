@@ -6,7 +6,6 @@
 
 namespace Voxen
 {
-
 	class Input
 	{
 	public:
@@ -17,5 +16,4 @@ namespace Voxen
 		static float GetMouseX();
 		static float GetMouseY();
 	};
-
 }

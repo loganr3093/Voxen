@@ -1,7 +1,8 @@
 #include "voxpch.h"
-#include "Buffer.h"
+#include "Voxen/Renderer/Buffer.h"
 
-#include "Renderer.h"
+#include "Voxen/Renderer/Renderer.h"
+
 #include "Platform/OpenGL/OpenGLBuffer.h"
 
 namespace Voxen

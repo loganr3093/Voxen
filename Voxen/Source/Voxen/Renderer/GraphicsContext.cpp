@@ -2,9 +2,11 @@
 #include "Voxen/Renderer/GraphicsContext.h"
 
 #include "Voxen/Renderer/Renderer.h"
+
 #include "Platform/OpenGL/OpenGLContext.h"
 
-namespace Voxen {
+namespace Voxen
+{
 
 	Scope<GraphicsContext> GraphicsContext::Create(void* window)
 	{

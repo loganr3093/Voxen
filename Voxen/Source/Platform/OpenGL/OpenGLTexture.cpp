@@ -1,7 +1,8 @@
 #include "voxpch.h"
-#include "OpenGLTexture.h"
+#include "Platform/OpenGL/OpenGLTexture.h"
 
-#include "stb_image.h"
+#include <stb_image.h>
+
 namespace Voxen
 {
 	OpenGLTexture2D::OpenGLTexture2D(uint32 width, uint32 height)

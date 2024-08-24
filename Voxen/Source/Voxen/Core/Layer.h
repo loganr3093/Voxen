@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Voxen/Core/Core.h"
-#include "Voxen/Events/Event.h"
-
 #include "Voxen/Core/Timestep.h"
+
+#include "Voxen/Events/Event.h"
 
 namespace Voxen
 {

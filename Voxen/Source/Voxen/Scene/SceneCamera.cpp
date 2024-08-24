@@ -1,5 +1,5 @@
 #include "voxpch.h"
-#include "SceneCamera.h"
+#include "Voxen/Scene/SceneCamera.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 

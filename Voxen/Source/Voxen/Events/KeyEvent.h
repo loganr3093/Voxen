@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Voxen/Events/Event.h"
 #include "Voxen/Core/Input.h"
+#include "Voxen/Events/Event.h"
 
 namespace Voxen
 {

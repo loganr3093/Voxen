@@ -1,5 +1,5 @@
 #include "voxpch.h"
-#include "OpenGLVertexArray.h"
+#include "Platform/OpenGL/OpenGLVertexArray.h"
 
 #include "Voxen/Renderer/VertexArray.h"
 

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Voxen/Renderer/OrthographicCamera.h"
 #include "Voxen/Core/Timestep.h"
+
+#include "Voxen/Renderer/OrthographicCamera.h"
 
 #include "Voxen/Events/ApplicationEvent.h"
 #include "Voxen/Events/MouseEvent.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene.h"
+#include "Voxen/Scene/Scene.h"
 
 namespace Voxen
 {
@@ -8,7 +8,6 @@ namespace Voxen
 	class SceneSerializer
 	{
 	public:
-		SceneSerializer();
 		SceneSerializer(const Ref<Scene>& scene);
 
 		void Serialize(const std::string& filepath);

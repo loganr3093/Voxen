@@ -1,5 +1,5 @@
 #include "voxpch.h"
-#include "Entity.h"
+#include "Voxen/Scene/Entity.h"
 
 namespace Voxen
 {

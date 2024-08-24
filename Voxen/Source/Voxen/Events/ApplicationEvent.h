@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Event.h"
+#include "Voxen/Events/Event.h"
 
 namespace Voxen
 {

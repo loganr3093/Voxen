@@ -1,9 +1,11 @@
 #include "voxpch.h"
-#include "SceneSerializer.h"
-#include "Components.h"
-#include "Entity.h"
+#include "Voxen/Scene/SceneSerializer.h"
+
+#include "Voxen/Scene/Components.h"
+#include "Voxen/Scene/Entity.h"
 
 #include <yaml-cpp/yaml.h>
+
 #include <fstream>
 
 namespace YAML

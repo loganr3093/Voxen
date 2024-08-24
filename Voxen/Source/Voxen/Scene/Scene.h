@@ -1,8 +1,8 @@
 #pragma once
 
-#include <entt.hpp>
-
 #include "Voxen/Core/Timestep.h"
+
+#include <entt.hpp>
 
 namespace Voxen
 {

@@ -5,7 +5,6 @@
 
 namespace Voxen
 {
-
 	class MouseMovedEvent : public Event
 	{
 	public:

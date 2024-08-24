@@ -1,9 +1,10 @@
 #include "voxpch.h"
-#include "Scene.h"
+#include "Voxen/Scene/Scene.h"
 
-#include "Components.h"
 #include "Voxen/Renderer/Renderer2D.h"
-#include "Entity.h"
+
+#include "Voxen/Scene/Components.h"
+#include "Voxen/Scene/Entity.h"
 
 #include <glm/glm.hpp>
 

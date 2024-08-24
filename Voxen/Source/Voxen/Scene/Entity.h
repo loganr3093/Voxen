@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Scene.h"
-#include <entt.hpp>
+#include "Voxen/Scene/Scene.h"
 
 #include "Voxen/Types/Types.h"
+
+#include <entt.hpp>
 
 namespace Voxen
 {

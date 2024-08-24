@@ -1,9 +1,8 @@
 #pragma once
 
-#include "RenderCommand.h"
-
-#include "OrthographicCamera.h"
-#include "Shader.h"
+#include "Voxen/Renderer/RenderCommand.h"
+#include "Voxen/Renderer/OrthographicCamera.h"
+#include "Voxen/Renderer/Shader.h"
 
 namespace Voxen
 {
