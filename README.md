@@ -36,23 +36,17 @@ Follow these instructions to get a copy of Voxen up and running on your local ma
    cd Voxen
    ```
    ```sh
-   git submodule init
-   ```
-   ```sh
-   git submodule update
+   git submodule update --init
    ```
 3. **Run Premake5**
 
-   Navigate to the GenerateProjects.bat file in the root directory and run it.
-4. **Open in Visual Studio**
+   Navigate Voxen/Scripts and run Setup-Windows.bat, this will generate Voxen.sln
+5. **Open in Visual Studio**
 
    Open the **Voxen** directory in Visual Studio. Ensure that you have all necessary components installed for C++ development.
-5. **Set Startup Project**
-
-   In Visual Studio, set the **Sandbox** project as the startup project if it isnt by default. This can be done by right-clicking on the **Sandbox** project in the Solution Explorer and selecting 'Set as Startup Project'.
 6. **Build and Run**
 
-   Build the solution and run the **Sandbox** project. This will launch the engine.
+   In Visual Studio, run the Voxen-Editor project.
 
 ### Contributing
 We welcome contributions from the community! Please fork the repository and create a pull request for any enhancements, bug fixes, or new features.
@@ -79,4 +73,4 @@ We welcome contributions from the community! Please fork the repository and crea
 
 ### Contributors
 - **Logan Rivera**: Project Lead
-Your name could go here!
+- Your name could go here!
