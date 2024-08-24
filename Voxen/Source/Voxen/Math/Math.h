@@ -5,6 +5,6 @@
 namespace Voxen::Math
 {
 
-	bool DecomposeTransform(const glm::mat4& transform, glm::vec3& outTranslation, glm::vec3& outRotation, glm::vec3& outScale);
+	bool DecomposeTransform(const Matrix4& transform, Vector3& outTranslation, Vector3& outRotation, Vector3& outScale);
 
 }

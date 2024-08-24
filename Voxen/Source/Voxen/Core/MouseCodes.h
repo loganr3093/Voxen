@@ -2,7 +2,7 @@
 
 namespace Voxen
 {
-	typedef enum class MouseCode : uint16_t
+	typedef enum class MouseCode : uint16
 	{
 		// From glfw3.h
 		Button0 = 0,

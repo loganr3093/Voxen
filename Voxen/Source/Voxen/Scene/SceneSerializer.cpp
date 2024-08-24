@@ -11,9 +11,9 @@
 namespace YAML
 {
 	template<>
-	struct convert<glm::vec3>
+	struct convert<Vector3>
 	{
-		static Node encode(const glm::vec3& rhs)
+		static Node encode(const Vector3& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -23,7 +23,7 @@ namespace YAML
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::vec3& rhs)
+		static bool decode(const Node& node, Vector3& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 3)
 				return false;
@@ -36,9 +36,9 @@ namespace YAML
 	};
 
 	template<>
-	struct convert<glm::vec4>
+	struct convert<Vector4>
 	{
-		static Node encode(const glm::vec4& rhs)
+		static Node encode(const Vector4& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -49,7 +49,7 @@ namespace YAML
 			return node;
 		}
 
-		static bool decode(const Node& node, glm::vec4& rhs)
+		static bool decode(const Node& node, Vector4& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 4)
 				return false;
@@ -65,14 +65,14 @@ namespace YAML
 
 namespace Voxen
 {
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const Vector3& v)
 	{
 		out << YAML::Flow;
 		out << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
 		return out;
 	}
 
-	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& v)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const Vector4& v)
 	{
 		out << YAML::Flow;
 		out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
@@ -205,9 +205,9 @@ namespace Voxen
 				{
 					// Entities always have transforms
 					auto& tc = deserializedEntity.GetComponent<TransformComponent>();
-					tc.Translation = transformComponent["Translation"].as<glm::vec3>();
-					tc.Rotation = transformComponent["Rotation"].as<glm::vec3>();
-					tc.Scale = transformComponent["Scale"].as<glm::vec3>();
+					tc.Translation = transformComponent["Translation"].as<Vector3>();
+					tc.Rotation = transformComponent["Rotation"].as<Vector3>();
+					tc.Scale = transformComponent["Scale"].as<Vector3>();
 				}
 
 				auto cameraComponent = entity["CameraComponent"];
@@ -233,7 +233,7 @@ namespace Voxen
 				if (spriteRendererComponent)
 				{
 					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
-					src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
+					src.Color = spriteRendererComponent["Color"].as<Vector4>();
 				}
 			}
 		}

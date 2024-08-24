@@ -32,15 +32,15 @@ namespace Voxen
 #if 0
 		// Entity
 		auto redSquare = m_ActiveScene->CreateEntity("Red Square");
-		redSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.8f, 0.3f, 0.2f, 1.0f });
+		redSquare.AddComponent<SpriteRendererComponent>(Vector4{ 0.8f, 0.3f, 0.2f, 1.0f });
 		auto& redTranslation = redSquare.GetComponent<TransformComponent>().Translation;
 		redTranslation.y = 2.0f;
 
 		auto greenSquare = m_ActiveScene->CreateEntity("Green Square");
-		greenSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.25f, 0.8f, 0.25f, 1.0f });
+		greenSquare.AddComponent<SpriteRendererComponent>(Vector4{ 0.25f, 0.8f, 0.25f, 1.0f });
 
 		auto blueSquare = m_ActiveScene->CreateEntity("Blue Square");
-		blueSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.2f, 0.3f, 0.8f, 1.0f });
+		blueSquare.AddComponent<SpriteRendererComponent>(Vector4{ 0.2f, 0.3f, 0.8f, 1.0f });
 		auto& blueTranslation = blueSquare.GetComponent<TransformComponent>().Translation;
 		blueTranslation.y = -2.0f;
 
@@ -238,12 +238,12 @@ namespace Voxen
 			// Camera
 			auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
 			const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
-			const glm::mat4& cameraProjection = camera.GetProjection();
-			glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+			const Matrix4& cameraProjection = camera.GetProjection();
+			Matrix4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
 
 			// Entity Transform
 			auto& tc = selectedEntity.GetComponent<TransformComponent>();
-			glm::mat4 transform = tc.GetTransform();
+			Matrix4 transform = tc.GetTransform();
 
 			// Snapping
 			bool snap = Input::IsKeyPressed(Key::LeftControl);
@@ -261,10 +261,10 @@ namespace Voxen
 
 			if (ImGuizmo::IsUsing())
 			{
-				glm::vec3 translation, rotation, scale;
+				Vector3 translation, rotation, scale;
 				Math::DecomposeTransform(transform, translation, rotation, scale);
 
-				glm::vec3 deltaRotation = rotation - tc.Rotation;
+				Vector3 deltaRotation = rotation - tc.Rotation;
 				tc.Translation = translation;
 				tc.Rotation += deltaRotation;
 				tc.Scale = scale;

@@ -9,9 +9,9 @@ namespace Voxen
 {
 	struct QuadVertex
 	{
-		glm::vec3 Position;
-		glm::vec4 Color;
-		glm::vec2 TexCoord;
+		Vector3 Position;
+		Vector4 Color;
+		Vector2 TexCoord;
 		float TexIndex;
 	};
 
@@ -34,7 +34,7 @@ namespace Voxen
 		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
 		uint32 TextureSlotIndex = 1;
 
-		glm::vec4 QuadVertexPositions[4];
+		Vector4 QuadVertexPositions[4];
 
 		Renderer2D::Statistics Stats;
 	};
@@ -105,11 +105,11 @@ namespace Voxen
 	{
 	}
 
-	void Renderer2D::BeginScene(const Camera& camera, const glm::mat4& transform)
+	void Renderer2D::BeginScene(const Camera& camera, const Matrix4& transform)
 	{
 		VOX_PROFILE_FUNCTION();
 
-		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
+		Matrix4 viewProj = camera.GetProjection() * glm::inverse(transform);
 
 		s_Data.TextureShader->Bind();
 		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
@@ -149,7 +149,7 @@ namespace Voxen
 		if (s_Data.QuadIndexCount == 0)
 			return;
 
-		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
+		uint32 dataSize = (uint32)((uint8*)s_Data.QuadVertexBufferPtr - (uint8*)s_Data.QuadVertexBufferBase);
 		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
 
 		for (uint32 i = 0; i < s_Data.TextureSlotIndex; i++)
@@ -168,43 +168,43 @@ namespace Voxen
 		StartBatch();
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const Vector2& position, const Vector2& size, const Vector4& color)
 	{
 		DrawQuad({ position.x, position.y, 0.0f }, {size.x, size.y, 1.0f}, color);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const Vector3& position, const Vector2& size, const Vector4& color)
 	{
 		DrawQuad(position, { size.x, size.y, 1.0f }, color);
 	}
 
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec3& size, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const Vector3& position, const Vector3& size, const Vector4& color)
 	{
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+		Matrix4 transform = glm::translate(Matrix4(1.0f), position)
+			* glm::scale(Matrix4(1.0f), { size.x, size.y, 1.0f });
 
 		DrawQuad(transform, color);
 
 	}
-	void Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Ref<Texture2D>& texture)
+	void Renderer2D::DrawQuad(const Vector2& position, const Vector2& size, const Ref<Texture2D>& texture)
 	{
 		DrawQuad({ position.x, position.y, 0.0f }, { size.x, size.y, 1.0f }, texture);
 	}
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Ref<Texture2D>& texture)
+	void Renderer2D::DrawQuad(const Vector3& position, const Vector2& size, const Ref<Texture2D>& texture)
 	{
 		DrawQuad(position, { size.x, size.y, 1.0f }, texture);
 	}
-	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec3& size, const Ref<Texture2D>& texture)
+	void Renderer2D::DrawQuad(const Vector3& position, const Vector3& size, const Ref<Texture2D>& texture)
 	{
 		VOX_PROFILE_FUNCTION();
 
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+		Matrix4 transform = glm::translate(Matrix4(1.0f), position)
+			* glm::scale(Matrix4(1.0f), { size.x, size.y, 1.0f });
 
 		DrawQuad(transform, texture);
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const Matrix4& transform, const Vector4& color)
 	{
 		VOX_PROFILE_FUNCTION();
 
@@ -214,7 +214,7 @@ namespace Voxen
 		}
 
 		constexpr size_t quadVertexCount = 4;
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		constexpr Vector2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
 		const float textureIndex = 0.0f; // White Texture
 
 		for (size_t i = 0; i < quadVertexCount; i++)
@@ -231,13 +231,13 @@ namespace Voxen
 		s_Data.Stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture)
+	void Renderer2D::DrawQuad(const Matrix4& transform, const Ref<Texture2D>& texture)
 	{
 		VOX_PROFILE_FUNCTION();
 
-		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		constexpr Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 		constexpr size_t quadVertexCount = 4;
-		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		constexpr Vector2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
 
 		if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
 		{
@@ -245,7 +245,7 @@ namespace Voxen
 		}
 
 		float textureIndex = 0.0f;
-		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
+		for (uint32 i = 1; i < s_Data.TextureSlotIndex; i++)
 		{
 			if (*s_Data.TextureSlots[i].get() == *texture.get())
 			{
@@ -280,12 +280,12 @@ namespace Voxen
 		s_Data.Stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
+	void Renderer2D::DrawRotatedQuad(const Vector2& position, const Vector2& size, float rotation, const Vector4& color)
 	{
 		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, color);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
+	void Renderer2D::DrawRotatedQuad(const Vector3& position, const Vector2& size, float rotation, const Vector4& color)
 	{
 		VOX_PROFILE_FUNCTION();
 
@@ -297,9 +297,9 @@ namespace Voxen
 		const float textureIndex = 0.0f;
 		const float tilingFactor = 1.0f;
 
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
-			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+		Matrix4 transform = glm::translate(Matrix4(1.0f), position)
+			* glm::rotate(Matrix4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
+			* glm::scale(Matrix4(1.0f), { size.x, size.y, 1.0f });
 
 		s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[0];
 		s_Data.QuadVertexBufferPtr->Color = color;
@@ -330,12 +330,12 @@ namespace Voxen
 		s_Data.Stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture)
+	void Renderer2D::DrawRotatedQuad(const Vector2& position, const Vector2& size, float rotation, const Ref<Texture2D>& texture)
 	{
 		DrawRotatedQuad({ position.x, position.y, 0.0f }, size, rotation, texture);
 	}
 
-	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Ref<Texture2D>& texture)
+	void Renderer2D::DrawRotatedQuad(const Vector3& position, const Vector2& size, float rotation, const Ref<Texture2D>& texture)
 	{
 		VOX_PROFILE_FUNCTION();
 
@@ -344,10 +344,10 @@ namespace Voxen
 			NextBatch();
 		}
 
-		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		constexpr Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 		float textureIndex = 0.0f;
-		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
+		for (uint32 i = 1; i < s_Data.TextureSlotIndex; i++)
 		{
 			if (*s_Data.TextureSlots[i].get() == *texture.get())
 			{
@@ -363,9 +363,9 @@ namespace Voxen
 			s_Data.TextureSlotIndex++;
 		}
 
-		glm::mat4 transform = glm::translate(glm::mat4(1.0f), position)
-			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
-			* glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+		Matrix4 transform = glm::translate(Matrix4(1.0f), position)
+			* glm::rotate(Matrix4(1.0f), glm::radians(rotation), { 0.0f, 0.0f, 1.0f })
+			* glm::scale(Matrix4(1.0f), { size.x, size.y, 1.0f });
 
 		s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[0];
 		s_Data.QuadVertexBufferPtr->Color = color;

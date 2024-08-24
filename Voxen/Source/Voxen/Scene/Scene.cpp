@@ -51,7 +51,7 @@ namespace Voxen
 
         // Render 2D
         Camera* mainCamera = nullptr;
-        glm::mat4 cameraTransform;
+        Matrix4 cameraTransform;
         {
             auto group = m_Registry.group<CameraComponent>(entt::get<TransformComponent>);
             for (auto entity : group)

@@ -7,7 +7,7 @@
 namespace Voxen::Math
 {
 
-	bool DecomposeTransform(const glm::mat4& transform, glm::vec3& translation, glm::vec3& rotation, glm::vec3& scale)
+	bool DecomposeTransform(const Matrix4& transform, Vector3& translation, Vector3& rotation, Vector3& scale)
 	{
 		// From glm::decompose in matrix_decompose.inl
 

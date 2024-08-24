@@ -2,7 +2,7 @@
 
 namespace Voxen
 {
-	typedef enum class KeyCode : uint16_t
+	typedef enum class KeyCode : uint16
 	{
 		// From glfw3.h
 		Space = 32,

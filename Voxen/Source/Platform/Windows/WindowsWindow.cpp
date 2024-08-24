@@ -14,7 +14,7 @@
 namespace Voxen
 {
 
-	static uint8_t s_GLFWWindowCount = 0;
+	static uint8 s_GLFWWindowCount = 0;
 
 	static void GLFWErrorCallback(int error, const char* description)
 	{

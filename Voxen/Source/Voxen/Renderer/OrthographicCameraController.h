@@ -31,8 +31,8 @@ namespace Voxen
 		void SetTranslationSpeed(float speed) { m_CameraTranslationSpeed = speed; }
 		float GetTranslationSpeed() { return m_CameraTranslationSpeed; }
 
-		void SetPosition(glm::vec3 pos) { m_CameraPosition = pos; }
-		glm::vec3 GetPosition() { return m_CameraPosition; }
+		void SetPosition(Vector3 pos) { m_CameraPosition = pos; }
+		Vector3 GetPosition() { return m_CameraPosition; }
 
 		void SetRotation(float rot) { m_CameraRotation = rot; }
 		float GetRotation() { return m_CameraRotation; }
@@ -47,7 +47,7 @@ namespace Voxen
 
 		bool m_Rotation = false;
 
-		glm::vec3 m_CameraPosition = { 0.0f, 0.0f, 0.0f };
+		Vector3 m_CameraPosition = { 0.0f, 0.0f, 0.0f };
 		float m_CameraTranslationSpeed = 5.0f;
 
 		// Rotation of the camera in degrees (counter-clockwise)

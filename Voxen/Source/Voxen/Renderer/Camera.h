@@ -8,13 +8,13 @@ namespace Voxen
 	{
 	public:
 		Camera() = default;
-		Camera(const glm::mat4& projection)
+		Camera(const Matrix4& projection)
 			: m_Projection(projection) {}
 
 		virtual ~Camera() = default;
 
-		const glm::mat4& GetProjection() const { return m_Projection; }
+		const Matrix4& GetProjection() const { return m_Projection; }
 	protected:
-		glm::mat4 m_Projection = glm::mat4(1.0f);
+		Matrix4 m_Projection = Matrix4(1.0f);
 	};
 }
