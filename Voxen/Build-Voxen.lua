@@ -15,6 +15,8 @@ project "Voxen"
         "vendor/stb/**.cpp",
         "vendor/glm/glm/**.inl",
         "vendor/glm/glm/**.hpp",
+        "vendor/ImGuizmo/ImGuizmo.h",
+        "vendor/ImGuizmo/ImGuizmo.cpp",
     }
 
     pchheader "voxpch.h"
@@ -30,7 +32,8 @@ project "Voxen"
         "vendor/imgui",
         "vendor/stb",
         "vendor/entt",
-        "vendor/yaml-cpp/include"
+        "vendor/yaml-cpp/include",
+        "vendor/ImGuizmo"
     }
 
     links
@@ -41,6 +44,9 @@ project "Voxen"
         "yaml-cpp",
         "opengl32.lib"
     }
+
+    filter "files:vendor/ImGuizmo/**.cpp"
+        flags ( "NoPCH" )
 
     targetdir ("../Binaries/" .. OutputDir .. "/%{prj.name}")
     objdir ("../Binaries/Intermediates/" .. OutputDir .. "/%{prj.name}")

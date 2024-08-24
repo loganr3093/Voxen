@@ -3,6 +3,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+
 #include "SceneCamera.h"
 #include "ScriptableEntity.h"
 
@@ -39,10 +42,7 @@ namespace Voxen
             glm::mat4 translation = glm::mat4(1.0f);
             translation = glm::translate(translation, Translation);
 
-            glm::mat4 rotation = glm::mat4(1.0f);
-            rotation = glm::rotate(rotation, Rotation.x, { 1, 0, 0 });
-            rotation = glm::rotate(rotation, Rotation.y, { 0, 1, 0 });
-            rotation = glm::rotate(rotation, Rotation.z, { 0, 0, 1 });
+            glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
 
             glm::mat4 scale = glm::mat4(1.0f);
             scale = glm::scale(scale, Scale);

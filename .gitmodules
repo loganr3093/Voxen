@@ -14,3 +14,6 @@
 [submodule "Voxen/vendor/yaml-cpp"]
 	path = Voxen/vendor/yaml-cpp
 	url = https://github.com/loganr3093/yaml-cpp.git
+[submodule "Voxen/vendor/ImGuizmo"]
+	path = Voxen/vendor/ImGuizmo
+	url = https://github.com/loganr3093/ImGuizmo.git
