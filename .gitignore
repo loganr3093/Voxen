@@ -4,6 +4,7 @@ Binaries/
 Intermediates/
 bin/
 bin-int/
+obj/
 
 # Exceptions
 !Vendor/Binaries/
@@ -15,6 +16,7 @@ bin-int/
 *.sln
 *.log
 *.user
+*.obj
 
 # Ignore all .ini files
 *.ini
