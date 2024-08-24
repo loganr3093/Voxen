@@ -9,6 +9,7 @@
 #include "Voxen/Core/Input.h"
 #include "Voxen/Core/Layer.h"
 #include "Voxen/Core/Log.h"
+#include "Voxen/Core/Assert.h"
 
 #include "Voxen/Core/Timestep.h"
 

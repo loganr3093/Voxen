@@ -1,7 +1,7 @@
 #include "voxpch.h"
-#include "Framebuffer.h"
+#include "Voxen/Renderer/Framebuffer.h"
 
-#include "Renderer.h"
+#include "Voxen/Renderer/Renderer.h"
 
 #include "Platform/OpenGL/OpenGLFramebuffer.h"
 

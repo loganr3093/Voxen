@@ -171,7 +171,7 @@ namespace Voxen
 	}
 	void SceneSerializer::SerializeRuntime(const std::string& filepath)
 	{
-		VOX_CORE_ASSERT(false, "Not implemented");
+		VOX_CORE_ASSERT(false);
 	}
 	bool SceneSerializer::Deserialize(const std::string& filepath)
 	{
@@ -240,7 +240,7 @@ namespace Voxen
 	}
 	bool SceneSerializer::DeserializeRuntime(const std::string& filepath)
 	{
-		VOX_CORE_ASSERT(false, "Not implemented");
+		VOX_CORE_ASSERT(false);
 		return false;
 	}
 }

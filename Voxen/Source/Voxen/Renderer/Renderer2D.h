@@ -38,15 +38,16 @@ namespace Voxen
 			uint32 DrawCalls = 0;
 			uint32 QuadCount = 0;
 
-			uint32 GetTotalVertexCount() { return QuadCount * 4; }
-			uint32 GetTotalIndexCount() { return QuadCount * 6; }
+			uint32 GetTotalVertexCount() const { return QuadCount * 4; }
+			uint32 GetTotalIndexCount() const { return QuadCount * 6; }
 		};
 
 		static Statistics GetStats();
 		static void ResetStats();
 
 	private:
-		static void FlushAndReset();
+		static void StartBatch();
+		static void NextBatch();
 	};
 }
 
