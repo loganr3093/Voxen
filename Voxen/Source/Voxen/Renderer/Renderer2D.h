@@ -3,6 +3,7 @@
 #include "Voxen/Renderer/OrthographicCamera.h"
 #include "Voxen/Renderer/Texture.h"
 #include "Voxen/Renderer/Camera.h"
+#include "Voxen/Renderer/EditorCamera.h"
 
 namespace Voxen
 {
@@ -13,6 +14,7 @@ namespace Voxen
 		static void Shutdown();
 
 		static void BeginScene(const Camera& camera, const Matrix4& transform);
+		static void BeginScene(const EditorCamera& camera);
 		static void BeginScene(const OrthographicCamera& camera); // TODO remove
 		static void EndScene();
 

@@ -1,7 +1,9 @@
 #pragma once
-
 #include "Voxen.h"
+
 #include "Panels/SceneHierarchyPanel.h"
+
+#include "Voxen/Renderer/EditorCamera.h"
 
 namespace Voxen
 {
@@ -37,6 +39,8 @@ namespace Voxen
 		Entity m_CameraEntity;
 
 		bool m_PrimaryCamera = true;
+
+		EditorCamera m_EditorCamera;
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		Vector2 m_ViewportSize = { 0.0f, 0.0f };
