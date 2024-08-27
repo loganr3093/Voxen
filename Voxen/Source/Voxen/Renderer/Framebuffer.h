@@ -8,6 +8,7 @@ namespace Voxen
 
 		// Color
 		RGBA8,
+		RED_INTEGER,
 
 		// Depth/stencil
 		DEPTH24STENCIL8,
@@ -54,6 +55,7 @@ namespace Voxen
 		virtual void Unbind() = 0;
 
 		virtual void Resize(uint32 width, uint32 height) = 0;
+		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) = 0;
 
 		virtual uint32 GetColorAttachmentRendererID(uint32 index = 0) const = 0;
 

@@ -44,6 +44,7 @@ namespace Voxen
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		Vector2 m_ViewportSize = { 0.0f, 0.0f };
+		Vector2 m_ViewportBounds[2];
 
 		int m_GizmoType = -1;
 

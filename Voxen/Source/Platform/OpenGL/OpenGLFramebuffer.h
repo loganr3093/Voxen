@@ -16,6 +16,7 @@ namespace Voxen
 		virtual void Unbind() override;
 
 		virtual void Resize(uint32 width, uint32 height) override;
+		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) override;
 
 		virtual uint32 GetColorAttachmentRendererID(uint32 index = 0) const override { VOX_CORE_ASSERT(index < m_ColorAttachments.size() && index >= 0); return m_ColorAttachments[index]; }
 
