@@ -57,6 +57,8 @@ namespace Voxen
 		virtual void Resize(uint32 width, uint32 height) = 0;
 		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) = 0;
 
+		virtual void ClearAttachment(uint32_t attachmentIndex, int value) = 0;
+
 		virtual uint32 GetColorAttachmentRendererID(uint32 index = 0) const = 0;
 
 		virtual const FramebufferSpecification& GetSpecification() const = 0;

@@ -75,6 +75,18 @@ namespace Voxen
 
 			return false;
 		}
+
+		static GLenum VoxenFBTextureFormatToGL(FramebufferTextureFormat format)
+		{
+			switch (format)
+			{
+			case Voxen::FramebufferTextureFormat::RGBA8:		return GL_RGBA8;
+			case Voxen::FramebufferTextureFormat::RED_INTEGER:	return GL_RED_INTEGER;
+			}
+
+			VOX_CORE_ASSERT(false);
+			return 0;
+		}
 	}
 
 	static bool IsDepthTextureFormat(FramebufferTextureFormat format)
@@ -208,5 +220,13 @@ namespace Voxen
 		int pixelData;
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
 		return pixelData;
+	}
+	void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
+	{
+		VOX_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
+
+		auto& spec = m_ColorAttachmentSpecifications[attachmentIndex];
+		glClearTexImage(m_ColorAttachments[attachmentIndex], 0,
+			Utils::VoxenFBTextureFormatToGL(spec.TextureFormat), GL_INT, &value);
 	}
 }
