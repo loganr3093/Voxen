@@ -9,10 +9,13 @@ namespace Voxen
 {
 	struct QuadVertex
 	{
-		Vector3 Position;
-		Vector4 Color;
-		Vector2 TexCoord;
+		glm::vec3 Position;
+		glm::vec4 Color;
+		glm::vec2 TexCoord;
 		float TexIndex;
+		
+		// Editor-only
+		int EntityID;
 	};
 
 	struct Renderer2DData
@@ -49,10 +52,11 @@ namespace Voxen
 
 		s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
 		s_Data.QuadVertexBuffer->SetLayout({
-			{ ShaderDataType::Vector3, "a_Position" },
-			{ ShaderDataType::Vector4, "a_Color" },
-			{ ShaderDataType::Vector2, "a_TexCoord" },
-			{ ShaderDataType::Float, "a_TexIndex" },
+			{ ShaderDataType::Vector3,	"a_Position" },
+			{ ShaderDataType::Vector4,	"a_Color"	 },
+			{ ShaderDataType::Vector2,	"a_TexCoord" },
+			{ ShaderDataType::Float,	"a_TexIndex" },
+			{ ShaderDataType::Int,		"a_EntityID" },
 			});
 		s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
 
@@ -216,7 +220,7 @@ namespace Voxen
 		DrawQuad(transform, texture);
 	}
 
-	void Renderer2D::DrawQuad(const Matrix4& transform, const Vector4& color)
+	void Renderer2D::DrawQuad(const Matrix4& transform, const Vector4& color, int entityID)
 	{
 		VOX_PROFILE_FUNCTION();
 
@@ -235,6 +239,7 @@ namespace Voxen
 			s_Data.QuadVertexBufferPtr->Color = color;
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_Data.QuadVertexBufferPtr->EntityID = entityID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 
@@ -243,7 +248,7 @@ namespace Voxen
 		s_Data.Stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawQuad(const Matrix4& transform, const Ref<Texture2D>& texture)
+	void Renderer2D::DrawQuad(const Matrix4& transform, const Ref<Texture2D>& texture, int entityID)
 	{
 		VOX_PROFILE_FUNCTION();
 
@@ -284,6 +289,7 @@ namespace Voxen
 			s_Data.QuadVertexBufferPtr->Color = color;
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
+			s_Data.QuadVertexBufferPtr->EntityID = entityID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 
@@ -406,6 +412,11 @@ namespace Voxen
 		s_Data.QuadIndexCount += 6;
 
 		s_Data.Stats.QuadCount++;
+	}
+
+	void Renderer2D::DrawSprite(const Matrix4& transform, SpriteRendererComponent& src, int entityID)
+	{
+		DrawQuad(transform, src.Color, entityID);
 	}
 
 	Renderer2D::Statistics Renderer2D::GetStats()

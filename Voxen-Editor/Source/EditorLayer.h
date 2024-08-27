@@ -40,6 +40,8 @@ namespace Voxen
 
 		bool m_PrimaryCamera = true;
 
+		Entity m_HoveredEntity;
+
 		EditorCamera m_EditorCamera;
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
