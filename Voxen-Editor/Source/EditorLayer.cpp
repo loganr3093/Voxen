@@ -127,7 +127,7 @@ namespace Voxen
 		auto [mx, my] = ImGui::GetMousePos();
 		mx -= m_ViewportBounds[0].x;
 		my -= m_ViewportBounds[0].y;
-		Vector2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
 		my = viewportSize.y - my;
 		int mouseX = (int)mx;
 		int mouseY = (int)my;
@@ -226,11 +226,7 @@ namespace Voxen
 
 		ImGui::Begin("Render Stats");
 
-		std::string name = "None";
-		if (m_HoveredEntity)
-		{
-			name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
-		}
+		std::string name = m_HoveredEntity ? m_HoveredEntity.GetComponent<TagComponent>().Tag : "None";
 		ImGui::Text("Hovered  Entity: %s", name.c_str());
 
 		auto stats = Renderer2D::GetStats();
@@ -244,8 +240,11 @@ namespace Voxen
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
-		// Includes tab bar
-		auto viewportOffset = ImGui::GetCursorPos();
+		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+		auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+		auto viewportOffset = ImGui::GetWindowPos();
+		m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+		m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
 
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
@@ -256,15 +255,6 @@ namespace Voxen
 
 		uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
 		ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-
-		auto windowSize = ImGui::GetWindowSize();
-		ImVec2 minBound = ImGui::GetWindowPos();
-		minBound.x += viewportOffset.x;
-		minBound.y += viewportOffset.y;
-
-		ImVec2 maxBound = { minBound.x + windowSize.x, minBound.y + windowSize.y };
-		m_ViewportBounds[0] = { minBound.x, minBound.y };
-		m_ViewportBounds[1] = { maxBound.x, maxBound.y };
 
 		// Gizmos
 		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
@@ -331,6 +321,7 @@ namespace Voxen
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(VOX_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+		dispatcher.Dispatch<MouseButtonPressedEvent>(VOX_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
@@ -379,6 +370,16 @@ namespace Voxen
 			m_GizmoType = ImGuizmo::OPERATION::SCALE;
 			break;
 		}
+	}
+
+	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+	{
+		if (e.GetMouseButton() == Mouse::ButtonLeft)
+		{
+			if (m_ViewportHovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
+				m_SceneHierarchyPanel.SetSelectedEntity(m_HoveredEntity);
+		}
+		return false;
 	}
 
 	void EditorLayer::NewScene()

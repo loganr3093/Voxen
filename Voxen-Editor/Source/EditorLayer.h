@@ -23,6 +23,7 @@ namespace Voxen
 
 	private:
 		bool OnKeyPressed(KeyPressedEvent& e);
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
 		void NewScene();
 		void OpenScene();
