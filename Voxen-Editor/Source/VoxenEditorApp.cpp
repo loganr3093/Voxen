@@ -1,9 +1,5 @@
 #include <Voxen.h>
-#include "Voxen/Core/EntryPoint.h"
-
-#include "Platform/OpenGL/OpenGLShader.h"
-#include <imgui/imgui.h>
-#include <glm/gtc/type_ptr.hpp>
+#include <Voxen/Core/EntryPoint.h>
 
 #include "EditorLayer.h"
 
@@ -12,8 +8,8 @@ namespace Voxen
 	class VoxenEditor : public Application
 	{
 	public:
-		VoxenEditor()
-			: Application("Voxen Editor")
+		VoxenEditor(const Voxen::ApplicationSpecification& specification)
+			: Voxen::Application(specification)
 		{
 			PushLayer(new EditorLayer());
 		}
@@ -25,6 +21,9 @@ namespace Voxen
 
 	Application* CreateApplication()
 	{
-		return new VoxenEditor();
+		ApplicationSpecification spec;
+		spec.Name = "Voxen-Hub";
+		spec.WorkingDirectory = "./";
+		return new VoxenEditor(spec);
 	}
 }

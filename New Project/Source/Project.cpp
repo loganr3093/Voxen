@@ -1,16 +1,13 @@
 #include <Voxen.h>
-#include "Voxen/Core/EntryPoint.h"
-
-#include "Platform/OpenGL/OpenGLShader.h"
-#include <imgui/imgui.h>
-#include <glm/gtc/type_ptr.hpp>
+#include <Voxen/Core/EntryPoint.h>
 
 #include "Demo.h"
 
 class Project : public Voxen::Application
 {
 public:
-	Project()
+	Project(const Voxen::ApplicationSpecification& specification)
+		: Voxen::Application(specification)
 	{
 		PushLayer(new Demo());
 	}
@@ -22,5 +19,8 @@ public:
 
 Voxen::Application* Voxen::CreateApplication()
 {
-	return new Project();
+	ApplicationSpecification spec;
+	spec.Name = "Demo";
+	spec.WorkingDirectory = "../Voxen-Editor";
+	return new Project(spec);
 }

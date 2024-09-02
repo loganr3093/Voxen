@@ -43,16 +43,7 @@ void Demo::OnUpdate(Voxen::Timestep ts)
 
 	Voxen::Renderer2D::BeginScene(m_CameraController.GetCamera());
 
-	Voxen::Renderer2D::DrawQuad({ 0.0f, 0.0f }, { 0.5f, 0.5f }, m_SquareColor);
-	Voxen::Renderer2D::DrawQuad({ -1.1f, 0.5f }, { 1.0f, 0.5f }, { 0.3f, 0.2f, 0.8f, 1.0f });
-
 	Voxen::Renderer2D::DrawQuad({ -5.0f, -5.0f, -0.1f }, { 10.0f, 10.0f }, m_TestTexture);
-
-	static float rotation = 0;
-	rotation += ts * 45.0f;
-
-	Voxen::Renderer2D::DrawRotatedQuad({ 0.5f, -1.0f }, { 1.0f, 1.0f }, rotation, m_TestTexture);
-	Voxen::Renderer2D::DrawRotatedQuad({ 1.0f, -1.0f, 0.1f }, { 0.5f, 0.5f }, rotation, { 0.9f, 0.4f, 0.2f, 0.5f });
 
 	Voxen::Renderer2D::EndScene();
 }
@@ -60,18 +51,6 @@ void Demo::OnUpdate(Voxen::Timestep ts)
 void Demo::OnImGuiRender()
 {
 	VOX_PROFILE_FUNCTION();
-
-	ImGui::Begin("Settings");
-
-	auto stats = Voxen::Renderer2D::GetStats();
-	ImGui::Text("Renderer2D Stats:");
-	ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-	ImGui::Text("Quads: %d", stats.QuadCount);
-	ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
-	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-
-	ImGui::ColorEdit4("Square Color", glm::value_ptr(m_SquareColor));
-	ImGui::End();
 }
 
 void Demo::OnEvent(Voxen::Event& e)

@@ -10,7 +10,6 @@
 
 namespace Voxen
 {
-
 	std::string FileDialogs::OpenFile(const char* filter)
 	{
 		OPENFILENAMEA ofn;
@@ -49,4 +48,8 @@ namespace Voxen
 		return std::string();
 	}
 
+	float Time::GetTime()
+	{
+		return glfwGetTime();
+	}
 }

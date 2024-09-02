@@ -7,8 +7,9 @@
 #include "Voxen/Scene/SceneSerializer.h"
 #include "Voxen/Utils/PlatformUtils.h"
 #include "Voxen/Math/Math.h"
+#include "Platform/OpenGL/OpenGLShader.h"
 
-#include "ImGuizmo.h"
+#include <ImGuizmo.h>
 
 namespace Voxen
 {
@@ -232,7 +233,7 @@ namespace Voxen
 
 		// Gizmos
 		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
-		if (selectedEntity && m_GizmoType != -1)
+		if (m_SceneState == SceneState::Edit && selectedEntity && m_GizmoType != -1)
 		{
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();

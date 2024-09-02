@@ -17,10 +17,16 @@
 
 namespace Voxen
 {
+	struct ApplicationSpecification
+	{
+		std::string Name = "Voxen Application";
+		std::string WorkingDirectory;
+	};
+
 	class Application
 	{
 	public:
-		Application(const std::string& name = "Voxen");
+		Application(const ApplicationSpecification& specification);
 		virtual ~Application() = default;
 
 		void Run();
@@ -37,9 +43,14 @@ namespace Voxen
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
 		inline static Application& Get() { return *s_Instance; }
+
+		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
+
+	private:
+		ApplicationSpecification m_Specification;
 
 		static Application* s_Instance;
 
