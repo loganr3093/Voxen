@@ -4,9 +4,9 @@ Entities:
     TagComponent:
       Tag: Camera
     TransformComponent:
-      Translation: [1.53910792, 1.83722532, 2.76265407]
-      Rotation: [-0.385778755, 0.243731976, -0.0976970494]
-      Scale: [1, 0.999998689, 0.999999642]
+      Translation: [0.961661756, 1.60309601, 2.28446507]
+      Rotation: [-0.373823702, -0.00964084547, 0.00378211611]
+      Scale: [0.999993861, 0.999998689, 1]
     CameraComponent:
       Camera:
         ProjectionType: 0

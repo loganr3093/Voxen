@@ -17,6 +17,31 @@ namespace Voxen
 	{
 		ImGui::Begin("Content Browser");
 
+		static float padding = 16.0f;
+		static float thumbnailSize = 128.0f;
+		float cellSize = thumbnailSize + padding;
+
+		// Thinner Slider: Adjust frame padding for a thinner appearance
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4, 2));
+
+		// Slider Width and Centering
+		float sliderWidth = 480.0f; // Set a fixed width for the slider
+		float panelWidth = ImGui::GetContentRegionAvail().x;
+		ImGui::SetCursorPosX((panelWidth - sliderWidth) * 0.5f); // Center the slider
+
+		// Push the width of the slider
+		ImGui::PushItemWidth(sliderWidth);
+
+		// Display the slider, thinner, centered, and without displaying the number
+		ImGui::SliderFloat("##thumbnailsize", &thumbnailSize, 32, 512, "", ImGuiSliderFlags_None);
+
+		// Reverting to the default frame padding and item width
+		ImGui::PopItemWidth();
+		ImGui::PopStyleVar();
+
+		// Start a new child region that will contain the rest of the content and is scrollable
+		ImGui::BeginChild("##content_region", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding);
+
 		if (m_CurrentDirectory != std::filesystem::path(g_AssetPath))
 		{
 			if (ImGui::Button("<-"))
@@ -25,11 +50,6 @@ namespace Voxen
 			}
 		}
 
-		static float padding = 16.0f;
-		static float thumbnailSize = 128.0f;
-		float cellSize = thumbnailSize + padding;
-
-		float panelWidth = ImGui::GetContentRegionAvail().x;
 		int columnCount = (int)(panelWidth / cellSize);
 		if (columnCount < 1)
 			columnCount = 1;
@@ -59,7 +79,6 @@ namespace Voxen
 			{
 				if (directoryEntry.is_directory())
 					m_CurrentDirectory /= path.filename();
-
 			}
 			ImGui::TextWrapped(filenameString.c_str());
 
@@ -68,12 +87,8 @@ namespace Voxen
 			ImGui::PopID();
 		}
 
-		ImGui::Columns(1);
+		ImGui::EndChild(); // End of the scrollable content region
 
-		ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 16, 512);
-		ImGui::SliderFloat("Padding", &padding, 0, 32);
-
-		// TODO: status bar
-		ImGui::End();
+		ImGui::End(); // End of Content Browser window
 	}
 }
