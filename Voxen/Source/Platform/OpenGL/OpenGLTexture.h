@@ -9,25 +9,28 @@ namespace Voxen
 	class OpenGLTexture2D : public Texture2D
 	{
 	public:
-		OpenGLTexture2D(uint32 width, uint32 height);
+		OpenGLTexture2D(uint32_t width, uint32_t height);
 		OpenGLTexture2D(const std::string& path);
-		virtual ~OpenGLTexture2D() override;
+		virtual ~OpenGLTexture2D();
 
-		virtual uint32 GetWidth() const override { return m_Width; }
-		virtual uint32 GetHeight() const override { return m_Height; }
-		virtual ID GetRendererID() const override { return m_RendererID; }
+		virtual uint32_t GetWidth() const override { return m_Width; }
+		virtual uint32_t GetHeight() const override { return m_Height; }
+		virtual uint32_t GetRendererID() const override { return m_RendererID; }
 
-		virtual void SetData(void* data, uint32 size) override;
+		virtual void SetData(void* data, uint32_t size) override;
 
-		virtual void Bind(uint32 slot = 0) const override;
+		virtual void Bind(uint32_t slot = 0) const override;
 
-		virtual bool operator==(const Texture& other) const override { return m_RendererID == ((OpenGLTexture2D&)other).m_RendererID; }
-	
+		virtual bool operator==(const Texture& other) const override
+		{
+			return m_RendererID == ((OpenGLTexture2D&)other).m_RendererID;
+		}
 	private:
 		std::string m_Path;
-		uint32 m_Width, m_Height;
-		ID m_RendererID;
+		uint32_t m_Width, m_Height;
+		uint32_t m_RendererID;
 		GLenum m_InternalFormat, m_DataFormat;
 	};
+
 }
 

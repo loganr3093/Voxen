@@ -5,6 +5,9 @@
 #include "Voxen/Renderer/Shader.h"
 #include "Voxen/Renderer/RenderCommand.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 namespace Voxen
 {
 	struct QuadVertex
@@ -173,8 +176,8 @@ namespace Voxen
 			s_Data.TextureSlots[i]->Bind(i);
 		}
 
+		s_Data.TextureShader->Bind();
 		RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
-
 		s_Data.Stats.DrawCalls++;
 	}
 
