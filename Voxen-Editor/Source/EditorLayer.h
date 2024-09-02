@@ -2,6 +2,7 @@
 #include "Voxen.h"
 
 #include "Panels/SceneHierarchyPanel.h"
+#include "Panels/ContentBrowserPanel.h"
 
 #include "Voxen/Renderer/EditorCamera.h"
 
@@ -53,5 +54,6 @@ namespace Voxen
 
 		// Panels
 		SceneHierarchyPanel m_SceneHierarchyPanel;
+		ContentBrowserPanel m_ContentBrowserPanel;
 	};
 }

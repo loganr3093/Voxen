@@ -20,7 +20,7 @@ namespace Voxen
 
 	struct Renderer2DData
 	{
-		static const uint32 MaxQuads = 2;
+		static const uint32 MaxQuads = 20000;
 		static const uint32 MaxVertices = MaxQuads * 4;
 		static const uint32 MaxIndices = MaxQuads * 6;
 		static const uint32 MaxTextureSlots = 32; // TODO: Render caps

@@ -33,8 +33,6 @@ namespace Voxen
 		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1, 1000);
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-
-		
 	}
 
 	void EditorLayer::OnDetach()
@@ -175,6 +173,7 @@ namespace Voxen
 		}
 
 		m_SceneHierarchyPanel.OnImGuiRender();
+		m_ContentBrowserPanel.OnImGuiRender();
 
 		ImGui::Begin("Render Stats");
 
