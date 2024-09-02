@@ -9,6 +9,7 @@
 namespace Voxen
 {
 	class Entity;
+	class UUID;
 
 	class Scene
 	{
@@ -17,6 +18,7 @@ namespace Voxen
 		~Scene();
 
 		Entity CreateEntity(const std::string& name = std::string());
+		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
 		void DestroyEntity(Entity entity);
 
 		void OnUpdateRuntime(Timestep ts);

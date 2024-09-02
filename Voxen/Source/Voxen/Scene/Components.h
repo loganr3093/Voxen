@@ -1,7 +1,8 @@
 #pragma once
 
+#include "Voxen/Core/UUID.h"
+
 #include "Voxen/Scene/SceneCamera.h"
-#include "Voxen/Scene/ScriptableEntity.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -12,6 +13,16 @@
 // TODO Change to Component namespace and remove postfix 'Component' from every component
 namespace Voxen
 {
+    struct IDComponent
+    {
+        UUID ID;
+
+        IDComponent() = default;
+        IDComponent(const IDComponent&) = default;
+        IDComponent(UUID id)
+            : ID(id) {}
+    };
+
     struct TagComponent
     {
         std::string Tag;
@@ -74,6 +85,7 @@ namespace Voxen
         CameraComponent(const CameraComponent&) = default;
     };
 
+    class ScriptableEntity;
     struct NativeScriptComponent
     {
         ScriptableEntity* Instance = nullptr;

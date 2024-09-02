@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Voxen/Scene/Scene.h"
+#include "Voxen/Scene/Components.h"
 
 #include "Voxen/Types/Types.h"
 
@@ -49,6 +50,8 @@ namespace Voxen
 		operator bool() const { return m_EntityHandle != entt::null; }
 		operator entt::entity() const { return m_EntityHandle; }
 		operator uint32() const { return (uint32)m_EntityHandle; }
+
+		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
 
 		bool operator==(const Entity& other) const
 		{
