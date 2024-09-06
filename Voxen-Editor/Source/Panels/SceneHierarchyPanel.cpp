@@ -1,51 +1,69 @@
 #include "SceneHierarchyPanel.h"
 
+#include "Voxen/Scene/Components.h"
+#include "Voxen/Scripting/ScriptEngine.h"
+
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
-
-#include "Voxen/Scene/Components.h"
 #include <glm/gtc/type_ptr.hpp>
+
+#include <cstring>
+
+#ifdef _MSVC_LANG
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 
 namespace Voxen
 {
+	extern const std::filesystem::path g_AssetPath;
+
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
 	{
 		SetContext(context);
 	}
+
 	void SceneHierarchyPanel::SetContext(const Ref<Scene>& context)
 	{
 		m_Context = context;
 		m_SelectionContext = {};
 	}
+
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
 		ImGui::Begin("Scene Hierarchy");
-		for (auto entityID : m_Context->m_Registry.view<entt::entity>())
-		{
-			Entity entity { entityID, m_Context.get() };
 
-			DrawEntityNode(entity);
-		}
-		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+		if (m_Context)
 		{
-			m_SelectionContext = {};
-		}
+			for (auto entityID : m_Context->m_Registry.view<entt::entity>())
+			{
+				Entity entity{ entityID, m_Context.get() };
 
-		// Right-click on a blank space
-		if (ImGui::BeginPopupContextWindow(0, 1 | ImGuiPopupFlags_NoOpenOverItems))
-		{
-			if (ImGui::MenuItem("Create Empty Entity"))
-				m_Context->CreateEntity("Empty Entity");
-			ImGui::EndPopup();
-		}
+				DrawEntityNode(entity);
+			}
 
+			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+				m_SelectionContext = {};
+
+			// Right-click on blank space
+			if (ImGui::BeginPopupContextWindow(0, 1 | ImGuiPopupFlags_NoOpenOverItems))
+			{
+				if (ImGui::MenuItem("Create Empty Entity"))
+				{
+					m_Context->CreateEntity("Empty Entity");
+				}
+
+				ImGui::EndPopup();
+			}
+		}
 		ImGui::End();
 
 		ImGui::Begin("Properties");
+
 		if (m_SelectionContext)
 		{
 			DrawComponents(m_SelectionContext);
 		}
+
 		ImGui::End();
 	}
 
@@ -60,7 +78,7 @@ namespace Voxen
 
 		ImGuiTreeNodeFlags flags = ((m_SelectionContext == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 		flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
+		bool opened = ImGui::TreeNodeEx((void*)(uint64)(uint32)entity, flags, tag.c_str());
 		if (ImGui::IsItemClicked())
 		{
 			m_SelectionContext = entity;
@@ -70,7 +88,10 @@ namespace Voxen
 		if (ImGui::BeginPopupContextItem())
 		{
 			if (ImGui::MenuItem("Delete Entity"))
+			{
 				entityDeleted = true;
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -79,7 +100,10 @@ namespace Voxen
 			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 			bool opened = ImGui::TreeNodeEx((void*)9817239, flags, tag.c_str());
 			if (opened)
+			{
 				ImGui::TreePop();
+			}
+
 			ImGui::TreePop();
 		}
 
@@ -115,8 +139,12 @@ namespace Voxen
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 1.0f });
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
 		ImGui::PushFont(boldFont);
+
 		if (ImGui::Button("X", buttonSize))
+		{
 			values.x = resetValue;
+		}
+
 		ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
@@ -129,8 +157,12 @@ namespace Voxen
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.3f, 0.8f, 0.3f, 1.0f });
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
 		ImGui::PushFont(boldFont);
+
 		if (ImGui::Button("Y", buttonSize))
+		{
 			values.y = resetValue;
+		}
+
 		ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
@@ -143,8 +175,12 @@ namespace Voxen
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
 		ImGui::PushFont(boldFont);
+
 		if (ImGui::Button("Z", buttonSize))
+		{
 			values.z = resetValue;
+		}
+
 		ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
@@ -164,15 +200,15 @@ namespace Voxen
 	{
 		if (!entity.HasComponent<T>()) return;
 
-		auto& component = entity.GetComponent<T>();
-		ImVec2 contentRegionAvail = ImGui::GetContentRegionAvail();
-
 		const ImGuiTreeNodeFlags treeNodeFlags =
 			ImGuiTreeNodeFlags_DefaultOpen |
 			ImGuiTreeNodeFlags_Framed |
 			ImGuiTreeNodeFlags_SpanAvailWidth |
 			ImGuiTreeNodeFlags_AllowItemOverlap |
 			ImGuiTreeNodeFlags_FramePadding;
+
+		auto& component = entity.GetComponent<T>();
+		ImVec2 contentRegionAvail = ImGui::GetContentRegionAvail();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
 		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
@@ -190,7 +226,10 @@ namespace Voxen
 		if (ImGui::BeginPopup("ComponentSettings"))
 		{
 			if (ImGui::MenuItem("Remove Component"))
+			{
 				removeComponent = true;
+			}
+
 			ImGui::EndPopup();
 		}
 
@@ -201,11 +240,14 @@ namespace Voxen
 		}
 
 		if (removeComponent)
+		{
 			entity.RemoveComponent<T>();
+		}
 	}
 	
 	void SceneHierarchyPanel::DrawComponents(Entity entity)
 	{
+		// Tag component
 		if (entity.HasComponent<TagComponent>())
 		{
 			auto& tag = entity.GetComponent<TagComponent>().Tag;
@@ -219,30 +261,26 @@ namespace Voxen
 			}
 		}
 
+		// Add component
 		ImGui::SameLine();
 		ImGui::PushItemWidth(-1);
-
 		if (ImGui::Button("Add Component"))
+		{
 			ImGui::OpenPopup("AddComponent");
+		}
 
+		// Add component menu
 		if (ImGui::BeginPopup("AddComponent"))
 		{
-			if (ImGui::MenuItem("Camera"))
-			{
-				m_SelectionContext.AddComponent<CameraComponent>();
-				ImGui::CloseCurrentPopup();
-			}
-			if (ImGui::MenuItem("Sprite Renderer"))
-			{
-				m_SelectionContext.AddComponent<SpriteRendererComponent>();
-				ImGui::CloseCurrentPopup();
-			}
+			DisplayAddComponentEntry<ScriptComponent>("Script");
+			DisplayAddComponentEntry<SpriteRendererComponent>("Sprite Renderer");
+			DisplayAddComponentEntry<CameraComponent>("Camera");
 
 			ImGui::EndPopup();
 		}
-
 		ImGui::PopItemWidth();
 
+		// Transform
 		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
 		{
 			DrawVec3Control("Translation", component.Translation);
@@ -252,6 +290,7 @@ namespace Voxen
 			DrawVec3Control("Scale", component.Scale, 1.0f);
 		});
 
+		// Camera
 		DrawComponent<CameraComponent>("Camera", entity, [](auto& component)
 		{
 			auto& camera = component.Camera;
@@ -311,9 +350,41 @@ namespace Voxen
 			}
 		});
 
+		// Sprite renderer
 		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [](auto& component)
 		{
 			ImGui::ColorEdit4("Color", glm::value_ptr(component.Color));
 		});
+
+		// Script
+		DrawComponent<ScriptComponent>("Script", entity, [](auto& component)
+		{
+			bool scriptClassExists = ScriptEngine::EntityClassExists(component.ClassName);
+
+			static char buffer[64];
+			strcpy(buffer, component.ClassName.c_str());
+
+			if (!scriptClassExists)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
+
+			if (ImGui::InputText("Class", buffer, sizeof(buffer)))
+				component.ClassName = buffer;
+
+			if (!scriptClassExists)
+				ImGui::PopStyleColor();
+		});
+	}
+
+	template<typename T>
+	void SceneHierarchyPanel::DisplayAddComponentEntry(const std::string& entryName)
+	{
+		if (!m_SelectionContext.HasComponent<T>())
+		{
+			if (ImGui::MenuItem(entryName.c_str()))
+			{
+				m_SelectionContext.AddComponent<T>();
+				ImGui::CloseCurrentPopup();
+			}
+		}
 	}
 }

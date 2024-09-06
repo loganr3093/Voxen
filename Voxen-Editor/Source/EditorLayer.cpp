@@ -469,9 +469,13 @@ namespace Voxen
 	void EditorLayer::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
+		m_ActiveScene->OnRuntimeStart();
 	}
 	void EditorLayer::OnSceneStop()
 	{
+		if (m_SceneState == SceneState::Play)
+			m_ActiveScene->OnRuntimeStop();
+
 		m_SceneState = SceneState::Edit;
 	}
 }
