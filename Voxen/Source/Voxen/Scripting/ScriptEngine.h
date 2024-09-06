@@ -1,7 +1,6 @@
 #pragma once
 
 #include <filesystem>
-
 #include <string>
 
 extern "C"
@@ -23,7 +22,7 @@ namespace Voxen
 	private:
 		static void InitMono();
 		static void ShutdownMono();
-
+	private:
 		static MonoObject* InstantiateClass(MonoClass* monoClass);
 
 		friend class ScriptClass;

@@ -11,6 +11,7 @@ namespace Voxen
 {
 	namespace Utils
 	{
+
 		// TODO: move to FileSystem class
 		static char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)
 		{
@@ -83,6 +84,7 @@ namespace Voxen
 				VOX_CORE_TRACE("{}.{}", nameSpace, name);
 			}
 		}
+
 	}
 
 	struct ScriptEngineData
@@ -92,6 +94,8 @@ namespace Voxen
 
 		MonoAssembly* CoreAssembly = nullptr;
 		MonoImage* CoreAssemblyImage = nullptr;
+
+		ScriptClass EntityClass;
 	};
 
 	static ScriptEngineData* s_Data = nullptr;
@@ -99,8 +103,42 @@ namespace Voxen
 	void ScriptEngine::Init()
 	{
 		s_Data = new ScriptEngineData();
+
 		InitMono();
 		LoadAssembly("Resources/Scripts/Voxen-ScriptCore.dll");
+
+		ScriptGlue::RegisterFunctions();
+
+		// Retrieve and instantiate class (with constructor)
+		s_Data->EntityClass = ScriptClass("Voxen", "Entity");
+
+		MonoObject* instance = s_Data->EntityClass.Instantiate();
+
+		// Call method
+		MonoMethod* printMessageFunc = s_Data->EntityClass.GetMethod("PrintMessage", 0);
+		s_Data->EntityClass.InvokeMethod(instance, printMessageFunc);
+
+		// Call method with param
+		MonoMethod* printIntFunc = s_Data->EntityClass.GetMethod("PrintInt", 1);
+
+		int value = 5;
+		void* param = &value;
+
+		s_Data->EntityClass.InvokeMethod(instance, printIntFunc, &param);
+
+		MonoMethod* printIntsFunc = s_Data->EntityClass.GetMethod("PrintInts", 2);
+		int value2 = 508;
+		void* params[2] =
+		{
+			&value,
+			&value2
+		};
+		s_Data->EntityClass.InvokeMethod(instance, printIntsFunc, params);
+
+		MonoString* monoString = mono_string_new(s_Data->AppDomain, "Hello World from C++!");
+		MonoMethod* printCustomMessageFunc = s_Data->EntityClass.GetMethod("PrintCustomMessage", 1);
+		void* stringParam = monoString;
+		s_Data->EntityClass.InvokeMethod(instance, printCustomMessageFunc, &stringParam);
 	}
 
 	void ScriptEngine::Shutdown()
@@ -148,6 +186,10 @@ namespace Voxen
 		mono_runtime_object_init(instance);
 		return instance;
 	}
+
+	// ----
+	// Script Class
+	// ----
 
 	ScriptClass::ScriptClass(const std::string& classNamespace, const std::string& className)
 		: m_ClassNamespace(classNamespace), m_ClassName(className)
