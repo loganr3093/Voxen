@@ -4,8 +4,13 @@ project "Voxen"
     kind "StaticLib"
     language "C++"
     cppdialect "C++20"
-    targetdir "Binaries/%{cfg.buildcfg}"
-    staticruntime "on"
+    staticruntime "On"
+
+    targetdir ("../Binaries/" .. OutputDir .. "/%{prj.name}")
+    objdir ("../Binaries/Intermediates/" .. OutputDir .. "/%{prj.name}")
+
+    pchheader "voxpch.h"
+    pchsource "Source/voxpch.cpp"
 
     files
     {
@@ -19,9 +24,6 @@ project "Voxen"
         "vendor/ImGuizmo/ImGuizmo.cpp",
     }
 
-    pchheader "voxpch.h"
-    pchsource "Source/voxpch.cpp"
-
     includedirs
     {
         "Source",
@@ -33,7 +35,8 @@ project "Voxen"
         "vendor/stb",
         "vendor/entt",
         "vendor/yaml-cpp/include",
-        "vendor/ImGuizmo"
+        "vendor/ImGuizmo",
+        "vendor/mono/include",
     }
 
     links
@@ -42,14 +45,13 @@ project "Voxen"
         "glad",
         "imgui",
         "yaml-cpp",
-        "opengl32.lib"
+        "opengl32.lib",
+
+        "vendor/mono/lib/%{cfg.buildcfg}/libmono-static-sgen.lib"
     }
 
     filter "files:vendor/ImGuizmo/**.cpp"
         flags ( "NoPCH" )
-
-    targetdir ("../Binaries/" .. OutputDir .. "/%{prj.name}")
-    objdir ("../Binaries/Intermediates/" .. OutputDir .. "/%{prj.name}")
 
     filter "system:windows"
         systemversion "latest"
@@ -60,6 +62,14 @@ project "Voxen"
             "GLFW_INCLUDE_NONE",
             "_CRT_SECURE_NO_WARNINGS",
             "YAML_CPP_STATIC_DEFINE"
+        }
+
+        links
+        {
+            "Ws2_32.lib",
+            "Winmm.lib",
+            "Version.lib",
+            "Bcrypt.lib"
         }
 
     filter "configurations:Debug"

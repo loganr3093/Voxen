@@ -8,6 +8,8 @@
 
 #include "Voxen/Utils/PlatformUtils.h"
 
+#include "Voxen/Scripting/ScriptEngine.h"
+
 namespace Voxen
 {
 	Application* Application::s_Instance = nullptr;
@@ -29,9 +31,15 @@ namespace Voxen
 		m_Window->SetEventCallback(VOX_BIND_EVENT_FN(Application::OnEvent));
 
 		Renderer::Init();
+		ScriptEngine::Init();
 
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
+	}
+
+	Application::~Application()
+	{
+		ScriptEngine::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)

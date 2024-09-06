@@ -27,7 +27,7 @@ namespace Voxen
 	{
 	public:
 		Application(const ApplicationSpecification& specification);
-		virtual ~Application() = default;
+		virtual ~Application();
 
 		void Run();
 
