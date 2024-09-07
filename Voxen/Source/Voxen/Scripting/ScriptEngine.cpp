@@ -274,14 +274,15 @@ namespace Voxen
 		: m_ScriptClass(scriptClass)
 	{
 		m_Instance = scriptClass->Instantiate();
-		//m_Constructor = s_Data->EntityClass.GetMethod(".ctor", 1);
+
+		m_Constructor = s_Data->EntityClass.GetMethod(".ctor", 1);
 		m_OnCreateMethod = scriptClass->GetMethod("OnCreate", 0);
 		m_OnUpdateMethod = scriptClass->GetMethod("OnUpdate", 1);
 
 		// Construct entity
-		//UUID entityID = entity.GetUUID();
-		//void* param = &entityID;
-		//m_ScriptClass->InvokeMethod(m_Instance, m_Constructor, &param);
+		UUID entityID = entity.GetUUID();
+		void* param = &entityID;
+		m_ScriptClass->InvokeMethod(m_Instance, m_Constructor, &param);
 	}
 
 	void ScriptInstance::InvokeOnCreate()
