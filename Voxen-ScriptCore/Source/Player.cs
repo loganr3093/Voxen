@@ -11,14 +11,19 @@ namespace Demo
 {
     public class Player : Entity
     {
+        private TransformComponent m_Transform;
+
         void OnCreate()
         {
             Console.WriteLine($"Player.OnCreate - {ID}");
+
+            m_Transform = GetComponent<TransformComponent>();
+
         }
 
         void OnUpdate(float ts)
         {
-            Console.WriteLine($"Player.OnUpdate: {ts}");
+            // Console.WriteLine($"Player.OnUpdate: {ts}");
 
             float speed = 1;
             Vector3 velocity = Vector3.Zero;
@@ -43,11 +48,11 @@ namespace Demo
 
             velocity *= speed;
 
-            Vector3 translation = Translation;
+            Vector3 translation = m_Transform.Translation;
 
             translation += velocity * ts;
 
-            Translation = translation;
+            m_Transform.Translation = translation;
         }
     }
 }

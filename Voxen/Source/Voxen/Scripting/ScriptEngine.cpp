@@ -99,6 +99,7 @@ namespace Voxen
 
 		auto& classes = s_Data->EntityClasses;
 
+		ScriptGlue::RegisterComponents();
 		ScriptGlue::RegisterFunctions();
 
 		s_Data->EntityClass = ScriptClass("Voxen", "Entity");
@@ -287,11 +288,13 @@ namespace Voxen
 
 	void ScriptInstance::InvokeOnCreate()
 	{
+		if (!m_OnCreateMethod) return;
 		m_ScriptClass.get()->InvokeMethod(m_Instance, m_OnCreateMethod);
 	}
 
 	void ScriptInstance::InvokeOnUpdate(float ts)
 	{
+		if (!m_OnUpdateMethod) return;
 		void* param = &ts;
 		m_ScriptClass.get()->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
 	}
