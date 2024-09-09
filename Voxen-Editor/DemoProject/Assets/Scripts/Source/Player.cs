@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Voxen;
-using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace Demo
 {
