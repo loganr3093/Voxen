@@ -10,6 +10,7 @@ namespace Demo
 {
     public class Player : Entity
     {
+        public float speed = 1;
         private TransformComponent m_Transform;
 
         void OnCreate()
@@ -22,9 +23,6 @@ namespace Demo
 
         void OnUpdate(float ts)
         {
-            // Console.WriteLine($"Player.OnUpdate: {ts}");
-
-            float speed = 1;
             Vector3 velocity = Vector3.Zero;
 
             if (Input.IsKeyDown(KeyCode.W))

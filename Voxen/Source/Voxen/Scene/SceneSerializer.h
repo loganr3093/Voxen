@@ -2,6 +2,12 @@
 
 #include "Voxen/Scene/Scene.h"
 
+namespace YAML
+{
+	class Emitter;
+	class Node;
+}
+
 namespace Voxen
 {
 
