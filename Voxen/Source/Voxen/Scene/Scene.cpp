@@ -3,9 +3,9 @@
 
 #include "Voxen/Renderer/Renderer2D.h"
 
+#include "Voxen/Scene/Entity.h"
 #include "Voxen/Scene/Components.h"
 #include "Voxen/Scene/ScriptableEntity.h"
-#include "Voxen/Scene/Entity.h"
 
 #include "Voxen/Scripting/ScriptEngine.h"
 
@@ -106,8 +106,8 @@ namespace Voxen
 
     void Scene::DestroyEntity(Entity entity)
     {
-        m_EntityMap.erase(entity.GetUUID());
         m_Registry.destroy(entity);
+        m_EntityMap.erase(entity.GetUUID());
     }
 
     void Scene::OnRuntimeStart()
@@ -160,10 +160,10 @@ namespace Voxen
         Camera* mainCamera = nullptr;
         Matrix4 cameraTransform;
         {
-            auto group = m_Registry.group<CameraComponent>(entt::get<TransformComponent>);
-            for (auto entity : group)
+            auto view = m_Registry.view<TransformComponent, CameraComponent>();
+            for (auto entity : view)
             {
-                auto [camera, transform] = group.get<CameraComponent, TransformComponent>(entity);
+                auto [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
 
                 if (camera.Primary)
                 {
@@ -176,14 +176,17 @@ namespace Voxen
 
         if (mainCamera)
         {
-            Renderer2D::BeginScene(mainCamera->GetProjection(), cameraTransform);
+            Renderer2D::BeginScene(*mainCamera, cameraTransform);
 
-            auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-            for (auto entity : group)
+            // Draw sprites
             {
-                auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+                auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+                for (auto entity : group)
+                {
+                    auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 
-                Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+                    Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+                }
             }
 
             Renderer2D::EndScene();
@@ -242,12 +245,14 @@ namespace Voxen
         Renderer2D::BeginScene(camera);
 
         // Draw sprites
-        auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-        for (auto entity : group)
         {
-            auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+            auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+            for (auto entity : group)
+            {
+                auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 
-            Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+                Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+            }
         }
 
         Renderer2D::EndScene();

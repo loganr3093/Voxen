@@ -37,6 +37,8 @@ namespace Voxen
 		void OnScenePlay();
 		void OnSceneStop();
 
+		void OnDuplicateEntity();
+
 		// UI Panels
 		void UI_Toolbar();
 	private:

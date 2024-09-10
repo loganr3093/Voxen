@@ -10,6 +10,8 @@ namespace Voxen
 	{
 	public:
 		static void Init();
+		static void Shutdown();
+
 		static void OnWindowResize(uint32 width, uint32 height);
 
 		static void BeginScene(OrthographicCamera& camera);
@@ -18,7 +20,6 @@ namespace Voxen
 		static void Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const Matrix4& transform = Matrix4(1.0f));
 
 		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
-
 	private:
 		struct SceneData
 		{

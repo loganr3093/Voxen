@@ -6,7 +6,7 @@
 
 #include "Voxen/Renderer/Renderer.h"
 
-#include "Voxen/Utils/PlatformUtils.h"
+#include "Voxen/Utilities/PlatformUtils.h"
 
 #include "Voxen/Scripting/ScriptEngine.h"
 

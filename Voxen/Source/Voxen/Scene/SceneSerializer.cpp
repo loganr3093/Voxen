@@ -1,84 +1,17 @@
 #include "voxpch.h"
 #include "Voxen/Scene/SceneSerializer.h"
 
-#include "Voxen/Scene/Components.h"
 #include "Voxen/Scene/Entity.h"
+#include "Voxen/Scene/Components.h"
+
+#include "Voxen/Utilities/YAMLConversions.h"
 
 #include <yaml-cpp/yaml.h>
 
 #include <fstream>
 
-namespace YAML
-{
-	template<>
-	struct convert<Vector3>
-	{
-		static Node encode(const Vector3& rhs)
-		{
-			Node node;
-			node.push_back(rhs.x);
-			node.push_back(rhs.y);
-			node.push_back(rhs.z);
-			node.SetStyle(EmitterStyle::Flow);
-			return node;
-		}
-
-		static bool decode(const Node& node, Vector3& rhs)
-		{
-			if (!node.IsSequence() || node.size() != 3)
-				return false;
-
-			rhs.x = node[0].as<float>();
-			rhs.y = node[1].as<float>();
-			rhs.z = node[2].as<float>();
-			return true;
-		}
-	};
-
-	template<>
-	struct convert<Vector4>
-	{
-		static Node encode(const Vector4& rhs)
-		{
-			Node node;
-			node.push_back(rhs.x);
-			node.push_back(rhs.y);
-			node.push_back(rhs.z);
-			node.push_back(rhs.w);
-			node.SetStyle(EmitterStyle::Flow);
-			return node;
-		}
-
-		static bool decode(const Node& node, Vector4& rhs)
-		{
-			if (!node.IsSequence() || node.size() != 4)
-				return false;
-
-			rhs.x = node[0].as<float>();
-			rhs.y = node[1].as<float>();
-			rhs.z = node[2].as<float>();
-			rhs.w = node[3].as<float>();
-			return true;
-		}
-	};
-}
-
 namespace Voxen
 {
-	YAML::Emitter& operator<<(YAML::Emitter& out, const Vector3& v)
-	{
-		out << YAML::Flow;
-		out << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
-		return out;
-	}
-
-	YAML::Emitter& operator<<(YAML::Emitter& out, const Vector4& v)
-	{
-		out << YAML::Flow;
-		out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
-		return out;
-	}
-
 	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
 		: m_Scene(scene)
 	{
@@ -101,6 +34,7 @@ namespace Voxen
 
 			out << YAML::EndMap; // TagComponent
 		}
+
 		if (entity.HasComponent<TransformComponent>())
 		{
 			out << YAML::Key << "TransformComponent";
@@ -144,9 +78,9 @@ namespace Voxen
 			auto& scriptComponent = entity.GetComponent<ScriptComponent>();
 
 			out << YAML::Key << "ScriptComponent";
-			out << YAML::BeginMap;
+			out << YAML::BeginMap; // ScriptComponent
 			out << YAML::Key << "ClassName" << YAML::Value << scriptComponent.ClassName;
-			out << YAML::EndMap;
+			out << YAML::EndMap; // ScriptComponent
 		}
 
 		if (entity.HasComponent<SpriteRendererComponent>())
@@ -182,89 +116,100 @@ namespace Voxen
 
 		std::ofstream fout(filepath);
 		fout << out.c_str();
-	}
 
-	void SceneSerializer::SerializeRuntime(const std::string& filepath)
-	{
-		VOX_CORE_ASSERT(false);
+
 	}
 
 	bool SceneSerializer::Deserialize(const std::string& filepath)
 	{
-		YAML::Node data = YAML::LoadFile(filepath);
+		YAML::Node data;
+		try
+		{
+			data = YAML::LoadFile(filepath);
+		}
+		catch (YAML::ParserException e)
+		{
+			VOX_CORE_ERROR("Failed to load .hazel file '{0}'\n     {1}", filepath, e.what());
+			return false;
+		}
+
 		if (!data["Scene"])
 			return false;
 
 		std::string sceneName = data["Scene"].as<std::string>();
 		VOX_CORE_TRACE("Deserializing scene '{0}'", sceneName);
 
+
 		auto entities = data["Entities"];
-		if (entities)
+		if (!entities) return true;
+		for (auto entity : entities)
 		{
-			for (auto entity : entities)
+			uint64 uuid = entity["Entity"].as<uint64>();
+
+			std::string name;
+			auto tagComponent = entity["TagComponent"];
+			if (tagComponent)
+				name = tagComponent["Tag"].as<std::string>();
+
+			VOX_CORE_TRACE("Deserialized entity with ID = {0}, name = {1}", uuid, name);
+
+			Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid, name);
+
+			auto transformComponent = entity["TransformComponent"];
+			if (transformComponent)
 			{
-				uint64_t uuid = entity["Entity"].as<uint64_t>();
+				// Entities always have transforms
+				auto& tc = deserializedEntity.GetComponent<TransformComponent>();
+				tc.Translation = transformComponent["Translation"].as<Vector3>(Vector3(0.0f));
+				tc.Rotation = transformComponent["Rotation"].as<Vector3>(Vector3(0.0f));
+				tc.Scale = transformComponent["Scale"].as<Vector3>(Vector3(0.0f));
+			}
 
-				std::string name;
-				auto tagComponent = entity["TagComponent"];
-				if (tagComponent)
-					name = tagComponent["Tag"].as<std::string>();
+			auto cameraComponent = entity["CameraComponent"];
+			if (cameraComponent)
+			{
+				auto& component = deserializedEntity.AddComponent<CameraComponent>();
+				const auto& cameraNode = cameraComponent["Camera"];
 
-				VOX_CORE_TRACE("Deserialized entity with ID = {0}, name = {1}", uuid, name);
+				component.Camera = SceneCamera();
+				auto& camera = component.Camera;
 
-				Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid, name);
-
-				auto transformComponent = entity["TransformComponent"];
-				if (transformComponent)
+				if (cameraNode.IsMap())
 				{
-					// Entities always have transforms
-					auto& tc = deserializedEntity.GetComponent<TransformComponent>();
-					tc.Translation = transformComponent["Translation"].as<Vector3>();
-					tc.Rotation = transformComponent["Rotation"].as<Vector3>();
-					tc.Scale = transformComponent["Scale"].as<Vector3>();
+					if (cameraNode["ProjectionType"])
+						camera.SetProjectionType((SceneCamera::ProjectionType)cameraNode["ProjectionType"].as<int>());
+					if (cameraNode["PerspectiveFOV"])
+						camera.SetPerspectiveVerticalFOV(cameraNode["PerspectiveFOV"].as<float>());
+					if (cameraNode["PerspectiveNear"])
+						camera.SetPerspectiveNearClip(cameraNode["PerspectiveNear"].as<float>());
+					if (cameraNode["PerspectiveFar"])
+						camera.SetPerspectiveFarClip(cameraNode["PerspectiveFar"].as<float>());
+					if (cameraNode["OrthographicSize"])
+						camera.SetOrthographicSize(cameraNode["OrthographicSize"].as<float>());
+					if (cameraNode["OrthographicNear"])
+						camera.SetOrthographicNearClip(cameraNode["OrthographicNear"].as<float>());
+					if (cameraNode["OrthographicFar"])
+						camera.SetOrthographicFarClip(cameraNode["OrthographicFar"].as<float>());
 				}
 
-				auto cameraComponent = entity["CameraComponent"];
-				if (cameraComponent)
-				{
-					auto& cc = deserializedEntity.AddComponent<CameraComponent>();
+				component.Primary = cameraComponent["Primary"].as<bool>();
+			}
 
-					cc.Camera.SetProjectionType((SceneCamera::ProjectionType)cameraComponent["Camera"]["ProjectionType"].as<int>());
+			auto scriptComponent = entity["ScriptComponent"];
+			if (scriptComponent)
+			{
+				auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
+				sc.ClassName = scriptComponent["ClassName"].as<std::string>();
+			}
 
-					cc.Camera.SetPerspectiveVerticalFOV(cameraComponent["Camera"]["PerspectiveFOV"].as<float>());
-					cc.Camera.SetPerspectiveNearClip(cameraComponent["Camera"]["PerspectiveNear"].as<float>());
-					cc.Camera.SetPerspectiveFarClip(cameraComponent["Camera"]["PerspectiveFar"].as<float>());
-
-					cc.Camera.SetOrthographicSize(cameraComponent["Camera"]["OrthographicSize"].as<float>());
-					cc.Camera.SetOrthographicNearClip(cameraComponent["Camera"]["OrthographicNear"].as<float>());
-					cc.Camera.SetOrthographicFarClip(cameraComponent["Camera"]["OrthographicFar"].as<float>());
-
-					cc.Primary = cameraComponent["Primary"].as<bool>();
-					cc.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
-				}
-
-				auto scriptComponent = entity["ScriptComponent"];
-				if (scriptComponent)
-				{
-					auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
-
-					sc.ClassName = scriptComponent["ClassName"].as<std::string>();
-				}
-
-				auto spriteRendererComponent = entity["SpriteRendererComponent"];
-				if (spriteRendererComponent)
-				{
-					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
-					src.Color = spriteRendererComponent["Color"].as<Vector4>();
-				}
+			auto spriteRendererComponent = entity["SpriteRendererComponent"];
+			if (spriteRendererComponent)
+			{
+				auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
+				src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
 			}
 		}
 
 		return true;
-	}
-	bool SceneSerializer::DeserializeRuntime(const std::string& filepath)
-	{
-		VOX_CORE_ASSERT(false);
-		return false;
 	}
 }

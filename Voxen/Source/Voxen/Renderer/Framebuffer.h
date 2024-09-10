@@ -38,7 +38,7 @@ namespace Voxen
 
 	struct FramebufferSpecification
 	{
-		uint32 Width, Height;
+		uint32 Width = 0, Height = 0;
 		FramebufferAttachmentSpecification Attachments;
 		uint32 Samples = 1;
 

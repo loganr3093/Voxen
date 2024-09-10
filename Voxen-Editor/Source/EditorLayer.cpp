@@ -1,13 +1,15 @@
 #include "EditorLayer.h"
+
+#include "Voxen/Scene/SceneSerializer.h"
+
+#include "Voxen/Utilities/PlatformUtils.h"
+
+#include "Voxen/Math/Math.h"
+
 #include <imgui/imgui.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
-#include "Voxen/Scene/SceneSerializer.h"
-#include "Voxen/Utils/PlatformUtils.h"
-#include "Voxen/Math/Math.h"
-#include "Platform/OpenGL/OpenGLShader.h"
 
 #include <ImGuizmo.h>
 
@@ -33,11 +35,10 @@ namespace Voxen
 		fbSpec.Height = 720;
 		m_Framebuffer = Framebuffer::Create(fbSpec);
 
-		m_ActiveScene = CreateRef<Scene>();
+		m_EditorScene = CreateRef<Scene>();
+		m_ActiveScene = m_EditorScene;
 
-		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1, 1000);
-
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1, 1000.0f);
 	}
 
 	void EditorLayer::OnDetach()
@@ -54,10 +55,10 @@ namespace Voxen
 			m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
-			m_Framebuffer->Resize((uint32)m_ViewportSize.x, (uint32)m_ViewportSize.y);
+			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
 			m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
-			m_ActiveScene->OnViewportResize((uint32)m_ViewportSize.x, (uint32)m_ViewportSize.y);
+			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
 
 		// Render
@@ -71,23 +72,23 @@ namespace Voxen
 
 		switch (m_SceneState)
 		{
-		case Voxen::EditorLayer::SceneState::Edit:
-		{
-			if (m_ViewportFocused)
+			case SceneState::Edit:
 			{
-				m_CameraController.OnUpdate(ts);
+				if (m_ViewportFocused)
+				{
+					m_CameraController.OnUpdate(ts);
+				}
+
+				m_EditorCamera.OnUpdate(ts);
+
+				m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+				break;
 			}
-
-			m_EditorCamera.OnUpdate(ts);
-
-			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
-			break;
-		}
-		case Voxen::EditorLayer::SceneState::Play:
-		{
-			m_ActiveScene->OnUpdateRuntime(ts);
-			break;
-		}
+			case SceneState::Play:
+			{
+				m_ActiveScene->OnUpdateRuntime(ts);
+				break;
+			}
 		}
 
 		auto [mx, my] = ImGui::GetMousePos();
@@ -158,6 +159,7 @@ namespace Voxen
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
+
 		style.WindowMinSize.x = minWinSizeX;
 
 		if (ImGui::BeginMenuBar())
@@ -191,7 +193,9 @@ namespace Voxen
 
 		ImGui::Begin("Render Stats");
 
-		std::string name = m_HoveredEntity ? m_HoveredEntity.GetComponent<TagComponent>().Tag : "None";
+		std::string name = "None";
+		if (m_HoveredEntity)
+			name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
 		ImGui::Text("Hovered  Entity: %s", name.c_str());
 
 		auto stats = Renderer2D::GetStats();
@@ -237,16 +241,8 @@ namespace Voxen
 		{
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
-			float windowWidth = (float)ImGui::GetWindowWidth();
-			float windowHeight = (float)ImGui::GetWindowHeight();
-			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-
-			// Camera
-			// Runtime camera from entity
-			/*auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
-			const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
-			const Matrix4& cameraProjection = camera.GetProjection();
-			Matrix4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());*/
+			
+			ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
 
 			// Editor Camera
 			const Matrix4& cameraProjection = m_EditorCamera.GetProjection();
@@ -324,7 +320,10 @@ namespace Voxen
 	void EditorLayer::OnEvent(Event& e)
 	{
 		m_CameraController.OnEvent(e);
-		m_EditorCamera.OnEvent(e);
+		if (m_SceneState == SceneState::Edit)
+		{
+			m_EditorCamera.OnEvent(e);
+		}
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(VOX_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
@@ -339,6 +338,7 @@ namespace Voxen
 
 		bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
 		bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
+
 		switch (e.GetKeyCode())
 		{
 		case Key::N:
@@ -372,25 +372,38 @@ namespace Voxen
 		case Key::D:
 		{
 			if (control)
-				//OnDuplicateEntity();
-
+				OnDuplicateEntity();
 			break;
 		}
 
 		// Gizmos
 		case Key::Q:
-			m_GizmoType = -1;
-			break;
-		case Key::W:
-			m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
-			break;
-		case Key::E:
-			m_GizmoType = ImGuizmo::OPERATION::ROTATE;
-			break;
-		case Key::R:
-			m_GizmoType = ImGuizmo::OPERATION::SCALE;
+		{
+			if (!ImGuizmo::IsUsing())
+				m_GizmoType = -1;
 			break;
 		}
+		case Key::W:
+		{
+			if (!ImGuizmo::IsUsing())
+				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			break;
+		}
+		case Key::E:
+		{
+			if (!ImGuizmo::IsUsing())
+				m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+			break;
+		}
+		case Key::R:
+		{
+			if (!ImGuizmo::IsUsing())
+				m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			break;
+		}
+		}
+
+		return false;
 	}
 
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
@@ -421,7 +434,7 @@ namespace Voxen
 
 	void EditorLayer::OpenScene(const std::filesystem::path& path)
 	{
-		if (m_SceneState != SceneState::Edit)
+		if (m_SceneState == SceneState::Play)
 			OnSceneStop();
 
 		if (path.extension().string() != ".voxen")
@@ -469,13 +482,34 @@ namespace Voxen
 	void EditorLayer::OnScenePlay()
 	{
 		m_SceneState = SceneState::Play;
+
+		m_ActiveScene = Scene::Copy(m_EditorScene);
 		m_ActiveScene->OnRuntimeStart();
+
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
+
 	void EditorLayer::OnSceneStop()
 	{
+		VOX_CORE_ASSERT(m_SceneState == SceneState::Play);
+
 		if (m_SceneState == SceneState::Play)
 			m_ActiveScene->OnRuntimeStop();
 
 		m_SceneState = SceneState::Edit;
+
+		m_ActiveScene = m_EditorScene;
+
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+	}
+
+	void EditorLayer::OnDuplicateEntity()
+	{
+		if (m_SceneState != SceneState::Edit)
+			return;
+
+		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		if (selectedEntity)
+			m_EditorScene->DuplicateEntity(selectedEntity);
 	}
 }
