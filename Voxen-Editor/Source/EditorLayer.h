@@ -42,17 +42,11 @@ namespace Voxen
 		// UI Panels
 		void UI_Toolbar();
 	private:
-		OrthographicCameraController m_CameraController;
-
-		// Temp
-		Ref<VertexArray> m_SquareVA;
-		Ref<Shader> m_FlatColorShader;
 		Ref<Framebuffer> m_Framebuffer;
 
 		Ref<Scene> m_ActiveScene;
 		Ref<Scene> m_EditorScene;
 		std::filesystem::path m_EditorScenePath;
-		Entity m_CameraEntity;
 
 		bool m_PrimaryCamera = true;
 
