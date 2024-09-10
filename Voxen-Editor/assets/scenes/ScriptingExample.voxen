@@ -1,0 +1,31 @@
+Scene: Untitled
+Entities:
+  - Entity: 17340850028512464132
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [0, 0, 2.18473387]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 0.87266463
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 5994778806344858817
+    TagComponent:
+      Tag: Player
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      ClassName: Demo.Player
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
