@@ -414,7 +414,7 @@ namespace Voxen
 
 	void EditorLayer::OpenScene()
 	{
-		std::string filepath = FileDialogs::OpenFile("Voxen Scene (*.voxen)\0*.voxen\0");
+		std::string filepath = FileDialogs::OpenFile("Voxen Scene (*.vscene)\0*.vscene\0");
 		if (!filepath.empty())
 			OpenScene(filepath);
 	}
@@ -424,7 +424,7 @@ namespace Voxen
 		if (m_SceneState != SceneState::Edit)
 			OnSceneStop();
 
-		if (path.extension().string() != ".voxen")
+		if (path.extension().string() != ".vscene")
 		{
 			VOX_WARN("Could not load {0} - not a scene file", path.filename().string());
 			return;
@@ -453,7 +453,7 @@ namespace Voxen
 
 	void EditorLayer::SaveSceneAs()
 	{
-		std::string filepath = FileDialogs::SaveFile("Voxen Scene (*.voxen)\0*.voxen\0");
+		std::string filepath = FileDialogs::SaveFile("Voxen Scene (*.vscene)\0*.vscene\0");
 		if (!filepath.empty())
 		{
 			SerializeScene(m_ActiveScene, filepath);
