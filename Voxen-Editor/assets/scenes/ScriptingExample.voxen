@@ -9,6 +9,10 @@ Entities:
       Scale: [1, 1, 1]
     ScriptComponent:
       ClassName: Demo.Player
+      ScriptFields:
+        - Name: speed
+          Type: Float
+          Data: 2
     SpriteRendererComponent:
       Color: [1, 1, 1, 1]
   - Entity: 17340850028512464132

@@ -110,11 +110,27 @@ namespace YAML
 			return true;
 		}
 	};
+
+	template<>
+	struct convert<Voxen::UUID>
+	{
+		static Node encode(const Voxen::UUID& uuid)
+		{
+			Node node;
+			node.push_back((uint64_t)uuid);
+			return node;
+		}
+
+		static bool decode(const Node& node, Voxen::UUID& uuid)
+		{
+			uuid = node.as<uint64_t>();
+			return true;
+		}
+	};
 }
 
 namespace Voxen
 {
-
 	inline YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec2& v)
 	{
 		out << YAML::Flow;
@@ -143,4 +159,17 @@ namespace Voxen
 		out << YAML::BeginSeq << v.w << v.x << v.y << v.z << YAML::EndSeq;
 		return out;
 	}
+
+	#define WRITE_SCRIPT_FIELD(FieldType, Type)           \
+				case ScriptFieldType::FieldType:          \
+					out << scriptField.GetValue<Type>();  \
+					break
+
+	#define READ_SCRIPT_FIELD(FieldType, Type)             \
+		case ScriptFieldType::FieldType:                   \
+		{                                                  \
+			Type data = scriptField["Data"].as<Type>();    \
+			fieldInstance.SetValue(data);                  \
+			break;                                         \
+		}
 }
