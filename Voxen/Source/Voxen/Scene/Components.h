@@ -85,6 +85,14 @@ namespace Voxen
         CameraComponent(const CameraComponent&) = default;
     };
 
+    struct ScriptComponent
+    {
+        std::string ClassName;
+
+        ScriptComponent() = default;
+        ScriptComponent(const ScriptComponent&) = default;
+    };
+
     class ScriptableEntity;
     struct NativeScriptComponent
     {
@@ -100,4 +108,13 @@ namespace Voxen
             DestroyInstanceFunction = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
         }
     };
+
+    template<typename... Component>
+    struct ComponentGroup
+    {
+    };
+
+    using AllComponents =
+        ComponentGroup<TransformComponent, SpriteRendererComponent,
+        CameraComponent, ScriptComponent, NativeScriptComponent>;
 }

@@ -20,10 +20,17 @@ group "Dependencies"
 group ""
 
 -- Build for Voxen
-include "Voxen/Build-Voxen.lua"
-
--- Build for new project
-include "New Project/Build-App.lua"
+group "Core"
+    include "Voxen/Build-Voxen.lua"
+    include "Voxen-ScriptCore/Build-ScriptCore"
+group ""
 
 -- Build for the Voxen Editor
-include "Voxen-Editor/Build-Editor"
+group "Tools"
+    include "Voxen-Editor/Build-Editor"
+group ""
+
+-- Build for new project
+group "Misc"
+    include "New Project/Build-App.lua"
+group ""

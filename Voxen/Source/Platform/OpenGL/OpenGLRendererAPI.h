@@ -9,6 +9,7 @@ namespace Voxen
 	public:
 		virtual void Init() override;
 		virtual void SetViewport(uint32 x, uint32 y, uint32 width, uint32 height) override;
+
 		virtual void SetClearColor(const Vector4& color) override;
 		virtual void Clear() override;
 

@@ -3,6 +3,7 @@
 // For use by Voxen applications
 
 // Core
+#include "Voxen/Core/Core.h"
 #include "Voxen/Core/Application.h"
 #include "Voxen/Core/Input.h"
 #include "Voxen/Core/Layer.h"
@@ -11,7 +12,6 @@
 #include "Voxen/Core/Timestep.h"
 #include "Voxen/Core/KeyCodes.h"
 #include "Voxen/Core/MouseCodes.h"
-
 
 // ImGui
 #include "Voxen/ImGui/ImGuiLayer.h"
