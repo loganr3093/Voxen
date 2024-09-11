@@ -416,6 +416,15 @@ namespace Voxen
 				}
 				break;
 			}
+			case Key::F:
+			{
+				Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+				if (!selectedEntity)
+					break;
+
+				m_EditorCamera.Focus(m_ActiveScene->GetWorldSpaceTransform(selectedEntity).Translation);
+				break;
+			}
 		}
 
 		return false;

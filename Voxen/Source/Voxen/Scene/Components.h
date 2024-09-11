@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
@@ -42,7 +43,6 @@ namespace Voxen
         Vector3 Rotation = { 0.0f, 0.0f, 0.0f };
         Vector3 Scale = { 1.0f, 1.0f, 1.0f };
 
-
         TransformComponent() = default;
         TransformComponent(const TransformComponent&) = default;
         TransformComponent(const Vector3& translation)
@@ -59,6 +59,19 @@ namespace Voxen
             scale = glm::scale(scale, Scale);
 
             return translation * rotation * scale;
+        }
+
+        void SetTransform(const Matrix4& transform)
+        {
+            Vector3 translation, scale, skew;
+            Quaternion rotation;
+            Vector4 perspective;
+
+            glm::decompose(transform, scale, rotation, translation, skew, perspective);
+
+            Translation = { translation.x, translation.y, translation.z };
+            Rotation = glm::eulerAngles(rotation);
+            Scale = { scale.x, scale.y, scale.z };
         }
     };
 

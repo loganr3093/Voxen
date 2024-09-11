@@ -2,6 +2,7 @@
 
 #include "Voxen/Core/Timestep.h"
 #include "Voxen/Core/UUID.h"
+
 #include "Voxen/Renderer/EditorCamera.h"
 
 #include <entt.hpp>
@@ -9,6 +10,7 @@
 namespace Voxen
 {
 	class Entity;
+	class TransformComponent;
 
 	class Scene
 	{
@@ -33,6 +35,9 @@ namespace Voxen
 
 		Entity FindEntityByName(std::string_view name);
 		Entity GetEntityByUUID(UUID uuid);
+
+		glm::mat4 GetWorldSpaceTransformMatrix(Entity entity);
+		TransformComponent GetWorldSpaceTransform(Entity entity);
 
 		Entity GetPrimaryCameraEntity();
 

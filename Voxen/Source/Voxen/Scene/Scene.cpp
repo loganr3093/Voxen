@@ -122,6 +122,21 @@ namespace Voxen
         return {};
     }
 
+    glm::mat4 Scene::GetWorldSpaceTransformMatrix(Entity entity)
+    {
+        glm::mat4 transform(1.0f);
+
+        return transform * entity.GetComponent<TransformComponent>().GetTransform();
+    }
+
+    TransformComponent Scene::GetWorldSpaceTransform(Entity entity)
+    {
+        glm::mat4 transform = GetWorldSpaceTransformMatrix(entity);
+        TransformComponent transformComponent;
+        transformComponent.SetTransform(transform);
+        return transformComponent;
+    }
+
     void Scene::OnRuntimeStart()
     {
         m_IsRunning = true;
