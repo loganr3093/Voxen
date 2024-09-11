@@ -5,10 +5,11 @@
 
 namespace Voxen
 {
-	static const uint32 s_MaxFramebufferSize = 8192;
+	static const uint32_t s_MaxFramebufferSize = 8192;
 
 	namespace Utils
 	{
+
 		static GLenum TextureTarget(bool multisampled)
 		{
 			return multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
@@ -80,37 +81,25 @@ namespace Voxen
 		{
 			switch (format)
 			{
-			case Voxen::FramebufferTextureFormat::RGBA8:		return GL_RGBA8;
-			case Voxen::FramebufferTextureFormat::RED_INTEGER:	return GL_RED_INTEGER;
+			case FramebufferTextureFormat::RGBA8:       return GL_RGBA8;
+			case FramebufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
 			}
 
 			VOX_CORE_ASSERT(false);
 			return 0;
 		}
+
 	}
 
-	static bool IsDepthTextureFormat(FramebufferTextureFormat format)
+	OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec)
+		: m_Specification(spec)
 	{
-		switch (format)
+		for (auto spec : m_Specification.Attachments.Attachments)
 		{
-			case Voxen::FramebufferTextureFormat::DEPTH24STENCIL8: return true;
-		}
-
-		return false;
-	}
-
-	OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec) : m_Specification(spec)
-	{
-		for (auto specification : m_Specification.Attachments.Attachments)
-		{
-			if (!Utils::IsDepthFormat(specification.TextureFormat))
-			{
-				m_ColorAttachmentSpecifications.emplace_back(specification);
-			}
+			if (!Utils::IsDepthFormat(spec.TextureFormat))
+				m_ColorAttachmentSpecifications.emplace_back(spec);
 			else
-			{
-				m_DepthAttachmentSpecification = specification;
-			}
+				m_DepthAttachmentSpecification = spec;
 		}
 
 		Invalidate();
@@ -140,12 +129,12 @@ namespace Voxen
 
 		bool multisample = m_Specification.Samples > 1;
 
+		// Attachments
 		if (m_ColorAttachmentSpecifications.size())
 		{
 			m_ColorAttachments.resize(m_ColorAttachmentSpecifications.size());
 			Utils::CreateTextures(multisample, m_ColorAttachments.data(), m_ColorAttachments.size());
 
-			// Attachments
 			for (size_t i = 0; i < m_ColorAttachments.size(); i++)
 			{
 				Utils::BindTexture(multisample, m_ColorAttachments[i]);
@@ -176,16 +165,16 @@ namespace Voxen
 		if (m_ColorAttachments.size() > 1)
 		{
 			VOX_CORE_ASSERT(m_ColorAttachments.size() <= 4);
-			GLenum buffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT12, GL_COLOR_ATTACHMENT3 };
+			GLenum buffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
 			glDrawBuffers(m_ColorAttachments.size(), buffers);
 		}
 		else if (m_ColorAttachments.empty())
 		{
-			// Only depth pass
+			// Only depth-pass
 			glDrawBuffer(GL_NONE);
 		}
 
-		VOX_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete");
+		VOX_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete!");
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -201,26 +190,30 @@ namespace Voxen
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void OpenGLFramebuffer::Resize(uint32 width, uint32 height)
+	void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)
 	{
 		if (width == 0 || height == 0 || width > s_MaxFramebufferSize || height > s_MaxFramebufferSize)
 		{
-			VOX_CORE_WARN("Attempting to resize framebuffer to {0}, {1}", width, height);
+			VOX_CORE_WARN("Attempted to rezize framebuffer to {0}, {1}", width, height);
 			return;
 		}
 		m_Specification.Width = width;
 		m_Specification.Height = height;
+
 		Invalidate();
 	}
 
 	int OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, int x, int y)
 	{
 		VOX_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
-		glReadBuffer(GL_COLOR_ATTACHMENT0 +  attachmentIndex);
+
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
 		int pixelData;
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
 		return pixelData;
+
 	}
+
 	void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 	{
 		VOX_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());

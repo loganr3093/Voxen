@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Voxen/Core/UUID.h"
+
 #include "Voxen/Scene/Scene.h"
 #include "Voxen/Scene/Components.h"
 
@@ -20,10 +22,16 @@ namespace Voxen
 		T& AddComponent(Args&&... args)
 		{
 			VOX_CORE_ASSERT(!HasComponent<T>(), "Entity already has component");
-			T& component =  m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
-
+			T& component = m_Scene->m_Registry.emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
 			m_Scene->OnComponentAdded<T>(*this, component);
+			return component;
+		}
 
+		template<typename T, typename... Args>
+		T& AddOrReplaceComponent(Args&&... args)
+		{
+			T& component = m_Scene->m_Registry.emplace_or_replace<T>(m_EntityHandle, std::forward<Args>(args)...);
+			m_Scene->OnComponentAdded<T>(*this, component);
 			return component;
 		}
 
@@ -52,6 +60,7 @@ namespace Voxen
 		operator uint32() const { return (uint32)m_EntityHandle; }
 
 		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
+		const std::string& GetName() { return GetComponent<TagComponent>().Tag; }
 
 		bool operator==(const Entity& other) const
 		{
@@ -64,7 +73,7 @@ namespace Voxen
 		}
 	private:
 		entt::entity m_EntityHandle{ entt::null };
-		Scene* m_Scene;
+		Scene* m_Scene = nullptr;
 	};
 }
 

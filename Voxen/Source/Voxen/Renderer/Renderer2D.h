@@ -18,7 +18,6 @@ namespace Voxen
 		static void BeginScene(const EditorCamera& camera);
 		static void BeginScene(const OrthographicCamera& camera); // TODO remove
 		static void EndScene();
-
 		static void Flush();
 
 		// Primitives

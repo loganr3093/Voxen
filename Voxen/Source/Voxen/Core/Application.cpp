@@ -6,7 +6,9 @@
 
 #include "Voxen/Renderer/Renderer.h"
 
-#include "Voxen/Utils/PlatformUtils.h"
+#include "Voxen/Utilities/PlatformUtils.h"
+
+#include "Voxen/Scripting/ScriptEngine.h"
 
 namespace Voxen
 {
@@ -29,9 +31,15 @@ namespace Voxen
 		m_Window->SetEventCallback(VOX_BIND_EVENT_FN(Application::OnEvent));
 
 		Renderer::Init();
+		ScriptEngine::Init();
 
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
+	}
+
+	Application::~Application()
+	{
+		ScriptEngine::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -53,6 +61,13 @@ namespace Voxen
 	void Application::Close()
 	{
 		m_Running = false;
+	}
+
+	void Application::SubmitToMainThread(const std::function<void()>& function)
+	{
+		std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
+
+		m_MainThreadQueue.emplace_back(function);
 	}
 
 	void Application::OnEvent(Event& e)
@@ -82,6 +97,8 @@ namespace Voxen
 			float time = Time::GetTime();
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
+
+			ExecuteMainThreadQueue();
 
 			if (!m_Minimized)
 			{
@@ -114,6 +131,7 @@ namespace Voxen
 		m_Running = false;
 		return true;
 	}
+
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
 		VOX_PROFILE_FUNCTION();
@@ -129,5 +147,15 @@ namespace Voxen
 		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
 		return false;
+	}
+
+	void Application::ExecuteMainThreadQueue()
+	{
+		std::scoped_lock<std::mutex> lock(m_MainThreadQueueMutex);
+
+		for (auto& func : m_MainThreadQueue)
+			func();
+
+		m_MainThreadQueue.clear();
 	}
 }

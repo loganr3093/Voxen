@@ -21,10 +21,12 @@ namespace Voxen
 		{
 			s_RendererAPI->SetClearColor(color);
 		}
+
 		inline static void Clear()
 		{
 			s_RendererAPI->Clear();
 		}
+
 		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32 indexCount = 0)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, indexCount);

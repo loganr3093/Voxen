@@ -27,7 +27,7 @@ namespace Voxen
 	{
 	public:
 		Application(const ApplicationSpecification& specification);
-		virtual ~Application() = default;
+		virtual ~Application();
 
 		void Run();
 
@@ -45,12 +45,18 @@ namespace Voxen
 		inline static Application& Get() { return *s_Instance; }
 
 		const ApplicationSpecification& GetSpecification() const { return m_Specification; }
+
+		void SubmitToMainThread(const std::function<void()>& function);
 	private:
 		bool OnWindowClose(WindowCloseEvent& e);
 		bool OnWindowResize(WindowResizeEvent& e);
 
+		void ExecuteMainThreadQueue();
 	private:
 		ApplicationSpecification m_Specification;
+
+		std::vector<std::function<void()>> m_MainThreadQueue;
+		std::mutex m_MainThreadQueueMutex;
 
 		static Application* s_Instance;
 

@@ -1,84 +1,21 @@
 #include "voxpch.h"
 #include "Voxen/Scene/SceneSerializer.h"
 
-#include "Voxen/Scene/Components.h"
+#include "Voxen/Core/UUID.h"
+
 #include "Voxen/Scene/Entity.h"
+#include "Voxen/Scene/Components.h"
+
+#include "Voxen/Scripting/ScriptEngine.h"
+
+#include "Voxen/Utilities/YAMLHelper.h"
 
 #include <yaml-cpp/yaml.h>
 
 #include <fstream>
 
-namespace YAML
-{
-	template<>
-	struct convert<Vector3>
-	{
-		static Node encode(const Vector3& rhs)
-		{
-			Node node;
-			node.push_back(rhs.x);
-			node.push_back(rhs.y);
-			node.push_back(rhs.z);
-			node.SetStyle(EmitterStyle::Flow);
-			return node;
-		}
-
-		static bool decode(const Node& node, Vector3& rhs)
-		{
-			if (!node.IsSequence() || node.size() != 3)
-				return false;
-
-			rhs.x = node[0].as<float>();
-			rhs.y = node[1].as<float>();
-			rhs.z = node[2].as<float>();
-			return true;
-		}
-	};
-
-	template<>
-	struct convert<Vector4>
-	{
-		static Node encode(const Vector4& rhs)
-		{
-			Node node;
-			node.push_back(rhs.x);
-			node.push_back(rhs.y);
-			node.push_back(rhs.z);
-			node.push_back(rhs.w);
-			node.SetStyle(EmitterStyle::Flow);
-			return node;
-		}
-
-		static bool decode(const Node& node, Vector4& rhs)
-		{
-			if (!node.IsSequence() || node.size() != 4)
-				return false;
-
-			rhs.x = node[0].as<float>();
-			rhs.y = node[1].as<float>();
-			rhs.z = node[2].as<float>();
-			rhs.w = node[3].as<float>();
-			return true;
-		}
-	};
-}
-
 namespace Voxen
 {
-	YAML::Emitter& operator<<(YAML::Emitter& out, const Vector3& v)
-	{
-		out << YAML::Flow;
-		out << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
-		return out;
-	}
-
-	YAML::Emitter& operator<<(YAML::Emitter& out, const Vector4& v)
-	{
-		out << YAML::Flow;
-		out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
-		return out;
-	}
-
 	SceneSerializer::SceneSerializer(const Ref<Scene>& scene)
 		: m_Scene(scene)
 	{
@@ -101,6 +38,7 @@ namespace Voxen
 
 			out << YAML::EndMap; // TagComponent
 		}
+
 		if (entity.HasComponent<TransformComponent>())
 		{
 			out << YAML::Key << "TransformComponent";
@@ -139,6 +77,61 @@ namespace Voxen
 			out << YAML::EndMap; // CameraComponent
 		}
 
+		if (entity.HasComponent<ScriptComponent>())
+		{
+			auto& scriptComponent = entity.GetComponent<ScriptComponent>();
+
+			out << YAML::Key << "ScriptComponent";
+			out << YAML::BeginMap; // ScriptComponent
+			out << YAML::Key << "ClassName" << YAML::Value << scriptComponent.ClassName;
+
+			// Fields
+			Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(scriptComponent.ClassName);
+			const auto& fields = entityClass->GetFields();
+			if (fields.size() > 0)
+			{
+				out << YAML::Key << "ScriptFields" << YAML::Value;
+				auto& entityFields = ScriptEngine::GetScriptFieldMap(entity);
+				out << YAML::BeginSeq;
+				for (const auto& [name, field] : fields)
+				{
+					if (entityFields.find(name) == entityFields.end())
+						continue;
+
+					out << YAML::BeginMap; // ScriptField
+					out << YAML::Key << "Name" << YAML::Value << name;
+					out << YAML::Key << "Type" << YAML::Value << Utils::ScriptFieldTypeToString(field.Type);
+
+					out << YAML::Key << "Data" << YAML::Value;
+					ScriptFieldInstance& scriptField = entityFields.at(name);
+
+					switch (field.Type)
+					{
+						WRITE_SCRIPT_FIELD(Float, float);
+						WRITE_SCRIPT_FIELD(Double, double);
+						WRITE_SCRIPT_FIELD(Bool, bool);
+						WRITE_SCRIPT_FIELD(Char, char);
+						WRITE_SCRIPT_FIELD(Byte, int8_t);
+						WRITE_SCRIPT_FIELD(Short, int16_t);
+						WRITE_SCRIPT_FIELD(Int, int32_t);
+						WRITE_SCRIPT_FIELD(Long, int64_t);
+						WRITE_SCRIPT_FIELD(UByte, uint8_t);
+						WRITE_SCRIPT_FIELD(UShort, uint16_t);
+						WRITE_SCRIPT_FIELD(UInt, uint32_t);
+						WRITE_SCRIPT_FIELD(ULong, uint64_t);
+						WRITE_SCRIPT_FIELD(Vector2, glm::vec2);
+						WRITE_SCRIPT_FIELD(Vector3, glm::vec3);
+						WRITE_SCRIPT_FIELD(Vector4, glm::vec4);
+						WRITE_SCRIPT_FIELD(Entity, UUID);
+					}
+					out << YAML::EndMap; // ScriptFields
+				}
+				out << YAML::EndSeq;
+			}
+
+			out << YAML::EndMap; // ScriptComponent
+		}
+
 		if (entity.HasComponent<SpriteRendererComponent>())
 		{
 			out << YAML::Key << "SpriteRendererComponent";
@@ -172,16 +165,23 @@ namespace Voxen
 
 		std::ofstream fout(filepath);
 		fout << out.c_str();
-	}
 
-	void SceneSerializer::SerializeRuntime(const std::string& filepath)
-	{
-		VOX_CORE_ASSERT(false);
+
 	}
 
 	bool SceneSerializer::Deserialize(const std::string& filepath)
 	{
-		YAML::Node data = YAML::LoadFile(filepath);
+		YAML::Node data;
+		try
+		{
+			data = YAML::LoadFile(filepath);
+		}
+		catch (YAML::ParserException e)
+		{
+			VOX_CORE_ERROR("Failed to load .vscene file '{0}'\n     {1}", filepath, e.what());
+			return false;
+		}
+
 		if (!data["Scene"])
 			return false;
 
@@ -189,64 +189,123 @@ namespace Voxen
 		VOX_CORE_TRACE("Deserializing scene '{0}'", sceneName);
 
 		auto entities = data["Entities"];
-		if (entities)
+		if (!entities) return true;
+		for (auto entity : entities)
 		{
-			for (auto entity : entities)
+			uint64 uuid = entity["Entity"].as<uint64>();
+
+			std::string name;
+			auto tagComponent = entity["TagComponent"];
+			if (tagComponent)
+				name = tagComponent["Tag"].as<std::string>();
+
+			VOX_CORE_TRACE("Deserialized entity with ID = {0}, name = {1}", uuid, name);
+
+			Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid, name);
+
+			auto transformComponent = entity["TransformComponent"];
+			if (transformComponent)
 			{
-				uint64_t uuid = entity["Entity"].as<uint64_t>();
+				// Entities always have transforms
+				auto& tc = deserializedEntity.GetComponent<TransformComponent>();
+				tc.Translation = transformComponent["Translation"].as<Vector3>(Vector3(0.0f));
+				tc.Rotation = transformComponent["Rotation"].as<Vector3>(Vector3(0.0f));
+				tc.Scale = transformComponent["Scale"].as<Vector3>(Vector3(0.0f));
+			}
 
-				std::string name;
-				auto tagComponent = entity["TagComponent"];
-				if (tagComponent)
-					name = tagComponent["Tag"].as<std::string>();
+			auto cameraComponent = entity["CameraComponent"];
+			if (cameraComponent)
+			{
+				auto& component = deserializedEntity.AddComponent<CameraComponent>();
+				const auto& cameraNode = cameraComponent["Camera"];
 
-				VOX_CORE_TRACE("Deserialized entity with ID = {0}, name = {1}", uuid, name);
+				component.Camera = SceneCamera();
+				auto& camera = component.Camera;
 
-				Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid, name);
-
-				auto transformComponent = entity["TransformComponent"];
-				if (transformComponent)
+				if (cameraNode.IsMap())
 				{
-					// Entities always have transforms
-					auto& tc = deserializedEntity.GetComponent<TransformComponent>();
-					tc.Translation = transformComponent["Translation"].as<Vector3>();
-					tc.Rotation = transformComponent["Rotation"].as<Vector3>();
-					tc.Scale = transformComponent["Scale"].as<Vector3>();
+					if (cameraNode["ProjectionType"])
+						camera.SetProjectionType((SceneCamera::ProjectionType)cameraNode["ProjectionType"].as<int>());
+					if (cameraNode["PerspectiveFOV"])
+						camera.SetPerspectiveVerticalFOV(cameraNode["PerspectiveFOV"].as<float>());
+					if (cameraNode["PerspectiveNear"])
+						camera.SetPerspectiveNearClip(cameraNode["PerspectiveNear"].as<float>());
+					if (cameraNode["PerspectiveFar"])
+						camera.SetPerspectiveFarClip(cameraNode["PerspectiveFar"].as<float>());
+					if (cameraNode["OrthographicSize"])
+						camera.SetOrthographicSize(cameraNode["OrthographicSize"].as<float>());
+					if (cameraNode["OrthographicNear"])
+						camera.SetOrthographicNearClip(cameraNode["OrthographicNear"].as<float>());
+					if (cameraNode["OrthographicFar"])
+						camera.SetOrthographicFarClip(cameraNode["OrthographicFar"].as<float>());
 				}
 
-				auto cameraComponent = entity["CameraComponent"];
-				if (cameraComponent)
+				component.Primary = cameraComponent["Primary"].as<bool>();
+			}
+
+			auto scriptComponent = entity["ScriptComponent"];
+			if (scriptComponent)
+			{
+				auto& sc = deserializedEntity.AddComponent<ScriptComponent>();
+				sc.ClassName = scriptComponent["ClassName"].as<std::string>();
+
+				auto scriptFields = scriptComponent["ScriptFields"];
+				if (scriptFields)
 				{
-					auto& cc = deserializedEntity.AddComponent<CameraComponent>();
+					Ref<ScriptClass> entityClass = ScriptEngine::GetEntityClass(sc.ClassName);
+					if (entityClass)
+					{
+						const auto& fields = entityClass->GetFields();
+						auto& entityFields = ScriptEngine::GetScriptFieldMap(deserializedEntity);
 
-					cc.Camera.SetProjectionType((SceneCamera::ProjectionType)cameraComponent["Camera"]["ProjectionType"].as<int>());
+						for (auto scriptField : scriptFields)
+						{
+							std::string name = scriptField["Name"].as<std::string>();
+							std::string typeString = scriptField["Type"].as<std::string>();
+							ScriptFieldType type = Utils::ScriptFieldTypeFromString(typeString);
 
-					cc.Camera.SetPerspectiveVerticalFOV(cameraComponent["Camera"]["PerspectiveFOV"].as<float>());
-					cc.Camera.SetPerspectiveNearClip(cameraComponent["Camera"]["PerspectiveNear"].as<float>());
-					cc.Camera.SetPerspectiveFarClip(cameraComponent["Camera"]["PerspectiveFar"].as<float>());
+							ScriptFieldInstance& fieldInstance = entityFields[name];
 
-					cc.Camera.SetOrthographicSize(cameraComponent["Camera"]["OrthographicSize"].as<float>());
-					cc.Camera.SetOrthographicNearClip(cameraComponent["Camera"]["OrthographicNear"].as<float>());
-					cc.Camera.SetOrthographicFarClip(cameraComponent["Camera"]["OrthographicFar"].as<float>());
+							// TODO(Yan): turn this assert into Hazelnut log warning
+							VOX_CORE_ASSERT(fields.find(name) != fields.end());
 
-					cc.Primary = cameraComponent["Primary"].as<bool>();
-					cc.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
+							if (fields.find(name) == fields.end())
+								continue;
+
+							fieldInstance.Field = fields.at(name);
+
+							switch (type)
+							{
+								READ_SCRIPT_FIELD(Float, float);
+								READ_SCRIPT_FIELD(Double, double);
+								READ_SCRIPT_FIELD(Bool, bool);
+								READ_SCRIPT_FIELD(Char, char);
+								READ_SCRIPT_FIELD(Byte, int8_t);
+								READ_SCRIPT_FIELD(Short, int16_t);
+								READ_SCRIPT_FIELD(Int, int32_t);
+								READ_SCRIPT_FIELD(Long, int64_t);
+								READ_SCRIPT_FIELD(UByte, uint8_t);
+								READ_SCRIPT_FIELD(UShort, uint16_t);
+								READ_SCRIPT_FIELD(UInt, uint32_t);
+								READ_SCRIPT_FIELD(ULong, uint64_t);
+								READ_SCRIPT_FIELD(Vector2, glm::vec2);
+								READ_SCRIPT_FIELD(Vector3, glm::vec3);
+								READ_SCRIPT_FIELD(Vector4, glm::vec4);
+								READ_SCRIPT_FIELD(Entity, UUID);
+							}
+						}
+					}
 				}
+			}
 
-				auto spriteRendererComponent = entity["SpriteRendererComponent"];
-				if (spriteRendererComponent)
-				{
-					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
-					src.Color = spriteRendererComponent["Color"].as<Vector4>();
-				}
+			auto spriteRendererComponent = entity["SpriteRendererComponent"];
+			if (spriteRendererComponent)
+			{
+				auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
+				src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
 			}
 		}
 
 		return true;
-	}
-	bool SceneSerializer::DeserializeRuntime(const std::string& filepath)
-	{
-		VOX_CORE_ASSERT(false);
-		return false;
 	}
 }

@@ -4,7 +4,6 @@
 #include "Voxen/Scene/Scene.h"
 #include "Voxen/Scene/Entity.h"
 
-
 namespace Voxen
 {
 	class SceneHierarchyPanel
@@ -19,8 +18,10 @@ namespace Voxen
 
 		Entity GetSelectedEntity() const { return m_SelectionContext; }
 		void SetSelectedEntity(Entity entity);
-
 	private:
+		template<typename T>
+		void DisplayAddComponentEntry(const std::string& entryName);
+
 		void DrawEntityNode(Entity entity);
 		void DrawComponents(Entity entity);
 	private:

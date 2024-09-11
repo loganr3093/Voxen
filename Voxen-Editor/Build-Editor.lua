@@ -19,6 +19,7 @@ project "Voxen-Editor"
         "../Voxen/Source",
         "../Voxen/vendor",
         "../Voxen/vendor/glm",
+        "../Voxen/vendor/filewatch",
         "../Voxen/vendor/entt",
         "../Voxen/vendor/ImGuizmo"
     }
