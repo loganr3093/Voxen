@@ -370,10 +370,7 @@ namespace Voxen
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
 
 			if (ImGui::InputText("Class", buffer, sizeof(buffer)))
-			{
 				component.ClassName = buffer;
-				return;
-			}
 
 			// Fields
 			bool sceneRunning = scene->IsRunning();

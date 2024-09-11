@@ -110,6 +110,18 @@ namespace Voxen
         m_EntityMap.erase(entity.GetUUID());
     }
 
+    Entity Scene::FindEntityByName(std::string_view name)
+    {
+        auto view = m_Registry.view<TagComponent>();
+        for (auto entity : view)
+        {
+            const TagComponent& tc = view.get<TagComponent>(entity);
+            if (tc.Tag == name)
+                return Entity{ entity, this };
+        }
+        return {};
+    }
+
     void Scene::OnRuntimeStart()
     {
         m_IsRunning = true;
@@ -204,6 +216,9 @@ namespace Voxen
 
     void Scene::OnViewportResize(uint32 width, uint32 height)
     {
+        if (m_ViewportWidth == width && m_ViewportHeight == height)
+            return;
+
         m_ViewportWidth = width;
         m_ViewportHeight = height;
 

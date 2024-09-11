@@ -13,7 +13,12 @@ namespace Voxen
 {
 	static std::unordered_map <MonoType*, std::function<bool(Entity)>> s_EntityHasComponentFunctions;
 
-#define VOX_ADD_INTERNAL_CALL(Name) mono_add_internal_call("Voxen.InternalCalls::" #Name, Name)
+	#define VOX_ADD_INTERNAL_CALL(Name) mono_add_internal_call("Voxen.InternalCalls::" #Name, Name)
+
+	static MonoObject* GetScriptInstance(UUID entityID)
+	{
+		return ScriptEngine::GetManagedInstance(entityID);
+	}
 
 	static bool Entity_HasComponent(UUID entityID, MonoReflectionType* componentType)
 	{
@@ -27,6 +32,20 @@ namespace Voxen
 		return s_EntityHasComponentFunctions.at(managedType)(entity);
 	}
 
+	static uint64 Entity_FindEntityByName(MonoString* name)
+	{
+		char* nameCStr = mono_string_to_utf8(name);
+
+		Scene* scene = ScriptEngine::GetSceneContext();
+		VOX_CORE_ASSERT(scene);
+		Entity entity = scene->FindEntityByName(nameCStr);
+		mono_free(nameCStr);
+
+		if (!entity)
+			return 0;
+
+		return entity.GetUUID();
+	}
 
 	static void TransformComponent_GetTranslation(UUID entityID, Vector3* outTranslation)
 	{
@@ -81,6 +100,9 @@ namespace Voxen
 	void ScriptGlue::RegisterFunctions()
 	{
 		VOX_ADD_INTERNAL_CALL(Entity_HasComponent);
+
+		VOX_ADD_INTERNAL_CALL(GetScriptInstance);
+		VOX_ADD_INTERNAL_CALL(Entity_FindEntityByName);
 
 		VOX_ADD_INTERNAL_CALL(TransformComponent_GetTranslation);
 		VOX_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);

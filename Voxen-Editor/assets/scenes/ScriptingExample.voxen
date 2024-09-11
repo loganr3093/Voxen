@@ -1,20 +1,14 @@
 Scene: Untitled
 Entities:
-  - Entity: 5994778806344858817
+  - Entity: 17239399587919783183
     TagComponent:
-      Tag: Player
+      Tag: Background
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [1.81624746, 0, 0]
       Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    ScriptComponent:
-      ClassName: Demo.Player
-      ScriptFields:
-        - Name: speed
-          Type: Float
-          Data: 2
+      Scale: [0.5, 0.5, 1]
     SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
+      Color: [0, 1, 1, 1]
   - Entity: 17340850028512464132
     TagComponent:
       Tag: Camera
@@ -25,7 +19,7 @@ Entities:
     CameraComponent:
       Camera:
         ProjectionType: 0
-        PerspectiveFOV: 0.87266463
+        PerspectiveFOV: 1.04719758
         PerspectiveNear: 0.00999999978
         PerspectiveFar: 1000
         OrthographicSize: 10
@@ -33,3 +27,27 @@ Entities:
         OrthographicFar: 1
       Primary: true
       FixedAspectRatio: false
+    ScriptComponent:
+      ClassName: Demo.Camera
+      ScriptFields:
+        - Name: speed
+          Type: Float
+          Data: 2
+        - Name: targetDistance
+          Type: Float
+          Data: 5
+  - Entity: 5994778806344858817
+    TagComponent:
+      Tag: Player
+    TransformComponent:
+      Translation: [-7.4505806e-09, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      ClassName: Demo.Player
+      ScriptFields:
+        - Name: speed
+          Type: Float
+          Data: 3
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
