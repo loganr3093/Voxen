@@ -22,7 +22,7 @@ namespace Voxen
 
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = std::string());
-		void DestroyEntity(Entity entity);
+		bool DestroyEntity(Entity entity);
 
 		void OnRuntimeStart();
 		void OnRuntimeStop();

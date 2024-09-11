@@ -1,5 +1,7 @@
 #include "EditorLayer.h"
 
+#include "EditorResources.h"
+
 #include "Voxen/Scene/SceneSerializer.h"
 
 #include "Voxen/Utilities/PlatformUtils.h"
@@ -28,8 +30,7 @@ namespace Voxen
 	{
 		VOX_PROFILE_FUNCTION();
 
-		m_IconPlay = Texture2D::Create("Resources/Icons/PlayButton.png");
-		m_IconStop = Texture2D::Create("Resources/Icons/StopButton.png");
+		EditorResources::Init();
 
 		FramebufferSpecification fbSpec;
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
@@ -50,6 +51,8 @@ namespace Voxen
 	void EditorLayer::OnDetach()
 	{
 		VOX_PROFILE_FUNCTION();
+
+		EditorResources::Shutdown();
 	}
 
 	void EditorLayer::OnUpdate(Timestep ts)
@@ -312,7 +315,7 @@ namespace Voxen
 
 		float size = ImGui::GetWindowHeight() - 4.0f;
 
-		Ref<Texture2D> icon = m_SceneState == SceneState::Edit ? m_IconPlay : m_IconStop;
+		Ref<Texture2D> icon = m_SceneState == SceneState::Edit ? EditorResources::PlayIcon : EditorResources::StopIcon;
 		ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));
 		if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(size, size), ImVec2(0, 0), ImVec2(1, 1), 0))
 		{
@@ -384,6 +387,20 @@ namespace Voxen
 					OnDuplicateEntity();
 				break;
 			}
+			case Key::F:
+			{
+				Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+				if (!selectedEntity)
+					break;
+
+				m_EditorCamera.Focus(m_ActiveScene->GetWorldSpaceTransform(selectedEntity).Translation);
+				break;
+			}
+			case Key::Escape:
+			{
+				m_SceneHierarchyPanel.SetSelectedEntity({});
+				break;
+			}
 
 			// Gizmos
 			case Key::Q:
@@ -414,15 +431,6 @@ namespace Voxen
 				{
 					m_GizmoType = ImGuizmo::OPERATION::SCALE;
 				}
-				break;
-			}
-			case Key::F:
-			{
-				Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
-				if (!selectedEntity)
-					break;
-
-				m_EditorCamera.Focus(m_ActiveScene->GetWorldSpaceTransform(selectedEntity).Translation);
 				break;
 			}
 		}

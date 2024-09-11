@@ -1,5 +1,7 @@
 #include "ContentBrowserPanel.h"
 
+#include "EditorResources.h"
+
 #include "Voxen/Project/Project.h"
 
 #include <imgui/imgui.h>
@@ -9,10 +11,11 @@ namespace Voxen
 	ContentBrowserPanel::ContentBrowserPanel()
 		: m_BaseDirectory(Project::GetAssetDirectory()), m_CurrentDirectory(m_BaseDirectory)
 	{
-		m_DirectoryIcon = Texture2D::Create("Resources/Icons/ContentBrowser/DirectoryIcon.png");
-		m_FileIcon = Texture2D::Create("Resources/Icons/ContentBrowser/FileIcon.png");
 	}
 
+	const static std::vector<std::string> excludedFileTypes = { ".bin", ".vs", ".auto", ".sln", ".csproj" };
+	const static std::vector<std::string> excludedFiles = { };
+	const static std::vector<std::string> excludedDirectories = { "Binaries", "Intermediates" };
 	void ContentBrowserPanel::OnImGuiRender()
 	{
 		ImGui::Begin("Content Browser");
@@ -60,9 +63,49 @@ namespace Voxen
 		{
 			const auto& path = directoryEntry.path();
 			std::string filenameString = path.filename().string();
+			std::string fileExtension = path.extension().string();
+
+			// Files to skip
+			if (
+				filenameString[0] == '.' ||
+				std::find(excludedDirectories.begin(), excludedDirectories.end(), filenameString) != excludedDirectories.end() ||
+				std::find(excludedFiles.begin(), excludedFiles.end(), filenameString) != excludedFiles.end() ||
+				std::find(excludedFileTypes.begin(), excludedFileTypes.end(), fileExtension) != excludedFileTypes.end()
+				)
+			{
+				continue;
+			}
 
 			ImGui::PushID(filenameString.c_str());
-			Ref<Texture2D> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
+			Ref<Texture2D> icon = EditorResources::FolderIcon;
+
+			if (!directoryEntry.is_directory())
+			{
+				icon = EditorResources::BlankFileIcon;
+
+				// You can now check the file type based on the extension
+				if (fileExtension == ".txt")
+				{
+					icon = EditorResources::TextFileIcon;
+				}
+				else if (fileExtension == ".cs")
+				{
+					icon = EditorResources::CSFileIcon;
+				}
+				else if (fileExtension == ".vscene")
+				{
+					icon = EditorResources::VSCFileIcon;
+				}
+				else if (fileExtension == ".lua")
+				{
+					icon = EditorResources::LuaFileIcon;
+				}
+				else if (fileExtension == ".bat")
+				{
+					icon = EditorResources::BatFileIcon;
+				}
+			}
+
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
 			ImGui::ImageButton((ImTextureID)icon->GetRendererID(), { thumbnailSize, thumbnailSize }, { 0, 1 }, { 1, 0 });
 

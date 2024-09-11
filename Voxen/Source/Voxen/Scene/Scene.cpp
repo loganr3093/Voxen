@@ -104,10 +104,18 @@ namespace Voxen
         return entity;
     }
 
-    void Scene::DestroyEntity(Entity entity)
+    bool Scene::DestroyEntity(Entity entity)
     {
-        m_Registry.destroy(entity);
+        if (m_EntityMap.find(entity.GetUUID()) == m_EntityMap.end())
+        {
+            VOX_CORE_WARN("Attempting to delete non-existant entity");
+            return false;
+        }
+
         m_EntityMap.erase(entity.GetUUID());
+        m_Registry.destroy(entity);
+
+        return true;
     }
 
     Entity Scene::FindEntityByName(std::string_view name)

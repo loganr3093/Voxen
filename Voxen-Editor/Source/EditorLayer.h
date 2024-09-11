@@ -70,14 +70,10 @@ namespace Voxen
 			Edit = 0,
 			Play = 1
 		};
-
 		SceneState m_SceneState = SceneState::Edit;
 
 		// Panels
 		SceneHierarchyPanel m_SceneHierarchyPanel;
 		Scope<ContentBrowserPanel> m_ContentBrowserPanel;
-
-		// Editor Resources
-		Ref<Texture2D> m_IconPlay, m_IconStop;
 	};
 }

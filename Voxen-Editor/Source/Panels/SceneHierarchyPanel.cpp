@@ -49,9 +49,18 @@ namespace Voxen
 			// Right-click on blank space
 			if (ImGui::BeginPopupContextWindow(0, 1 | ImGuiPopupFlags_NoOpenOverItems))
 			{
-				if (ImGui::MenuItem("Create Empty Entity"))
+				if (ImGui::MenuItem("Create Empty"))
 				{
-					m_Context->CreateEntity("Empty Entity");
+					m_Context->CreateEntity("Empty");
+				}
+				if (ImGui::MenuItem("Create Camera"))
+				{
+					Entity camera = m_Context->CreateEntity("Camera");
+					auto& cc = camera.AddComponent<CameraComponent>();
+					if (!m_Context->GetPrimaryCameraEntity())
+						cc.Primary = true;
+					else
+						cc.Primary = false;
 				}
 
 				ImGui::EndPopup();
@@ -361,16 +370,20 @@ namespace Voxen
 		// Script
 		DrawComponent<ScriptComponent>("Script", entity, [entity, scene = m_Context](auto& component) mutable
 		{
-			bool scriptClassExists = ScriptEngine::EntityClassExists(component.ClassName);
-
 			static char buffer[64];
 			strcpy_s(buffer, sizeof(buffer), component.ClassName.c_str());
 
+			bool scriptClassExists = ScriptEngine::EntityClassExists(component.ClassName);
 			if (!scriptClassExists)
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
 
 			if (ImGui::InputText("Class", buffer, sizeof(buffer)))
 				component.ClassName = buffer;
+
+			if (!scriptClassExists)
+				ImGui::PopStyleColor();
+
+			scriptClassExists = ScriptEngine::EntityClassExists(component.ClassName);
 
 			// Fields
 			bool sceneRunning = scene->IsRunning();
@@ -433,9 +446,6 @@ namespace Voxen
 					}
 				}
 			}
-
-			if (!scriptClassExists)
-				ImGui::PopStyleColor();
 		});
 	}
 
