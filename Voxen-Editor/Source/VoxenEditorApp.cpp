@@ -13,10 +13,6 @@ namespace Voxen
 		{
 			PushLayer(new EditorLayer());
 		}
-		~VoxenEditor()
-		{
-
-		}
 	};
 
 	Application* CreateApplication()
@@ -24,6 +20,7 @@ namespace Voxen
 		ApplicationSpecification spec;
 		spec.Name = "Voxen-Hub";
 		spec.WorkingDirectory = "./";
+
 		return new VoxenEditor(spec);
 	}
 }

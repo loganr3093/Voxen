@@ -35,3 +35,6 @@
 
 #include "Voxen/Renderer/OrthographicCamera.h"
 #include "Voxen/Renderer/OrthographicCameraController.h"
+
+// Project
+#include "Voxen/Project/Project.h"
