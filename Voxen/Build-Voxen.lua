@@ -36,6 +36,7 @@ project "Voxen"
         "vendor/entt",
         "vendor/yaml-cpp/include",
         "vendor/ImGuizmo",
+        "vendor/filewatch",
         "vendor/mono/include",
     }
 

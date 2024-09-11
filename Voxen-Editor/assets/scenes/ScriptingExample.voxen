@@ -1,14 +1,20 @@
 Scene: Untitled
 Entities:
-  - Entity: 17239399587919783183
+  - Entity: 5994778806344858817
     TagComponent:
-      Tag: Background
+      Tag: Player
     TransformComponent:
-      Translation: [1.81624746, 0, 0]
+      Translation: [-7.4505806e-09, 0, 0]
       Rotation: [0, 0, 0]
-      Scale: [0.5, 0.5, 1]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      ClassName: Demo.Player
+      ScriptFields:
+        - Name: speed
+          Type: Float
+          Data: 3
     SpriteRendererComponent:
-      Color: [0, 1, 1, 1]
+      Color: [1, 1, 1, 1]
   - Entity: 17340850028512464132
     TagComponent:
       Tag: Camera
@@ -33,21 +39,12 @@ Entities:
         - Name: speed
           Type: Float
           Data: 2
-        - Name: targetDistance
-          Type: Float
-          Data: 5
-  - Entity: 5994778806344858817
+  - Entity: 17239399587919783183
     TagComponent:
-      Tag: Player
+      Tag: Background
     TransformComponent:
-      Translation: [-7.4505806e-09, 0, 0]
+      Translation: [1.81624746, 0, 0]
       Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    ScriptComponent:
-      ClassName: Demo.Player
-      ScriptFields:
-        - Name: speed
-          Type: Float
-          Data: 3
+      Scale: [0.5, 0.5, 1]
     SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
+      Color: [0, 1, 1, 1]
