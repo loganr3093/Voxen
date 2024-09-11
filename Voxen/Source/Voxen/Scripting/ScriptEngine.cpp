@@ -35,7 +35,6 @@ namespace Voxen
 
 	namespace Utils
 	{
-
 		// TODO: move to FileSystem class
 		static char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)
 		{
@@ -91,6 +90,23 @@ namespace Voxen
 			return assembly;
 		}
 
+		void PrintAssemblyTypes(MonoAssembly* assembly)
+		{
+			MonoImage* image = mono_assembly_get_image(assembly);
+			const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
+			int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
+
+			for (int32_t i = 0; i < numTypes; i++)
+			{
+				uint32_t cols[MONO_TYPEDEF_SIZE];
+				mono_metadata_decode_row(typeDefinitionsTable, i, cols, MONO_TYPEDEF_SIZE);
+
+				const char* nameSpace = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);
+				const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
+				VOX_CORE_TRACE("{}.{}", nameSpace, name);
+			}
+		}
+
 		ScriptFieldType MonoTypeToScriptFieldType(MonoType* monoType)
 		{
 			std::string typeName = mono_type_get_name(monoType);
@@ -128,6 +144,7 @@ namespace Voxen
 			}
 			return "<Invalid>";
 		}
+
 	}
 
 	struct ScriptEngineData
@@ -145,22 +162,13 @@ namespace Voxen
 
 		std::unordered_map<std::string, Ref<ScriptClass>> EntityClasses;
 		std::unordered_map<UUID, Ref<ScriptInstance>> EntityInstances;
+		std::unordered_map<UUID, ScriptFieldMap> EntityScriptFields;
 
 		// Runtime
 		Scene* SceneContext = nullptr;
 	};
 
 	static ScriptEngineData* s_Data = nullptr;
-
-	Ref<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID entityID)
-	{
-		auto data = s_Data->EntityInstances;
-		auto it = s_Data->EntityInstances.find(entityID);
-		if (it == s_Data->EntityInstances.end())
-			return nullptr;
-
-		return it->second;
-	}
 
 	void ScriptEngine::Init()
 	{
@@ -170,8 +178,6 @@ namespace Voxen
 		LoadAssembly("Resources/Scripts/Voxen-ScriptCore.dll");
 		LoadAppAssembly("DemoProject/Assets/Scripts/Binaries/Demo.dll");
 		LoadAssemblyClasses();
-
-		auto& classes = s_Data->EntityClasses;
 
 		ScriptGlue::RegisterComponents();
 		ScriptGlue::RegisterFunctions();
@@ -230,29 +236,7 @@ namespace Voxen
 		s_Data->SceneContext = scene;
 	}
 
-	void ScriptEngine::OnRuntimeStop()
-	{
-		s_Data->SceneContext = nullptr;
-
-		s_Data->EntityInstances.clear();
-	}
-
-	Scene* ScriptEngine::GetSceneContext()
-	{
-		return s_Data->SceneContext;
-	}
-
-	std::unordered_map<std::string, Ref<ScriptClass>> ScriptEngine::GetEntityClasses()
-	{
-		return s_Data->EntityClasses;
-	}
-
-	MonoImage* ScriptEngine::GetCoreAssemblyImage()
-	{
-		return s_Data->CoreAssemblyImage;
-	}
-
-	bool ScriptEngine::EntityClassExists(std::string fullClassName)
+	bool ScriptEngine::EntityClassExists(const std::string& fullClassName)
 	{
 		return s_Data->EntityClasses.find(fullClassName) != s_Data->EntityClasses.end();
 	}
@@ -262,8 +246,19 @@ namespace Voxen
 		const auto& sc = entity.GetComponent<ScriptComponent>();
 		if (ScriptEngine::EntityClassExists(sc.ClassName))
 		{
+			UUID entityID = entity.GetUUID();
+
 			Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(s_Data->EntityClasses[sc.ClassName], entity);
-			s_Data->EntityInstances[entity.GetUUID()] = instance;
+			s_Data->EntityInstances[entityID] = instance;
+
+			// Copy field values
+			if (s_Data->EntityScriptFields.find(entityID) != s_Data->EntityScriptFields.end())
+			{
+				const ScriptFieldMap& fieldMap = s_Data->EntityScriptFields.at(entityID);
+				for (const auto& [name, fieldInstance] : fieldMap)
+					instance->SetFieldValueInternal(name, fieldInstance.m_Buffer);
+			}
+
 			instance->InvokeOnCreate();
 		}
 	}
@@ -277,17 +272,58 @@ namespace Voxen
 		instance->InvokeOnUpdate((float)ts);
 	}
 
+	Scene* ScriptEngine::GetSceneContext()
+	{
+		return s_Data->SceneContext;
+	}
+
+	Ref<ScriptInstance> ScriptEngine::GetEntityScriptInstance(UUID entityID)
+	{
+		auto it = s_Data->EntityInstances.find(entityID);
+		if (it == s_Data->EntityInstances.end())
+			return nullptr;
+
+		return it->second;
+	}
+
+	Ref<ScriptClass> ScriptEngine::GetEntityClass(const std::string& className)
+	{
+		if (s_Data->EntityClasses.find(className) == s_Data->EntityClasses.end())
+			return nullptr;
+		return s_Data->EntityClasses.at(className);
+	}
+
+	void ScriptEngine::OnRuntimeStop()
+	{
+		s_Data->SceneContext = nullptr;
+
+		s_Data->EntityInstances.clear();
+	}
+
+	std::unordered_map<std::string, Ref<ScriptClass>> ScriptEngine::GetEntityClasses()
+	{
+		return s_Data->EntityClasses;
+	}
+
+	ScriptFieldMap& ScriptEngine::GetScriptFieldMap(Entity entity)
+	{
+		VOX_CORE_ASSERT(entity);
+
+		UUID entityID = entity.GetUUID();
+		return s_Data->EntityScriptFields[entityID];
+	}
+
 	void ScriptEngine::LoadAssemblyClasses()
 	{
 		s_Data->EntityClasses.clear();
 
 		const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(s_Data->AppAssemblyImage, MONO_TABLE_TYPEDEF);
-		int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
+		int32 numTypes = mono_table_info_get_rows(typeDefinitionsTable);
 		MonoClass* entityClass = mono_class_from_name(s_Data->CoreAssemblyImage, "Voxen", "Entity");
 
-		for (int32_t i = 0; i < numTypes; i++)
+		for (int32 i = 0; i < numTypes; i++)
 		{
-			uint32_t cols[MONO_TYPEDEF_SIZE];
+			uint32 cols[MONO_TYPEDEF_SIZE];
 			mono_metadata_decode_row(typeDefinitionsTable, i, cols, MONO_TYPEDEF_SIZE);
 
 			const char* nameSpace = mono_metadata_string_heap(s_Data->AppAssemblyImage, cols[MONO_TYPEDEF_NAMESPACE]);
@@ -318,7 +354,7 @@ namespace Voxen
 			while (MonoClassField* field = mono_class_get_fields(monoClass, &iterator))
 			{
 				const char* fieldName = mono_field_get_name(field);
-				uint32_t flags = mono_field_get_flags(field);
+				uint32 flags = mono_field_get_flags(field);
 				if (flags & FIELD_ATTRIBUTE_PUBLIC)
 				{
 					MonoType* type = mono_field_get_type(field);
@@ -329,6 +365,11 @@ namespace Voxen
 				}
 			}
 		}
+	}
+
+	MonoImage* ScriptEngine::GetCoreAssemblyImage()
+	{
+		return s_Data->CoreAssemblyImage;
 	}
 
 	MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)
@@ -360,7 +401,8 @@ namespace Voxen
 
 	MonoObject* ScriptClass::InvokeMethod(MonoObject* instance, MonoMethod* method, void** params)
 	{
-		return mono_runtime_invoke(method, instance, params, nullptr);
+		MonoObject* exception = nullptr;
+		return mono_runtime_invoke(method, instance, params, &exception);
 	}
 
 	// ----

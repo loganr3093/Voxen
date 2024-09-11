@@ -1,10 +1,21 @@
 Scene: Untitled
 Entities:
+  - Entity: 5994778806344858817
+    TagComponent:
+      Tag: Player
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      ClassName: Demo.Player
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
   - Entity: 17340850028512464132
     TagComponent:
       Tag: Camera
     TransformComponent:
-      Translation: [0, 0, 2.18473387]
+      Translation: [0, 0, 5]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     CameraComponent:
@@ -18,14 +29,3 @@ Entities:
         OrthographicFar: 1
       Primary: true
       FixedAspectRatio: false
-  - Entity: 5994778806344858817
-    TagComponent:
-      Tag: Player
-    TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    ScriptComponent:
-      ClassName: Demo.Player
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]

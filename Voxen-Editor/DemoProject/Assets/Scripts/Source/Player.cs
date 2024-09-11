@@ -10,8 +10,8 @@ namespace Demo
 {
     public class Player : Entity
     {
-        public float speed = 1;
         private TransformComponent m_Transform;
+        public float speed = 2;
 
         void OnCreate()
         {
@@ -43,11 +43,11 @@ namespace Demo
                 velocity.X = -1.0f;
             }
 
-            velocity *= speed;
+            velocity *= speed * ts;
 
             Vector3 translation = m_Transform.Translation;
 
-            translation += velocity * ts;
+            translation += velocity;
 
             m_Transform.Translation = translation;
         }

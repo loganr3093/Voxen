@@ -112,6 +112,8 @@ namespace Voxen
 
     void Scene::OnRuntimeStart()
     {
+        m_IsRunning = true;
+
         // Scripting
         ScriptEngine::OnRuntimeStart(this);
 
@@ -127,6 +129,8 @@ namespace Voxen
 
     void Scene::OnRuntimeStop()
     {
+        m_IsRunning = false;
+
         ScriptEngine::OnRuntimeStop();
     }
 
