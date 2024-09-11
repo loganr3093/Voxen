@@ -1,13 +1,13 @@
 #include "ContentBrowserPanel.h"
 
+#include "Voxen/Project/Project.h"
+
 #include <imgui/imgui.h>
 
 namespace Voxen
 {
-	// Once we have projects, change this
-	extern const std::filesystem::path g_AssetPath = "assets";
 	ContentBrowserPanel::ContentBrowserPanel()
-		: m_CurrentDirectory(g_AssetPath)
+		: m_BaseDirectory(Project::GetAssetDirectory()), m_CurrentDirectory(m_BaseDirectory)
 	{
 		m_DirectoryIcon = Texture2D::Create("Resources/Icons/ContentBrowser/DirectoryIcon.png");
 		m_FileIcon = Texture2D::Create("Resources/Icons/ContentBrowser/FileIcon.png");
@@ -16,6 +16,14 @@ namespace Voxen
 	void ContentBrowserPanel::OnImGuiRender()
 	{
 		ImGui::Begin("Content Browser");
+
+		if (m_CurrentDirectory != std::filesystem::path(m_BaseDirectory))
+		{
+			if (ImGui::Button("<-"))
+			{
+				m_CurrentDirectory = m_CurrentDirectory.parent_path();
+			}
+		}
 
 		static float padding = 16.0f;
 		static float thumbnailSize = 128.0f;
@@ -33,7 +41,7 @@ namespace Voxen
 		ImGui::PushItemWidth(sliderWidth);
 
 		// Display the slider, thinner, centered, and without displaying the number
-		ImGui::SliderFloat("##thumbnailsize", &thumbnailSize, 32, 512, "", ImGuiSliderFlags_None);
+		ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 32, 512, "", ImGuiSliderFlags_None);
 
 		// Reverting to the default frame padding and item width
 		ImGui::PopItemWidth();
@@ -41,14 +49,6 @@ namespace Voxen
 
 		// Start a new child region that will contain the rest of the content and is scrollable
 		ImGui::BeginChild("##content_region", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding);
-
-		if (m_CurrentDirectory != std::filesystem::path(g_AssetPath))
-		{
-			if (ImGui::Button("<-"))
-			{
-				m_CurrentDirectory = m_CurrentDirectory.parent_path();
-			}
-		}
 
 		int columnCount = (int)(panelWidth / cellSize);
 		if (columnCount < 1)
@@ -59,8 +59,7 @@ namespace Voxen
 		for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
 		{
 			const auto& path = directoryEntry.path();
-			auto relativePath = std::filesystem::relative(path, g_AssetPath);
-			std::string filenameString = relativePath.filename().string();
+			std::string filenameString = path.filename().string();
 
 			ImGui::PushID(filenameString.c_str());
 			Ref<Texture2D> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
@@ -69,6 +68,7 @@ namespace Voxen
 
 			if (ImGui::BeginDragDropSource())
 			{
+				std::filesystem::path relativePath(path);
 				const wchar_t* itemPath = relativePath.c_str();
 				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
 				ImGui::EndDragDropSource();
