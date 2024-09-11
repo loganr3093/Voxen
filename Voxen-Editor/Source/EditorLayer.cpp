@@ -450,7 +450,7 @@ namespace Voxen
 	{
 		if (Project::Load(path))
 		{
-			//ScriptEngine::Init();
+			ScriptEngine::Init();
 
 			auto activeProject = Project::GetActive();
 			auto startScene = Project::GetActive()->GetConfig().StartScene;

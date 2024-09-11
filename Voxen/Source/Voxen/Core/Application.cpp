@@ -31,7 +31,6 @@ namespace Voxen
 		m_Window->SetEventCallback(VOX_BIND_EVENT_FN(Application::OnEvent));
 
 		Renderer::Init();
-		ScriptEngine::Init();
 
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);

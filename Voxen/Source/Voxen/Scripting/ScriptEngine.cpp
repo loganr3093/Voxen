@@ -10,6 +10,8 @@
 
 #include "Voxen/Scripting/ScriptGlue.h"
 
+#include "Voxen/Project/Project.h"
+
 #include <FileWatch.h>
 
 #include <mono/jit/jit.h>
@@ -117,7 +119,11 @@ namespace Voxen
 		Scope<filewatch::FileWatch<std::string>> AppAssemblyFileWatcher;
 		bool AssemblyReloadPending = false;
 
-		bool EnableDebugging = true;
+		#ifdef VOX_DEBUG
+				bool EnableDebugging = true;
+		#else
+				bool EnableDebugging = false;
+		#endif
 
 		// Runtime
 		Scene* SceneContext = nullptr;
@@ -152,6 +158,8 @@ namespace Voxen
 			VOX_CORE_ERROR("[ScriptEngine] Could not load Voxen-ScriptCore assembly.");
 			return;
 		}
+
+		auto scriptModulePath = Project::GetAssetDirectory() / Project::GetActive()->GetConfig().ScriptModulePath;
 		status = LoadAppAssembly("DemoProject/Assets/Scripts/Binaries/Demo.dll");
 		if (!status)
 		{
@@ -219,9 +227,10 @@ namespace Voxen
 		mono_domain_set(s_Data->AppDomain, true);
 
 		s_Data->CoreAssemblyFilepath = filepath;
-		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath);
+		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);
 		if (s_Data->CoreAssembly == nullptr)
 			return false;
+
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
 		return true;
 	}
@@ -232,6 +241,7 @@ namespace Voxen
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);
 		if (s_Data->AppAssembly == nullptr)
 			return false;
+
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 
 		s_Data->AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath.string(), OnAppAssemblyFileSystemEvent);
@@ -408,6 +418,11 @@ namespace Voxen
 		return s_Data->EntityInstances.at(uuid)->GetManagedObject();
 	}
 
+	MonoString* ScriptEngine::CreateString(const char* string)
+	{
+		return mono_string_new(s_Data->AppDomain, string);
+	}
+
 	MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)
 	{
 		MonoObject* instance = mono_object_new(s_Data->AppDomain, monoClass);
@@ -463,14 +478,14 @@ namespace Voxen
 	void ScriptInstance::InvokeOnCreate()
 	{
 		if (!m_OnCreateMethod) return;
-		m_ScriptClass.get()->InvokeMethod(m_Instance, m_OnCreateMethod);
+		m_ScriptClass->InvokeMethod(m_Instance, m_OnCreateMethod);
 	}
 
 	void ScriptInstance::InvokeOnUpdate(float ts)
 	{
 		if (!m_OnUpdateMethod) return;
 		void* param = &ts;
-		m_ScriptClass.get()->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
+		m_ScriptClass->InvokeMethod(m_Instance, m_OnUpdateMethod, &param);
 	}
 
 	bool ScriptInstance::GetFieldValueInternal(const std::string& name, void* buffer)
