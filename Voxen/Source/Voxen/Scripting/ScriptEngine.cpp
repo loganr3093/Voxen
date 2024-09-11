@@ -3,6 +3,8 @@
 
 #include "Voxen/Core/Application.h"
 #include "Voxen/Core/Timer.h"
+#include "Voxen/Core/Buffer.h"
+#include "Voxen/Core/FileSystem.h"
 
 #include "Voxen/Scene/Scene.h"
 
@@ -42,43 +44,13 @@ namespace Voxen
 
 	namespace Utils
 	{
-		// TODO: move to FileSystem class
-		static char* ReadBytes(const std::filesystem::path& filepath, uint32_t* outSize)
-		{
-			std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
-
-			if (!stream)
-			{
-				// Failed to open the file
-				return nullptr;
-			}
-
-			std::streampos end = stream.tellg();
-			stream.seekg(0, std::ios::beg);
-			uint64_t size = end - stream.tellg();
-
-			if (size == 0)
-			{
-				// File is empty
-				return nullptr;
-			}
-
-			char* buffer = new char[size];
-			stream.read((char*)buffer, size);
-			stream.close();
-
-			*outSize = (uint32_t)size;
-			return buffer;
-		}
-
 		static MonoAssembly* LoadMonoAssembly(const std::filesystem::path& assemblyPath, bool loadPDB = false)
 		{
-			uint32_t fileSize = 0;
-			char* fileData = ReadBytes(assemblyPath, &fileSize);
+			ScopedBuffer fileData = FileSystem::ReadFileBinary(assemblyPath);
 
 			// NOTE: We can't use this image for anything other than loading the assembly because this image doesn't have a reference to the assembly
 			MonoImageOpenStatus status;
-			MonoImage* image = mono_image_open_from_data_full(fileData, fileSize, 1, &status, 0);
+			MonoImage* image = mono_image_open_from_data_full(fileData.As<char>(), fileData.Size(), 1, &status, 0);
 
 			if (status != MONO_IMAGE_OK)
 			{
@@ -94,11 +66,9 @@ namespace Voxen
 
 				if (std::filesystem::exists(pdbPath))
 				{
-					uint32_t pdbFileSize = 0;
-					char* pdbFileData = ReadBytes(pdbPath, &pdbFileSize);
-					mono_debug_open_image_from_memory(image, (const mono_byte*)pdbFileData, pdbFileSize);
+					ScopedBuffer pdbFileData = FileSystem::ReadFileBinary(pdbPath);
+					mono_debug_open_image_from_memory(image, pdbFileData.As<const mono_byte>(), pdbFileData.Size());
 					VOX_CORE_INFO("Loaded PDB {}", pdbPath.string());
-					delete[] pdbFileData;
 				}
 			}
 
@@ -106,27 +76,7 @@ namespace Voxen
 			MonoAssembly* assembly = mono_assembly_load_from_full(image, pathString.c_str(), &status, 0);
 			mono_image_close(image);
 
-			// Don't forget to free the file data
-			delete[] fileData;
-
 			return assembly;
-		}
-
-		void PrintAssemblyTypes(MonoAssembly* assembly)
-		{
-			MonoImage* image = mono_assembly_get_image(assembly);
-			const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
-			int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
-
-			for (int32_t i = 0; i < numTypes; i++)
-			{
-				uint32_t cols[MONO_TYPEDEF_SIZE];
-				mono_metadata_decode_row(typeDefinitionsTable, i, cols, MONO_TYPEDEF_SIZE);
-
-				const char* nameSpace = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAMESPACE]);
-				const char* name = mono_metadata_string_heap(image, cols[MONO_TYPEDEF_NAME]);
-				VOX_CORE_TRACE("{}.{}", nameSpace, name);
-			}
 		}
 
 		ScriptFieldType MonoTypeToScriptFieldType(MonoType* monoType)
@@ -196,8 +146,19 @@ namespace Voxen
 		InitMono();
 		ScriptGlue::RegisterFunctions();
 
-		LoadAssembly("Resources/Scripts/Voxen-ScriptCore.dll");
-		LoadAppAssembly("DemoProject/Assets/Scripts/Binaries/Demo.dll");
+		bool status = LoadAssembly("Resources/Scripts/Voxen-ScriptCore.dll");
+		if (!status)
+		{
+			VOX_CORE_ERROR("[ScriptEngine] Could not load Voxen-ScriptCore assembly.");
+			return;
+		}
+		status = LoadAppAssembly("DemoProject/Assets/Scripts/Binaries/Demo.dll");
+		if (!status)
+		{
+			VOX_CORE_ERROR("[ScriptEngine] Could not load app assembly.");
+			return;
+		}
+
 		LoadAssemblyClasses();
 
 		ScriptGlue::RegisterComponents();
@@ -250,27 +211,33 @@ namespace Voxen
 		s_Data->RootDomain = nullptr;
 	}
 
-	void ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
+	bool ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
 	{
 		// Create an App Domain
 		std::string appDomainFriendlyName = "VoxenScriptRuntime";
 		s_Data->AppDomain = mono_domain_create_appdomain(appDomainFriendlyName.data(), nullptr);
 		mono_domain_set(s_Data->AppDomain, true);
 
-		// Move this maybe
 		s_Data->CoreAssemblyFilepath = filepath;
 		s_Data->CoreAssembly = Utils::LoadMonoAssembly(filepath);
+		if (s_Data->CoreAssembly == nullptr)
+			return false;
 		s_Data->CoreAssemblyImage = mono_assembly_get_image(s_Data->CoreAssembly);
+		return true;
 	}
 
-	void ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
+	bool ScriptEngine::LoadAppAssembly(const std::filesystem::path& filepath)
 	{
 		s_Data->AppAssemblyFilepath = filepath;
 		s_Data->AppAssembly = Utils::LoadMonoAssembly(filepath, s_Data->EnableDebugging);
+		if (s_Data->AppAssembly == nullptr)
+			return false;
 		s_Data->AppAssemblyImage = mono_assembly_get_image(s_Data->AppAssembly);
 
 		s_Data->AppAssemblyFileWatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath.string(), OnAppAssemblyFileSystemEvent);
 		s_Data->AssemblyReloadPending = false;
+
+		return true;
 	}
 
 	void ScriptEngine::ReloadAssembly()
@@ -324,10 +291,15 @@ namespace Voxen
 	void ScriptEngine::OnUpdateEntity(Entity entity, Timestep ts)
 	{
 		UUID entityUUID = entity.GetUUID();
-		VOX_CORE_ASSERT(s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end());
-
-		Ref<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
-		instance->InvokeOnUpdate((float)ts);
+		if (s_Data->EntityInstances.find(entityUUID) != s_Data->EntityInstances.end())
+		{
+			Ref<ScriptInstance> instance = s_Data->EntityInstances[entityUUID];
+			instance->InvokeOnUpdate((float)ts);
+		}
+		else
+		{
+			VOX_CORE_ERROR("Could not find ScriptInstance for entity {}", (uint64)entityUUID);
+		}
 	}
 
 	Scene* ScriptEngine::GetSceneContext()

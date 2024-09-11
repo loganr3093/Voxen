@@ -21,7 +21,8 @@
     <OutputPath>..\Voxen-Editor\Resources\Scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\Voxen-Editor\Resources\Scripts\Intermediates\Debug\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -33,7 +34,8 @@
     <OutputPath>..\Voxen-Editor\Resources\Scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\Voxen-Editor\Resources\Scripts\Intermediates\Release\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -45,7 +47,8 @@
     <OutputPath>..\Voxen-Editor\Resources\Scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\Voxen-Editor\Resources\Scripts\Intermediates\Dist\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -61,7 +64,9 @@
     <Compile Include="Source\Voxen\KeyCode.cs" />
     <Compile Include="Source\Voxen\Scene\Components.cs" />
     <Compile Include="Source\Voxen\Scene\Entity.cs" />
+    <Compile Include="Source\Voxen\Vector2.cs" />
     <Compile Include="Source\Voxen\Vector3.cs" />
+    <Compile Include="Source\Voxen\Vector4.cs" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
