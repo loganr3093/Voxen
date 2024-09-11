@@ -5,7 +5,6 @@ namespace Demo
     public class Camera : Entity
     {
         public float speed = 1.0f;
-        public float targetDistance = 5.0f;
         public Entity target;
 
         private Vector3 Lerp(Vector3 current, Vector3 target, float speed, float ts)
@@ -28,7 +27,7 @@ namespace Demo
         {
             if (target == null) return;
 
-            Vector3 targetPosition = new Vector3 (target.Translation.X, target.Translation.Y, targetDistance);
+            Vector3 targetPosition = new Vector3 (target.Translation.X, target.Translation.Y, Translation.Z);
 
             Translation = Lerp(Translation, targetPosition, speed, ts);
         }
