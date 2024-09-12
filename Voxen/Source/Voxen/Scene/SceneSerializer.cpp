@@ -146,11 +146,11 @@ namespace Voxen
 		out << YAML::EndMap; // Entity
 	}
 
-	void SceneSerializer::Serialize(const std::string& filepath)
+	void SceneSerializer::Serialize(const std::filesystem::path& filepath)
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
-		out << YAML::Key << "Scene" << YAML::Value << "Untitled";
+		out << YAML::Key << "Scene" << YAML::Value << filepath.stem().string();
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		for (const auto [entityID, ref] : m_Scene->m_Registry.storage<TagComponent>().each())
 		{
@@ -165,28 +165,30 @@ namespace Voxen
 
 		std::ofstream fout(filepath);
 		fout << out.c_str();
-
-
 	}
 
-	bool SceneSerializer::Deserialize(const std::string& filepath)
+	bool SceneSerializer::Deserialize(const std::filesystem::path& filepath)
 	{
 		YAML::Node data;
 		try
 		{
-			data = YAML::LoadFile(filepath);
+			data = YAML::LoadFile(filepath.string());
 		}
 		catch (YAML::ParserException e)
 		{
-			VOX_CORE_ERROR("Failed to load .vscene file '{0}'\n     {1}", filepath, e.what());
+			VOX_CORE_ERROR("Failed to load .vscene file '{0}'\n     {1}", filepath.string(), e.what());
 			return false;
 		}
 
 		if (!data["Scene"])
 			return false;
 
+		bool shouldSerialize = false;
 		std::string sceneName = data["Scene"].as<std::string>();
+
 		VOX_CORE_TRACE("Deserializing scene '{0}'", sceneName);
+
+		m_Scene->SetName(filepath.stem().string());
 
 		auto entities = data["Entities"];
 		if (!entities) return true;

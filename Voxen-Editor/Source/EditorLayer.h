@@ -6,6 +6,8 @@
 
 #include "Voxen/Renderer/EditorCamera.h"
 
+#include <filesystem>
+
 namespace Voxen
 {
 
@@ -18,40 +20,58 @@ namespace Voxen
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 
-		void OnUpdate(Timestep ts) override;
 		virtual void OnImGuiRender() override;
-		void OnEvent(Event& e) override;
+		virtual void OnEvent(Event& e) override;
 
-	private:
-		bool OnKeyPressed(KeyPressedEvent& e);
-		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
+		void OnUpdate(Timestep ts) override;
 
-		void NewProject();
+		// Project
 		bool OpenProject();
-		void OpenProject(const std::filesystem::path& path);
+		bool OpenProject(const std::filesystem::path& filepath);
+		void CreateProject(const std::filesystem::path& filepath, const std::string& projectName);
+		void CreateEmptyProject();
+		void UpdateCurrentProject();
 		void SaveProject();
+		void CloseProject();
 
-		void NewScene();
-		void OpenScene();
-		void OpenScene(const std::filesystem::path& path);
+		// Scene
+		void NewScene(const std::string& sceneName = "NewScene");
+		bool OpenScene();
+		bool OpenScene(const std::filesystem::path& filepath, const bool checkAutoSave);
 		void SaveScene();
 		void SaveSceneAs();
+		void AutoSaveScene();
 
-		void SerializeScene(Ref<Scene> scene, const std::filesystem::path& path);
+	private:
+		// Events
+		bool OnKeyPressed(KeyPressedEvent& e);
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
 		void OnScenePlay();
 		void OnSceneStop();
 
-		void OnDuplicateEntity();
-
 		// UI Panels
 		void UI_Toolbar();
+
+		// Popups
+		void UI_ShowNewProjectPopup();
+		void UI_ShowLoadAutoSavePopup();
+		void UI_ShowNewScenePopup();
+
+		// Utils
+		void BuildProjectData();
+		void RunBatchFileSolution(const std::filesystem::path& filepath);
+		void OnDuplicateEntity();
+		void SerializeScene(Ref<Scene> scene, const std::filesystem::path& filepath);
+		void HandleDragDrop();
 	private:
 		Ref<Framebuffer> m_Framebuffer;
 
 		Ref<Scene> m_ActiveScene;
 		Ref<Scene> m_EditorScene;
-		std::filesystem::path m_EditorScenePath;
+		std::filesystem::path m_SceneFilePath;
+
+		float m_TimeSinceLastSave = 0.0f;
 
 		bool m_PrimaryCamera = true;
 
@@ -63,14 +83,27 @@ namespace Voxen
 		Vector2 m_ViewportSize = { 0.0f, 0.0f };
 		Vector2 m_ViewportBounds[2] = { { 0.0f, 0.0f },{ 0.0f, 0.0f } };
 
-		int m_GizmoType = -1;
+		struct GizmoSettings
+		{
+			int Type = -1;
+			float PositionSnap = 00.5f;
+			float RotationSnap = 22.5f;
+		};
+		GizmoSettings m_Gizmo;
 
 		enum class SceneState
 		{
-			Edit = 0,
-			Play = 1
+			Edit = 0, Play = 1
 		};
 		SceneState m_SceneState = SceneState::Edit;
+
+		struct LoadAutoSavePopupData
+		{
+			std::string FilePath;
+			std::string FilePathAuto;
+		} m_LoadAutoSavePopupData;
+
+		std::filesystem::path m_ProjectsPath = std::filesystem::current_path() / "Projects";
 
 		// Panels
 		SceneHierarchyPanel m_SceneHierarchyPanel;

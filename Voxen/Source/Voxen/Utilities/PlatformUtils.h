@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <filesystem>
 
 namespace Voxen
 {
@@ -8,8 +9,9 @@ namespace Voxen
 	{
 	public:
 		// These return empty strings if cancelled
-		static std::string OpenFile(const char* filter);
-		static std::string SaveFile(const char* filter);
+		static std::filesystem::path OpenFile(const char* filter);
+		static std::filesystem::path SaveFile(const char* filter);
+		static std::filesystem::path OpenFolder();
 	};
 
 	class Time

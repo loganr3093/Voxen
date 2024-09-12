@@ -14,11 +14,17 @@
 namespace Voxen
 {
     Scene::Scene()
+        : m_Name("Untitled")
+    {
+    }
+    Scene::Scene(const std::string& sceneName)
+        : m_Name(sceneName)
     {
     }
 
     Scene::~Scene()
     {
+        m_Registry.clear();
     }
 
     template<typename... Component>
@@ -264,7 +270,7 @@ namespace Voxen
             if (camera.Primary)
                 return Entity{entity, this};
         }
-        return {};
+        return Entity{entt::null, nullptr};
     }
 
     void Scene::DuplicateEntity(Entity entity)

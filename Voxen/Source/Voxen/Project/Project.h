@@ -37,6 +37,11 @@ namespace Voxen
 			return GetAssetDirectory() / path;
 		}
 
+		static std::filesystem::path GetScriptProjectPath()
+		{
+			return GetAssetDirectory() / "Scripts" / (s_ActiveProject->m_Config.Name + ".csproj");
+		}
+
 		ProjectConfig& GetConfig() { return m_Config; }
 
 		static Ref<Project> GetActive() { return s_ActiveProject; }

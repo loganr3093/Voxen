@@ -1,0 +1,5 @@
+Project:
+  Name: $PROJECT_NAME$
+  StartScene: "Scenes/DemoScene.vscene"
+  AssetDirectory: "Assets"
+  ScriptModulePath: "Scripts/Binaries/$PROJECT_NAME$.dll"

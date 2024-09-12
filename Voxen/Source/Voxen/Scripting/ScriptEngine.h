@@ -171,6 +171,10 @@ namespace Voxen
 		static MonoObject* GetManagedInstance(UUID uuid);
 
 		static MonoString* CreateString(const char* string);
+
+		static void SetAppAssemblyFilepath(std::filesystem::path filepath);
+
+		static bool IsRunning();
 	private:
 		static void InitMono();
 		static void ShutdownMono();

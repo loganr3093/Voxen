@@ -3,15 +3,15 @@
 
 #include "Demo.h"
 
-class Project : public Voxen::Application
+class NativeProject : public Voxen::Application
 {
 public:
-	Project(const Voxen::ApplicationSpecification& specification)
+	NativeProject(const Voxen::ApplicationSpecification& specification)
 		: Voxen::Application(specification)
 	{
 		PushLayer(new Demo());
 	}
-	~Project()
+	~NativeProject()
 	{
 
 	}
@@ -22,5 +22,5 @@ Voxen::Application* Voxen::CreateApplication()
 	ApplicationSpecification spec;
 	spec.Name = "Demo";
 	spec.WorkingDirectory = "../Voxen-Editor";
-	return new Project(spec);
+	return new NativeProject(spec);
 }

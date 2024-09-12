@@ -16,6 +16,7 @@ namespace Voxen
 	{
 	public:
 		Scene();
+		Scene(const std::string& sceneName);
 		~Scene();
 
 		static Ref<Scene> Copy(Ref<Scene> other);
@@ -41,6 +42,9 @@ namespace Voxen
 
 		Entity GetPrimaryCameraEntity();
 
+		const std::string& GetName() { return m_Name; }
+		void SetName(const std::string& name) { m_Name = name; }
+
 		bool IsRunning() const { return m_IsRunning; }
 
 		template<typename... Components>
@@ -54,6 +58,8 @@ namespace Voxen
 
 		void RenderScene(EditorCamera& camera);
 	private:
+		std::string m_Name;
+
 		entt::registry m_Registry;
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 		bool m_IsRunning = false;

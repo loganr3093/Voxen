@@ -56,11 +56,9 @@ namespace Voxen
 				if (ImGui::MenuItem("Create Camera"))
 				{
 					Entity camera = m_Context->CreateEntity("Camera");
+					bool primaryExists = m_Context->GetPrimaryCameraEntity();
 					auto& cc = camera.AddComponent<CameraComponent>();
-					if (!m_Context->GetPrimaryCameraEntity())
-						cc.Primary = true;
-					else
-						cc.Primary = false;
+					cc.Primary = primaryExists ? false : true;
 				}
 
 				ImGui::EndPopup();

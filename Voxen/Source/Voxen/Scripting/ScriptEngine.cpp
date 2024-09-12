@@ -127,6 +127,8 @@ namespace Voxen
 
 		// Runtime
 		Scene* SceneContext = nullptr;
+
+		bool Running = false;
 	};
 
 	static ScriptEngineData* s_Data = nullptr;
@@ -152,7 +154,7 @@ namespace Voxen
 		InitMono();
 		ScriptGlue::RegisterFunctions();
 
-		bool status = LoadAssembly("Resources/Scripts/Voxen-ScriptCore.dll");
+		bool status = LoadAssembly(std::filesystem::current_path() / "Resources" / "Scripts" / "Voxen-ScriptCore.dll");
 		if (!status)
 		{
 			VOX_CORE_ERROR("[ScriptEngine] Could not load Voxen-ScriptCore assembly.");
@@ -160,7 +162,7 @@ namespace Voxen
 		}
 
 		auto scriptModulePath = Project::GetAssetDirectory() / Project::GetActive()->GetConfig().ScriptModulePath;
-		status = LoadAppAssembly("DemoProject/Assets/Scripts/Binaries/Demo.dll");
+		status = LoadAppAssembly(scriptModulePath);
 		if (!status)
 		{
 			VOX_CORE_ERROR("[ScriptEngine] Could not load app assembly.");
@@ -172,6 +174,8 @@ namespace Voxen
 		ScriptGlue::RegisterComponents();
 
 		s_Data->EntityClass = ScriptClass("Voxen", "Entity", true);
+
+		s_Data->Running = true;
 	}
 
 	void ScriptEngine::Shutdown()
@@ -184,7 +188,7 @@ namespace Voxen
 	{
 		mono_set_assemblies_path("mono/lib/4.5");
 
-		if (s_Data->EnableDebugging)
+		if (false && s_Data->EnableDebugging)
 		{
 			const char* argv[2] =
 			{
@@ -210,13 +214,24 @@ namespace Voxen
 
 	void ScriptEngine::ShutdownMono()
 	{
-		mono_domain_set(mono_get_root_domain(), false);
+		if (s_Data->AppDomain)
+		{
+			mono_domain_set(mono_get_root_domain(), false);
 
-		mono_domain_unload(s_Data->AppDomain);
-		s_Data->AppDomain = nullptr;
+			mono_domain_unload(s_Data->AppDomain);
+			s_Data->AppDomain = nullptr;
+		}
 
-		mono_jit_cleanup(s_Data->RootDomain);
-		s_Data->RootDomain = nullptr;
+		if (s_Data->EnableDebugging)
+		{
+			mono_debug_cleanup();
+		}
+
+		if (s_Data->RootDomain)
+		{
+			mono_jit_cleanup(s_Data->RootDomain);
+			s_Data->RootDomain = nullptr;
+		}
 	}
 
 	bool ScriptEngine::LoadAssembly(const std::filesystem::path& filepath)
@@ -328,6 +343,7 @@ namespace Voxen
 
 	Ref<ScriptClass> ScriptEngine::GetEntityClass(const std::string& className)
 	{
+		auto& data = s_Data;
 		if (s_Data->EntityClasses.find(className) == s_Data->EntityClasses.end())
 			return nullptr;
 		return s_Data->EntityClasses.at(className);
@@ -421,6 +437,18 @@ namespace Voxen
 	MonoString* ScriptEngine::CreateString(const char* string)
 	{
 		return mono_string_new(s_Data->AppDomain, string);
+	}
+
+	void ScriptEngine::SetAppAssemblyFilepath(std::filesystem::path filepath)
+	{
+		auto& data = s_Data;
+		s_Data->AppAssemblyFilepath = filepath;
+	}
+
+	bool ScriptEngine::IsRunning()
+	{
+		if (!s_Data) return false;
+		return s_Data->Running;
 	}
 
 	MonoObject* ScriptEngine::InstantiateClass(MonoClass* monoClass)
