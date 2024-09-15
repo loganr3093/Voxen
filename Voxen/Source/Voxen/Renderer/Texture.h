@@ -29,5 +29,10 @@ namespace Voxen
 		static Ref<Texture2D> Create(const std::string& path);
 	};
 
+	class TextureRW : public Texture
+	{
+	public:
+		static Ref<TextureRW> Create(uint32_t width, uint32_t height);
+	};
 }
 

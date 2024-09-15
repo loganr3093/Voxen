@@ -1,6 +1,6 @@
 #include "EditorLayer.h"
 
-#include "EditorResources.h"
+#include "Voxen/Editor/EditorResources.h"
 
 #include "Voxen/Scene/SceneSerializer.h"
 

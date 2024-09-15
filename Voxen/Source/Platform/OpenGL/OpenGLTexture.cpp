@@ -5,6 +5,8 @@
 
 namespace Voxen
 {
+	// Texture 2D
+
 	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
 		: m_Width(width), m_Height(height)
 	{
@@ -87,6 +89,52 @@ namespace Voxen
 	}
 
 	void OpenGLTexture2D::Bind(uint32_t slot) const
+	{
+		VOX_PROFILE_FUNCTION();
+
+		glBindTextureUnit(slot, m_RendererID);
+	}
+
+	// Texture RW
+
+	OpenGLTextureRW::OpenGLTextureRW(uint32_t width, uint32_t height, GLenum internalFormat, GLenum format, GLenum type)
+		: m_Width(width), m_Height(height), m_InternalFormat(internalFormat), m_Format(format), m_Type(type)
+	{
+		VOX_PROFILE_FUNCTION();
+
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
+
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	}
+
+	OpenGLTextureRW::~OpenGLTextureRW()
+	{
+		VOX_PROFILE_FUNCTION();
+
+		glDeleteTextures(1, &m_RendererID);
+	}
+
+	void OpenGLTextureRW::SetData(void* data, uint32_t size)
+	{
+		VOX_PROFILE_FUNCTION();
+
+		uint32_t bpp = m_Format == GL_RGBA ? 4 : 3;
+		VOX_CORE_ASSERT(size == m_Width * m_Height * bpp, "Data must match texture size!");
+		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_Format, m_Type, data);
+	}
+
+	void OpenGLTextureRW::BindImage(uint32_t unit, GLenum access) const
+	{
+		VOX_PROFILE_FUNCTION();
+
+		glBindImageTexture(unit, m_RendererID, 0, GL_FALSE, 0, access, m_InternalFormat);
+	}
+
+	void OpenGLTextureRW::Bind(uint32_t slot) const
 	{
 		VOX_PROFILE_FUNCTION();
 

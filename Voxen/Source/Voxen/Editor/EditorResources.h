@@ -7,6 +7,10 @@ namespace Voxen
 	class EditorResources
 	{
 	public:
+		// Shaders
+		inline static std::filesystem::path FullScreenQuadShader = "Resources/Shaders/FullScreenQuad.glsl";
+		inline static std::filesystem::path RaytraceShader = "Resources/Shaders/Raytrace.glsl";
+
 		// Viewport
 		inline static Ref<Texture2D> PlayIcon = nullptr;
 		inline static Ref<Texture2D> StopIcon = nullptr;

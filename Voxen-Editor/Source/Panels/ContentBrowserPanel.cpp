@@ -1,6 +1,6 @@
 #include "ContentBrowserPanel.h"
 
-#include "EditorResources.h"
+#include "Voxen/Editor/EditorResources.h"
 
 #include "Voxen/Project/Project.h"
 
