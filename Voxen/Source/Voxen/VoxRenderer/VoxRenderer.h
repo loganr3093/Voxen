@@ -1,20 +1,26 @@
 #pragma once
 
-#include "Voxen/Renderer/OrthographicCamera.h"
+#include "Voxen/Renderer/Shader.h"
+#include "Voxen/Renderer/RenderCommand.h"
 #include "Voxen/Renderer/Texture.h"
-#include "Voxen/Renderer/Camera.h"
 #include "Voxen/Renderer/EditorCamera.h"
-
-#include "Voxen/Scene/Components.h"
+#include <glm/glm.hpp>
 
 namespace Voxen
 {
-	class VoxRenderer
-	{
-	public:
-		static void Init();
-		static void Shutdown();
-		static void BeginScene(const EditorCamera& camera);
-		static void EndScene();
-	};
+    class VoxRenderer
+    {
+    public:
+        static void Init();
+        static void Shutdown();
+        static void BeginScene(const EditorCamera& camera);
+        static void EndScene();
+
+        // New method to run the compute shader and render the quad
+        static void RenderFullscreenQuad(const glm::vec4& color);
+
+    private:
+        static void SetupFullscreenQuad();
+        static void RunComputeShader(const glm::vec4& color);
+    };
 }
