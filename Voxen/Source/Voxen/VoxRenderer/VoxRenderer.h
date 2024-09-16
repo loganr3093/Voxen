@@ -11,8 +11,11 @@ namespace Voxen
     class VoxRenderer
     {
     public:
-        static void Init();
+        static void Init(const Vector2& screenSize);
         static void Shutdown();
+
+        static void ResizeScreen(const Vector2& screenSize);
+
         static void BeginScene(const EditorCamera& camera);
         static void EndScene();
 

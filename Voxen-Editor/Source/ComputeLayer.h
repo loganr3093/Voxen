@@ -27,12 +27,14 @@ namespace Voxen
 
 		virtual void OnAttach() override
 		{
-			VoxRenderer::Init();
+			Vector2 screenSize = { Application::Get().GetWindow().GetWidth() , Application::Get().GetWindow().GetHeight() };
+
+			VoxRenderer::Init(screenSize);
 
 			FramebufferSpecification fbSpec;
 			fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
-			fbSpec.Width = Application::Get().GetWindow().GetWidth();
-			fbSpec.Height = Application::Get().GetWindow().GetHeight();
+			fbSpec.Width = screenSize.x;
+			fbSpec.Height = screenSize.y;
 			m_Framebuffer = Framebuffer::Create(fbSpec);
 
 			m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1, 1000.0f);
@@ -98,6 +100,9 @@ namespace Voxen
 		virtual void OnEvent(Event& e) override
 		{
 			m_EditorCamera.OnEvent(e);
+
+			EventDispatcher dispatcher(e);
+			dispatcher.Dispatch<WindowResizeEvent>(VOX_BIND_EVENT_FN(OnWindowResizeEvent));
 		}
 
 		virtual void OnUpdate(Timestep ts) override
@@ -126,6 +131,12 @@ namespace Voxen
 			VoxRenderer::EndScene();
 
 			m_Framebuffer->Unbind();
+		}
+
+		bool OnWindowResizeEvent(WindowResizeEvent& e)
+		{
+			VoxRenderer::ResizeScreen({ e.GetWidth(), e.GetHeight() });
+			return false;
 		}
 
 	private:

@@ -26,11 +26,12 @@ namespace Voxen
         Ref<Texture2D> ScreenTexture;  // Texture to display the result of the compute shader
 
         EditorCamera Camera;
+        Vector2 ScreenSize;
     };
 
     static VoxRendererData s_Data;
 
-    void VoxRenderer::Init()
+    void VoxRenderer::Init(const Vector2& screenSize)
     {
         VOX_PROFILE_FUNCTION();
 
@@ -48,22 +49,32 @@ namespace Voxen
             imageStore(imgOutput, pixel_coords, color);
         }
         )";
+
+        s_Data.ScreenSize = screenSize;
+
         //s_Data.ComputeShader = ComputeShader::Create("ColorComputeShader", computeShaderSource);
         s_Data.ComputeShader = ComputeShader::Create("Resources/Shaders/Raytrace.glsl");
 
         // Create the read-write texture
-        s_Data.RWTexture = TextureRW::Create(1600, 900);
+        s_Data.RWTexture = TextureRW::Create(s_Data.ScreenSize.x, s_Data.ScreenSize.y);
 
         // Fullscreen quad shader (for rendering the texture)
         s_Data.FullscreenQuadShader = Shader::Create("Resources/Shaders/FullscreenQuad.glsl");
 
         // Setup the screen texture (for rendering to the screen)
-        s_Data.ScreenTexture = Texture2D::Create(1600, 900);
+        s_Data.ScreenTexture = Texture2D::Create(s_Data.ScreenSize.x, s_Data.ScreenSize.y);
     }
 
     void VoxRenderer::Shutdown()
     {
         VOX_PROFILE_FUNCTION();
+    }
+
+    void VoxRenderer::ResizeScreen(const Vector2& screenSize)
+    {
+        s_Data.ScreenSize = screenSize;
+        s_Data.RWTexture = TextureRW::Create(s_Data.ScreenSize.x, s_Data.ScreenSize.y);
+        s_Data.ScreenTexture = Texture2D::Create(s_Data.ScreenSize.x, s_Data.ScreenSize.y);
     }
 
     void VoxRenderer::BeginScene(const EditorCamera& camera)
@@ -120,7 +131,9 @@ namespace Voxen
         s_Data.RWTexture->BindImage(0);
 
         // Dispatch the compute shader (assuming 1280x720 texture)
-        s_Data.ComputeShader->Dispatch(1600 / 16, 900 / 16, 1);
+        int dispatchX = static_cast<int>(s_Data.ScreenSize.x / 16);
+        int dispatchY = static_cast<int>(s_Data.ScreenSize.y / 16);
+        s_Data.ComputeShader->Dispatch(dispatchX, dispatchY, 1);
 
         // Ensure memory is synchronized before rendering
         s_Data.RWTexture->Unbind();
