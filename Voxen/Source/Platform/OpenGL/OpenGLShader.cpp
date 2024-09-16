@@ -20,22 +20,35 @@ namespace Voxen
 		return 0;
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& filePath)
+	OpenGLShader::OpenGLShader(const std::filesystem::path& filepath)
 	{
 		VOX_PROFILE_FUNCTION();
 
-		std::string source = ReadFile(filePath);
+		std::string source = ReadFile(filepath);
 		auto shaderSources = PreProcess(source);
-		VOX_TRACE("Compiling shader '{0}'", filePath);
+		VOX_TRACE("Compiling shader '{0}'", filepath.string());
 		Compile(shaderSources);
 
 		// Get name from file path
-		auto lastSlash = filePath.find_last_of("/\\");
-		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
-		auto lastDot = filePath.rfind('.');
-		auto count = lastDot == std::string::npos ? filePath.size() - lastSlash : lastDot - lastSlash;
+		m_Name = filepath.stem().string();
+	}
 
-		m_Name = filePath.substr(lastSlash, count);
+	OpenGLShader::OpenGLShader(const std::string& filepath)
+	{
+		VOX_PROFILE_FUNCTION();
+
+		std::string source = ReadFile(filepath);
+		auto shaderSources = PreProcess(source);
+		VOX_TRACE("Compiling shader '{0}'", filepath);
+		Compile(shaderSources);
+
+		// Get name from file path
+		auto lastSlash = filepath.find_last_of("/\\");
+		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
+		auto lastDot = filepath.rfind('.');
+		auto count = lastDot == std::string::npos ? filepath.size() - lastSlash : lastDot - lastSlash;
+
+		m_Name = filepath.substr(lastSlash, count);
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
@@ -57,12 +70,12 @@ namespace Voxen
 		glDeleteProgram(m_RendererID);
 	}
 
-	std::string OpenGLShader::ReadFile(const std::string& filePath)
+	std::string OpenGLShader::ReadFile(const std::filesystem::path& filepath)
 	{
 		VOX_PROFILE_FUNCTION();
 
 		std::string result;
-		std::ifstream in(filePath, std::ios::in | std::ios::binary);
+		std::ifstream in(filepath, std::ios::in | std::ios::binary);
 		if (in)
 		{
 			in.seekg(0, std::ios::end);
@@ -73,7 +86,7 @@ namespace Voxen
 		}
 		else
 		{
-			VOX_CORE_ERROR("Could not open file '{0}'", filePath);
+			VOX_CORE_ERROR("Could not open file '{0}'", filepath.string());
 		}
 
 		return result;

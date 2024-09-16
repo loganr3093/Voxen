@@ -22,7 +22,8 @@ namespace Voxen
 
 		virtual const std::string& GetName() const = 0;
 
-		static Ref<ComputeShader> Create(const std::string& filePath);
+		static Ref<ComputeShader> Create(const std::filesystem::path& filepath);
+		static Ref<ComputeShader> Create(const std::string& filepath);
 		static Ref<ComputeShader> Create(const std::string& name, const std::string& computeSrc);
 	};
 
@@ -31,8 +32,8 @@ namespace Voxen
 	public:
 		void Add(const std::string& name, const Ref<ComputeShader>& ComputeShader);
 		void Add(const Ref<ComputeShader>& ComputeShader);
-		Ref<ComputeShader> Load(const std::string& filePath);
-		Ref<ComputeShader> Load(const std::string& name, const std::string& filePath);
+		Ref<ComputeShader> Load(const std::string& filepath);
+		Ref<ComputeShader> Load(const std::string& name, const std::string& filepath);
 
 		Ref<ComputeShader> Get(const std::string& name);
 

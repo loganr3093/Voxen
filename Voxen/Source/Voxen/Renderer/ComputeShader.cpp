@@ -7,23 +7,36 @@
 
 namespace Voxen
 {
-	Ref<ComputeShader> ComputeShader::Create(const std::string& filePath)
+	Ref<ComputeShader> ComputeShader::Create(const std::filesystem::path& filepath)
 	{
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::None: VOX_CORE_ASSERT(false, "RendererAPI::None is currently not supported"); return nullptr;
-		case RendererAPI::API::OpenGL: return std::make_shared<OpenGLComputeShader>(filePath);
+		case RendererAPI::API::OpenGL: return CreateRef<OpenGLComputeShader>(filepath);
 		}
 
 		VOX_CORE_ASSERT(false, "Unknown RendererAPI");
 		return nullptr;
 	}
+
+	Ref<ComputeShader> ComputeShader::Create(const std::string& filepath)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::None: VOX_CORE_ASSERT(false, "RendererAPI::None is currently not supported"); return nullptr;
+		case RendererAPI::API::OpenGL: return CreateRef<OpenGLComputeShader>(filepath);
+		}
+
+		VOX_CORE_ASSERT(false, "Unknown RendererAPI");
+		return nullptr;
+	}
+
 	Ref<ComputeShader> ComputeShader::Create(const std::string& name, const std::string& computeSrc)
 	{
 		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::None: VOX_CORE_ASSERT(false, "RendererAPI::None is currently not supported"); return nullptr;
-		case RendererAPI::API::OpenGL: return std::make_shared<OpenGLComputeShader>(name, computeSrc);
+		case RendererAPI::API::OpenGL: return CreateRef<OpenGLComputeShader>(name, computeSrc);
 		}
 
 		VOX_CORE_ASSERT(false, "Unknown RendererAPI");
@@ -42,15 +55,15 @@ namespace Voxen
 		auto& name = ComputeShader->GetName();
 		Add(name, ComputeShader);
 	}
-	Ref<ComputeShader> ComputeShaderLibrary::Load(const std::string& filePath)
+	Ref<ComputeShader> ComputeShaderLibrary::Load(const std::string& filepath)
 	{
-		auto ComputeShader = ComputeShader::Create(filePath);
+		auto ComputeShader = ComputeShader::Create(filepath);
 		Add(ComputeShader);
 		return ComputeShader;
 	}
-	Ref<ComputeShader> ComputeShaderLibrary::Load(const std::string& name, const std::string& filePath)
+	Ref<ComputeShader> ComputeShaderLibrary::Load(const std::string& name, const std::string& filepath)
 	{
-		auto ComputeShader = ComputeShader::Create(filePath);
+		auto ComputeShader = ComputeShader::Create(filepath);
 		Add(name, ComputeShader);
 		return ComputeShader;
 	}

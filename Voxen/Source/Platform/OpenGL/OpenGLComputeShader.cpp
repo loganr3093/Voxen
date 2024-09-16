@@ -8,6 +8,17 @@
 
 namespace Voxen
 {
+	OpenGLComputeShader::OpenGLComputeShader(const std::filesystem::path& filepath)
+	{
+		VOX_PROFILE_FUNCTION();
+
+		std::string source = ReadFile(filepath);
+		VOX_TRACE("Compiling compute shader '{0}'", filepath.string());
+		Compile(source);
+
+		m_Name = filepath.stem().string();
+	}
+
 	OpenGLComputeShader::OpenGLComputeShader(const std::string& filePath)
 	{
 		VOX_PROFILE_FUNCTION();
@@ -47,12 +58,12 @@ namespace Voxen
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 
-	std::string OpenGLComputeShader::ReadFile(const std::string& filePath)
+	std::string OpenGLComputeShader::ReadFile(const std::filesystem::path& filepath)
 	{
 		VOX_PROFILE_FUNCTION();
 
 		std::string result;
-		std::ifstream in(filePath, std::ios::in | std::ios::binary);
+		std::ifstream in(filepath, std::ios::in | std::ios::binary);
 		if (in)
 		{
 			in.seekg(0, std::ios::end);
@@ -63,7 +74,7 @@ namespace Voxen
 		}
 		else
 		{
-			VOX_CORE_ERROR("Could not open file '{0}'", filePath);
+			VOX_CORE_ERROR("Could not open file '{0}'", filepath.string());
 		}
 
 		return result;

@@ -10,6 +10,7 @@ namespace Voxen
 		// Shaders
 		inline static std::filesystem::path FullScreenQuadShader = "Resources/Shaders/FullScreenQuad.glsl";
 		inline static std::filesystem::path RaytraceShader = "Resources/Shaders/Raytrace.glsl";
+		inline static std::filesystem::path SpriteRendererShader = "Resources/Shaders/SpriteRenderer.glsl";
 
 		// Viewport
 		inline static Ref<Texture2D> PlayIcon = nullptr;

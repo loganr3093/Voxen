@@ -5,6 +5,8 @@
 #include "Voxen/Renderer/Shader.h"
 #include "Voxen/Renderer/RenderCommand.h"
 
+#include "Voxen/Editor/EditorResources.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -96,7 +98,7 @@ namespace Voxen
 			samplers[i] = i;
 		}
 
-		s_Data.TextureShader = Shader::Create("assets/shaders/Texture.glsl");
+		s_Data.TextureShader = Shader::Create(EditorResources::SpriteRendererShader);
 		s_Data.TextureShader->Bind();
 		s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 

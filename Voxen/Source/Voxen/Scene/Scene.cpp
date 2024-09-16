@@ -330,4 +330,9 @@ namespace Voxen
     void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
     {
     }
+
+    template<>
+    void Scene::OnComponentAdded<VoxelRendererComponent>(Entity entity, VoxelRendererComponent& component)
+    {
+    }
 }

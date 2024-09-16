@@ -11,7 +11,8 @@ namespace Voxen
 	class OpenGLComputeShader : public ComputeShader
 	{
 	public:
-		OpenGLComputeShader(const std::string& filePath);
+		OpenGLComputeShader(const std::filesystem::path& filepath);
+		OpenGLComputeShader(const std::string& filepath);
 		OpenGLComputeShader(const std::string& name, const std::string& computeSrc);
 		virtual ~OpenGLComputeShader();
 
@@ -30,7 +31,7 @@ namespace Voxen
 
 		virtual const std::string& GetName() const override { return m_Name; }
 	private:
-		std::string ReadFile(const std::string& filePath);
+		std::string ReadFile(const std::filesystem::path& filepath);
 		void Compile(const std::string& source);
 
 		ID m_RendererID;

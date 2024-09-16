@@ -126,8 +126,8 @@ namespace Voxen
 
     struct VoxelRendererComponent
     {
-        SparseVoxelOctree SVO;
-
+        //SparseVoxelOctree SVO;
+        std::string Name;
         VoxelRendererComponent() = default;
         VoxelRendererComponent(const VoxelRendererComponent&) = default;
     };
@@ -139,5 +139,5 @@ namespace Voxen
 
     using AllComponents =
         ComponentGroup<TransformComponent, SpriteRendererComponent,
-        CameraComponent, ScriptComponent, NativeScriptComponent>;
+        CameraComponent, ScriptComponent, NativeScriptComponent, VoxelRendererComponent>;
 }
