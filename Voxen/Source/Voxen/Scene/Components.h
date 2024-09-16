@@ -4,6 +4,8 @@
 
 #include "Voxen/Scene/SceneCamera.h"
 
+#include "Voxen/VoxRenderer/SparseVoxelOctree.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -120,6 +122,14 @@ namespace Voxen
             InstantiateScript = []() { return static_cast<ScriptableEntity*>( new T()); };
             DestroyInstanceFunction = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
         }
+    };
+
+    struct VoxelRendererComponent
+    {
+        SparseVoxelOctree SVO;
+
+        VoxelRendererComponent() = default;
+        VoxelRendererComponent(const VoxelRendererComponent&) = default;
     };
 
     template<typename... Component>

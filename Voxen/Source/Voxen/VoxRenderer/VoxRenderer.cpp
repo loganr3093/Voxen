@@ -8,6 +8,8 @@
 #include "Voxen/Renderer/RenderCommand.h"
 #include "Voxen/Renderer/ShaderStorageBuffer.h"
 
+#include "Voxen/VoxRenderer/SparseVoxelOctree.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
