@@ -17,10 +17,10 @@ namespace Voxen
         static void EndScene();
 
         // New method to run the compute shader and render the quad
-        static void RenderFullscreenQuad(const glm::vec4& color);
+        static void RenderFullscreenQuad(const Vector2& screenSize);
 
     private:
         static void SetupFullscreenQuad();
-        static void RunComputeShader(const glm::vec4& color);
+        static void RunComputeShader(const Vector2& screenSize);
     };
 }

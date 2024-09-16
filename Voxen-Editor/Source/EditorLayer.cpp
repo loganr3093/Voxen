@@ -44,8 +44,6 @@ namespace Voxen
 	{
 		VOX_PROFILE_FUNCTION();
 
-		EditorResources::Init();
-
 		FramebufferSpecification fbSpec;
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 1280;
@@ -82,6 +80,7 @@ namespace Voxen
 		VOX_PROFILE_FUNCTION();
 
 		EditorResources::Shutdown();
+		ScriptEngine::Shutdown();
 	}
 
 	void EditorLayer::OnImGuiRender()

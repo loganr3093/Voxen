@@ -2,12 +2,11 @@
 #include "Voxen/VoxRenderer/VoxRenderer.h"
 
 #include "Voxen/Renderer/ComputeShader.h"
-#include "Voxen/Renderer/Shader.h"
-#include "Voxen/Renderer/RenderCommand.h"
-#include "Voxen/Editor/EditorResources.h"
 #include "Voxen/Renderer/Texture.h"
+#include "Voxen/Renderer/Shader.h"
+#include "Voxen/Renderer/VertexArray.h"
+#include "Voxen/Renderer/RenderCommand.h"
 
-#include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -15,10 +14,18 @@ namespace Voxen
 {
     struct VoxRendererData
     {
-        GLuint FullscreenQuadVAO, FullscreenQuadVBO;
+        // Fullscreen quad setup
+        Ref<VertexArray> QuadVertexArray;
+        Ref<VertexBuffer> QuadVertexBuffer;
+        Ref<IndexBuffer> QuadIndexBuffer;
+
         Ref<ComputeShader> ComputeShader;
-        Ref<TextureRW> RWTexture;
-        Ref<Shader> FullscreenQuadShader;
+        Ref<TextureRW> RWTexture;  // Texture used by compute shader
+        Ref<Shader> FullscreenQuadShader;  // Shader used for rendering the quad
+
+        Ref<Texture2D> ScreenTexture;  // Texture to display the result of the compute shader
+
+        EditorCamera Camera;
     };
 
     static VoxRendererData s_Data;
@@ -27,12 +34,12 @@ namespace Voxen
     {
         VOX_PROFILE_FUNCTION();
 
-        // Set up the fullscreen quad and shaders
+        // Set up the fullscreen quad vertices and indices
         SetupFullscreenQuad();
 
         // Initialize the compute shader
         std::string computeShaderSource = R"(
-        #version 430
+        #version 460
         layout (local_size_x = 16, local_size_y = 16) in;
         layout (rgba32f, binding = 0) uniform image2D imgOutput;
         uniform vec4 color;
@@ -41,112 +48,104 @@ namespace Voxen
             imageStore(imgOutput, pixel_coords, color);
         }
         )";
-        s_Data.ComputeShader = ComputeShader::Create("ColorComputeShader", computeShaderSource);
+        //s_Data.ComputeShader = ComputeShader::Create("ColorComputeShader", computeShaderSource);
+        s_Data.ComputeShader = ComputeShader::Create("Resources/Shaders/Raytrace.glsl");
 
-        // Create the read-write texture (800x600 for now)
-        s_Data.RWTexture = TextureRW::Create(800, 600);
+        // Create the read-write texture
+        s_Data.RWTexture = TextureRW::Create(1600, 900);
 
         // Fullscreen quad shader (for rendering the texture)
-        s_Data.FullscreenQuadShader = Shader::Create("assets/shaders/FullscreenQuad.glsl");
+        s_Data.FullscreenQuadShader = Shader::Create("Resources/Shaders/FullscreenQuad.glsl");
+
+        // Setup the screen texture (for rendering to the screen)
+        s_Data.ScreenTexture = Texture2D::Create(1600, 900);
     }
 
     void VoxRenderer::Shutdown()
     {
         VOX_PROFILE_FUNCTION();
-
-        // Clean up OpenGL resources
-        glDeleteVertexArrays(1, &s_Data.FullscreenQuadVAO);
-        glDeleteBuffers(1, &s_Data.FullscreenQuadVBO);
     }
 
     void VoxRenderer::BeginScene(const EditorCamera& camera)
     {
         VOX_PROFILE_FUNCTION();
-
-        // Scene setup if needed
+        s_Data.Camera = camera;
     }
 
     void VoxRenderer::EndScene()
     {
         VOX_PROFILE_FUNCTION();
-
-        // Finalize the scene rendering
     }
 
     void VoxRenderer::SetupFullscreenQuad()
     {
-        // Fullscreen quad vertices
-        float quadVertices[] = {
-            // positions   // texCoords
-            -1.0f,  1.0f,  0.0f, 1.0f,
-            -1.0f, -1.0f,  0.0f, 0.0f,
-             1.0f, -1.0f,  1.0f, 0.0f,
-
-            -1.0f,  1.0f,  0.0f, 1.0f,
-             1.0f, -1.0f,  1.0f, 0.0f,
-             1.0f,  1.0f,  1.0f, 1.0f
+        // Fullscreen quad vertices (positions, texture coords, and entity ID)
+        float fullScreenQuadVertices[] =
+        {
+            // positions         // texture Coords   // ID
+            -0.5f, -0.5f, 0.0f,  0.0f, 0.0f,         -1,  // Bottom Left
+             0.5f, -0.5f, 0.0f,  1.0f, 0.0f,         -1,  // Bottom Right
+             0.5f,  0.5f, 0.0f,  1.0f, 1.0f,         -1,  // Top Right
+            -0.5f,  0.5f, 0.0f,  0.0f, 1.0f,         -1   // Top Left
         };
 
-        glGenVertexArrays(1, &s_Data.FullscreenQuadVAO);
-        glGenBuffers(1, &s_Data.FullscreenQuadVBO);
+        uint32 indices[] = { 0, 1, 2, 2, 3, 0 };  // Indices for two triangles forming a quad
 
-        glBindVertexArray(s_Data.FullscreenQuadVAO);
+        // Create the vertex buffer and vertex array
+        s_Data.QuadVertexBuffer = VertexBuffer::Create(fullScreenQuadVertices, sizeof(fullScreenQuadVertices));
+        s_Data.QuadVertexBuffer->SetLayout({
+            { ShaderDataType::Vector3, "a_Position" },
+            { ShaderDataType::Vector2, "a_TexCoords" },
+            { ShaderDataType::Int,     "a_EntityID" }
+            });
 
-        glBindBuffer(GL_ARRAY_BUFFER, s_Data.FullscreenQuadVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        s_Data.QuadVertexArray = VertexArray::Create();
+        s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
 
-        // Position attribute
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-
-        // Texture coordinate attribute
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-
-        glBindVertexArray(0);
+        // Create the index buffer
+        s_Data.QuadIndexBuffer = IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32));
+        s_Data.QuadVertexArray->SetIndexBuffer(s_Data.QuadIndexBuffer);
     }
 
-    void VoxRenderer::RunComputeShader(const glm::vec4& color)
+    void VoxRenderer::RunComputeShader(const Vector2& screenSize)
     {
         // Bind the compute shader
         s_Data.ComputeShader->Bind();
 
-        // Set the color uniform
-        s_Data.ComputeShader->SetVector4("color", color);
+        // Set the uniforms
+        s_Data.ComputeShader->SetVector2("u_ScreenSize", screenSize);
+        s_Data.ComputeShader->SetMat4("u_CameraMatrix", s_Data.Camera.GetViewMatrix());
 
         // Bind the texture as an image for writing
-        s_Data.RWTexture->Bind(0);
+        s_Data.RWTexture->BindImage(0);
 
-        // Dispatch the compute shader (assumed 800x600 texture)
-        GLuint workgroupSizeX = (800 + 16 - 1) / 16;
-        GLuint workgroupSizeY = (600 + 16 - 1) / 16;
-        glDispatchCompute(workgroupSizeX, workgroupSizeY, 1);
+        // Dispatch the compute shader (assuming 1280x720 texture)
+        s_Data.ComputeShader->Dispatch(1600 / 16, 900 / 16, 1);
 
-        // Ensure all operations are complete
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-        // Unbind the compute shader
-        s_Data.ComputeShader->Unbind();
+        // Ensure memory is synchronized before rendering
+        s_Data.RWTexture->Unbind();
     }
 
-    void VoxRenderer::RenderFullscreenQuad(const glm::vec4& color)
+    void VoxRenderer::RenderFullscreenQuad(const Vector2& screenSize)
     {
         // Run the compute shader to color the texture
-        RunComputeShader(color);
+        RunComputeShader(screenSize);
 
         // Bind the fullscreen quad shader
         s_Data.FullscreenQuadShader->Bind();
-        s_Data.FullscreenQuadShader->SetInt("screenTexture", 0);
+        s_Data.FullscreenQuadShader->SetInt("u_Texture", 0);  // Bind texture to texture unit 0
 
-        // Bind the RWTexture to texture unit 0
+        // Bind the read-write texture as the screen texture
         s_Data.RWTexture->Bind(0);
 
-        // Render the fullscreen quad
-        glBindVertexArray(s_Data.FullscreenQuadVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        // Bind the quad vertex array for rendering
+        s_Data.QuadVertexArray->Bind();
 
-        // Unbind the fullscreen quad shader
+        // Render the quad (6 vertices for 2 triangles)
+        RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexBuffer->GetCount());
+
+        // Unbind the shader and texture
         s_Data.FullscreenQuadShader->Unbind();
+        s_Data.RWTexture->Unbind();
     }
 }

@@ -23,7 +23,7 @@ namespace Voxen
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& e) override;
 
-		void OnUpdate(Timestep ts) override;
+		virtual void OnUpdate(Timestep ts) override;
 
 		// Project
 		bool OpenProject();

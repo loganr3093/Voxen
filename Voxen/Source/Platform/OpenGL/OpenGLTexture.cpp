@@ -95,6 +95,13 @@ namespace Voxen
 		glBindTextureUnit(slot, m_RendererID);
 	}
 
+	void OpenGLTexture2D::Unbind(uint32_t slot) const
+	{
+		VOX_PROFILE_FUNCTION();
+
+		glBindTextureUnit(slot, 0);  // Unbind texture by binding ID 0
+	}
+
 	// Texture RW
 
 	OpenGLTextureRW::OpenGLTextureRW(uint32_t width, uint32_t height, GLenum internalFormat, GLenum format, GLenum type)
@@ -127,11 +134,11 @@ namespace Voxen
 		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, m_Format, m_Type, data);
 	}
 
-	void OpenGLTextureRW::BindImage(uint32_t unit, GLenum access) const
+	void OpenGLTextureRW::BindImage(uint32_t unit) const
 	{
 		VOX_PROFILE_FUNCTION();
 
-		glBindImageTexture(unit, m_RendererID, 0, GL_FALSE, 0, access, m_InternalFormat);
+		glBindImageTexture(unit, m_RendererID, 0, GL_FALSE, 0, GL_READ_WRITE, m_InternalFormat);
 	}
 
 	void OpenGLTextureRW::Bind(uint32_t slot) const
@@ -139,5 +146,12 @@ namespace Voxen
 		VOX_PROFILE_FUNCTION();
 
 		glBindTextureUnit(slot, m_RendererID);
+	}
+
+	void OpenGLTextureRW::Unbind(uint32_t slot) const
+	{
+		VOX_PROFILE_FUNCTION();
+
+		glBindTextureUnit(slot, 0);
 	}
 }

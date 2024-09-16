@@ -15,6 +15,8 @@ namespace Voxen
 		OpenGLComputeShader(const std::string& name, const std::string& computeSrc);
 		virtual ~OpenGLComputeShader();
 
+		virtual void Dispatch(uint32 xGroups, uint32 yGroups, uint32 zGroups) const override;
+
 		virtual void Bind() const override;
 		virtual void Unbind() const override;
 

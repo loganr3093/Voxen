@@ -7,6 +7,8 @@ namespace Voxen
 	public:
 		virtual ~ComputeShader() = default;
 
+		virtual void Dispatch(uint32 xGroups, uint32 yGroups, uint32 zGroups) const = 0;
+
 		virtual void Bind() const = 0;
 		virtual void Unbind() const = 0;
 

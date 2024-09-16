@@ -19,6 +19,7 @@ namespace Voxen
         virtual void SetData(void* data, uint32_t size) override;
 
         virtual void Bind(uint32_t slot = 0) const override;
+        virtual void Unbind(uint32_t slot = 0) const override;
 
         virtual bool operator==(const Texture& other) const override
         {
@@ -43,9 +44,10 @@ namespace Voxen
 
         virtual void SetData(void* data, uint32_t size) override;
 
-        void BindImage(uint32_t unit, GLenum access = GL_READ_WRITE) const;
+        virtual void BindImage(uint32_t unit) const override;
 
         virtual void Bind(uint32_t slot = 0) const override;
+        virtual void Unbind(uint32_t slot = 0) const override;
 
         virtual bool operator==(const Texture& other) const override
         {

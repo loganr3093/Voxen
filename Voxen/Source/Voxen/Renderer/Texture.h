@@ -18,6 +18,7 @@ namespace Voxen
 		virtual void SetData(void* data, uint32_t size) = 0;
 
 		virtual void Bind(uint32_t slot = 0) const = 0;
+		virtual void Unbind(uint32_t slot = 0) const = 0;
 
 		virtual bool operator==(const Texture& other) const = 0;
 	};
@@ -32,6 +33,7 @@ namespace Voxen
 	class TextureRW : public Texture
 	{
 	public:
+		virtual void BindImage(uint32_t unit) const = 0;
 		static Ref<TextureRW> Create(uint32_t width, uint32_t height);
 	};
 }

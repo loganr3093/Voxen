@@ -40,6 +40,13 @@ namespace Voxen
 		glDeleteProgram(m_RendererID);
 	}
 
+	void OpenGLComputeShader::Dispatch(uint32 xGroups, uint32 yGroups, uint32 zGroups) const
+	{
+		VOX_PROFILE_FUNCTION();
+		glDispatchCompute(xGroups, yGroups, zGroups);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+	}
+
 	std::string OpenGLComputeShader::ReadFile(const std::string& filePath)
 	{
 		VOX_PROFILE_FUNCTION();

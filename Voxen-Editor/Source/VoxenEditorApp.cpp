@@ -2,6 +2,7 @@
 #include <Voxen/Core/EntryPoint.h>
 
 #include "EditorLayer.h"
+#include "ComputeLayer.h"
 
 namespace Voxen
 {
@@ -11,7 +12,8 @@ namespace Voxen
 		VoxenEditor(const Voxen::ApplicationSpecification& specification)
 			: Voxen::Application(specification)
 		{
-			PushLayer(new EditorLayer());
+			//PushLayer(new EditorLayer());
+			PushLayer(new ComputeLayer());
 		}
 	};
 
