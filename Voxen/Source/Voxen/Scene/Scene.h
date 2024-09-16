@@ -12,7 +12,7 @@ namespace Voxen
 	class Entity;
 	class TransformComponent;
 
-	class Scene
+	class Scene : public std::enable_shared_from_this<Scene>
 	{
 	public:
 		Scene();
@@ -69,5 +69,7 @@ namespace Voxen
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneHierarchyPanel;
+		friend class Renderer2D;
+		friend class VoxRenderer;
 	};
 }

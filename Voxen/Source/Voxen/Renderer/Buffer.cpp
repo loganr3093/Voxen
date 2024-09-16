@@ -9,7 +9,7 @@ namespace Voxen
 {
 	Ref<VertexBuffer> VertexBuffer::Create(uint32 size)
 	{
-		switch (Renderer::GetAPI())
+		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::None:
 			VOX_CORE_ASSERT(false, "RendererAPI::None is currently not suported");
@@ -25,7 +25,7 @@ namespace Voxen
 	}
 	Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32 size)
 	{
-		switch (Renderer::GetAPI())
+		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::None:
 			VOX_CORE_ASSERT(false, "RendererAPI::None is currently not suported");
@@ -42,7 +42,7 @@ namespace Voxen
 
 	Ref<IndexBuffer> IndexBuffer::Create(uint32* indices, uint32 size)
 	{
-		switch (Renderer::GetAPI())
+		switch (RendererAPI::GetAPI())
 		{
 		case RendererAPI::API::None:
 			VOX_CORE_ASSERT(false, "RendererAPI::None is currently not suported");

@@ -40,12 +40,6 @@ void Demo::OnUpdate(Voxen::Timestep ts)
 	// Render
 	Voxen::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 	Voxen::RenderCommand::Clear();
-
-	Voxen::Renderer2D::BeginScene(m_CameraController.GetCamera());
-
-	Voxen::Renderer2D::DrawQuad({ -5.0f, -5.0f, -0.1f }, { 10.0f, 10.0f }, m_TestTexture);
-
-	Voxen::Renderer2D::EndScene();
 }
 
 void Demo::OnImGuiRender()

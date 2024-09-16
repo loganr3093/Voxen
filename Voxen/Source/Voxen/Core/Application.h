@@ -10,17 +10,18 @@
 
 #include "Voxen/ImGui/ImGuiLayer.h"
 
+#include "Voxen/Renderer/Renderer.h"
 #include "Voxen/Renderer/Shader.h"
 #include "Voxen/Renderer/Buffer.h"
 #include "Voxen/Renderer/VertexArray.h"
-#include "Voxen/Renderer/OrthographicCamera.h"
 
 namespace Voxen
 {
 	struct ApplicationSpecification
 	{
 		std::string Name = "Voxen Application";
-		std::string WorkingDirectory;
+		std::string WorkingDirectory = "./";
+		RendererType RendererType = RendererType::VoxRenderer;
 	};
 
 	class Application

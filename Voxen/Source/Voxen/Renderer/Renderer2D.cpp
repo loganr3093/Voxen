@@ -113,11 +113,15 @@ namespace Voxen
 		delete[] s_Data.QuadVertexBufferBase;
 	}
 
-	void Renderer2D::BeginScene(const Camera& camera, const Matrix4& transform)
+	void Renderer2D::OnWindowResize(uint32 width, uint32 height)
+	{
+	}
+
+	void Renderer2D::BeginScene(const Camera& camera, const Matrix4& cameraTransform)
 	{
 		VOX_PROFILE_FUNCTION();
 
-		Matrix4 viewProj = camera.GetProjection() * glm::inverse(transform);
+		Matrix4 viewProj = camera.GetProjection() * glm::inverse(cameraTransform);
 
 		s_Data.TextureShader->Bind();
 		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
@@ -125,7 +129,7 @@ namespace Voxen
 		StartBatch();
 	}
 
-	void Renderer2D::BeginScene(const EditorCamera& camera)
+	void Renderer2D::BeginEditorScene(const EditorCamera& camera)
 	{
 		VOX_PROFILE_FUNCTION();
 
@@ -137,21 +141,25 @@ namespace Voxen
 		StartBatch();
 	}
 
-	void Renderer2D::BeginScene(const OrthographicCamera& camera)
-	{
-		VOX_PROFILE_FUNCTION();
-
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
-
-		StartBatch();
-	}
-
 	void Renderer2D::EndScene()
 	{
 		VOX_PROFILE_FUNCTION();
 
 		Flush();
+	}
+
+	void Renderer2D::RenderScene(Ref<Scene> scene)
+	{
+		// Draw sprites
+		{
+			auto group = scene->m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+			for (auto entity : group)
+			{
+				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+
+				DrawSprite(transform.GetTransform(), sprite, (int)entity);
+			}
+		}
 	}
 
 	void Renderer2D::StartBatch()

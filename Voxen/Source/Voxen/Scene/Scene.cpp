@@ -1,7 +1,7 @@
 #include "voxpch.h"
 #include "Voxen/Scene/Scene.h"
 
-#include "Voxen/Renderer/Renderer2D.h"
+#include "Voxen/Renderer/Renderer.h"
 
 #include "Voxen/Scene/Entity.h"
 #include "Voxen/Scene/Components.h"
@@ -31,16 +31,16 @@ namespace Voxen
     static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& enttMap)
     {
         ([&]()
+        {
+            auto view = src.view<Component>();
+            for (auto srcEntity : view)
             {
-                auto view = src.view<Component>();
-                for (auto srcEntity : view)
-                {
-                    entt::entity dstEntity = enttMap.at(src.get<IDComponent>(srcEntity).ID);
+                entt::entity dstEntity = enttMap.at(src.get<IDComponent>(srcEntity).ID);
 
-                    auto& srcComponent = src.get<Component>(srcEntity);
-                    dst.emplace_or_replace<Component>(dstEntity, srcComponent);
-                }
-            }(), ...);
+                auto& srcComponent = src.get<Component>(srcEntity);
+                dst.emplace_or_replace<Component>(dstEntity, srcComponent);
+            }
+        }(), ...);
     }
 
     template<typename... Component>
@@ -221,20 +221,11 @@ namespace Voxen
 
         if (mainCamera)
         {
-            Renderer2D::BeginScene(*mainCamera, cameraTransform);
+            Renderer::BeginScene(*mainCamera, cameraTransform);
 
-            // Draw sprites
-            {
-                auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-                for (auto entity : group)
-                {
-                    auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+            Renderer::RenderScene(shared_from_this());
 
-                    Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
-                }
-            }
-
-            Renderer2D::EndScene();
+            Renderer::EndScene();
         }
     }
 
@@ -290,20 +281,11 @@ namespace Voxen
 
     void Scene::RenderScene(EditorCamera& camera)
     {
-        Renderer2D::BeginScene(camera);
+        Renderer::BeginScene(camera);
 
-        // Draw sprites
-        {
-            auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-            for (auto entity : group)
-            {
-                auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+        Renderer::RenderScene(shared_from_this());
 
-                Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
-            }
-        }
-
-        Renderer2D::EndScene();
+        Renderer::EndScene();
     }
 
     template<typename T>

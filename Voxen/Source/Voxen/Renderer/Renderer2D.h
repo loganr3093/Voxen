@@ -1,10 +1,13 @@
 #pragma once
 
-#include "Voxen/Renderer/OrthographicCamera.h"
+#include "Voxen/Renderer/Renderer.h"
+
 #include "Voxen/Renderer/Texture.h"
 #include "Voxen/Renderer/Camera.h"
 #include "Voxen/Renderer/EditorCamera.h"
+
 #include "Voxen/Scene/Components.h"
+#include "Voxen/Scene/Scene.h"
 
 namespace Voxen
 {
@@ -14,10 +17,14 @@ namespace Voxen
 		static void Init();
 		static void Shutdown();
 
-		static void BeginScene(const Camera& camera, const Matrix4& transform);
-		static void BeginScene(const EditorCamera& camera);
-		static void BeginScene(const OrthographicCamera& camera); // TODO remove
+		static void OnWindowResize(uint32 width, uint32 height);
+
+		static void BeginScene(const Camera& camera, const Matrix4& cameraTransform);
+		static void BeginEditorScene(const EditorCamera& camera);
 		static void EndScene();
+
+		static void RenderScene(Ref<Scene> scene);
+
 		static void Flush();
 
 		// Primitives

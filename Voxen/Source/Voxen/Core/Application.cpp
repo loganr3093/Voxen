@@ -34,7 +34,7 @@ namespace Voxen
 
 		EditorResources::Init();
 
-		Renderer::Init();
+		Renderer::Init(m_Specification.RendererType);
 
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);

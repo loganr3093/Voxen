@@ -1,32 +1,35 @@
 #pragma once
 
 #include "Voxen/Renderer/RenderCommand.h"
-#include "Voxen/Renderer/OrthographicCamera.h"
 #include "Voxen/Renderer/Shader.h"
+#include "Voxen/Renderer/EditorCamera.h"
+
+#include "Voxen/Scene/Scene.h"
+#include "Voxen/Scene/Components.h"
 
 namespace Voxen
 {
+	enum class RendererType
+	{
+		None = 0,
+		Renderer2D, VoxRenderer
+	};
+
 	class Renderer
 	{
 	public:
-		static void Init();
+		static void Init(RendererType type);
 		static void Shutdown();
 
 		static void OnWindowResize(uint32 width, uint32 height);
 
-		static void BeginScene(OrthographicCamera& camera);
+		static void BeginScene(const Camera& camera, const Matrix4& cameraTransform);
+		static void BeginScene(const EditorCamera& camera);
 		static void EndScene();
 
-		static void Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const Matrix4& transform = Matrix4(1.0f));
+		static void RenderScene(Ref<Scene> scene);
 
-		inline static RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
-	private:
-		struct SceneData
-		{
-			Matrix4 ViewProjectionMatrix;
-		};
-
-		static Scope<SceneData> s_SceneData;
+		static RendererType GetType();
 	};
 }
 

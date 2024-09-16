@@ -7,6 +7,8 @@
 #include "Voxen/Renderer/EditorCamera.h"
 #include "Voxen/VoxRenderer/VoxRenderer.h"
 
+#include "Voxen/VoxRenderer/SparseVoxelOctree.h"
+
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -27,15 +29,17 @@ namespace Voxen
 
 		virtual void OnAttach() override
 		{
-			Vector2 screenSize = { Application::Get().GetWindow().GetWidth() , Application::Get().GetWindow().GetHeight() };
+			VoxRenderer::Init();
 
-			VoxRenderer::Init(screenSize);
+			Vector2 screenSize = { Application::Get().GetWindow().GetWidth() , Application::Get().GetWindow().GetHeight() };
 
 			FramebufferSpecification fbSpec;
 			fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 			fbSpec.Width = screenSize.x;
 			fbSpec.Height = screenSize.y;
 			m_Framebuffer = Framebuffer::Create(fbSpec);
+
+			m_Scene = CreateRef<Scene>();
 
 			m_EditorCamera = EditorCamera(80.0f, 1.778f, 0.001, 1000.0f, { 0.0f, 0.0f, -10.0f });
 		}
@@ -100,9 +104,6 @@ namespace Voxen
 		virtual void OnEvent(Event& e) override
 		{
 			m_EditorCamera.OnEvent(e);
-
-			EventDispatcher dispatcher(e);
-			dispatcher.Dispatch<WindowResizeEvent>(VOX_BIND_EVENT_FN(OnWindowResizeEvent));
 		}
 
 		virtual void OnUpdate(Timestep ts) override
@@ -124,23 +125,18 @@ namespace Voxen
 
 			m_EditorCamera.OnUpdate(ts);
 
-			VoxRenderer::BeginScene(m_EditorCamera);
+			Renderer::BeginScene(m_EditorCamera);
 
-			VoxRenderer::RenderFullscreenQuad({ Application::Get().GetWindow().GetWidth(), Application::Get().GetWindow().GetHeight() });
+			Renderer::RenderScene(m_Scene);
 
-			VoxRenderer::EndScene();
+			Renderer::EndScene();
 
 			m_Framebuffer->Unbind();
 		}
 
-		bool OnWindowResizeEvent(WindowResizeEvent& e)
-		{
-			VoxRenderer::ResizeScreen({ e.GetWidth(), e.GetHeight() });
-			return false;
-		}
-
 	private:
 		Ref<Framebuffer> m_Framebuffer;
+		Ref<Scene> m_Scene;
 		EditorCamera m_EditorCamera;
 	};
 }

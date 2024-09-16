@@ -9,7 +9,7 @@
 
 #include <glm/glm.hpp>
 
-
+// TODO: Move to "Voxen/Editor/"
 namespace Voxen
 {
 	class EditorCamera : public Camera

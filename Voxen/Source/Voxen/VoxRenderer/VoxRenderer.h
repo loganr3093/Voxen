@@ -4,6 +4,9 @@
 #include "Voxen/Renderer/RenderCommand.h"
 #include "Voxen/Renderer/Texture.h"
 #include "Voxen/Renderer/EditorCamera.h"
+
+#include "Voxen/Scene/Scene.h"
+
 #include <glm/glm.hpp>
 
 namespace Voxen
@@ -11,19 +14,21 @@ namespace Voxen
     class VoxRenderer
     {
     public:
-        static void Init(const Vector2& screenSize);
+        static void Init();
         static void Shutdown();
 
-        static void ResizeScreen(const Vector2& screenSize);
+        static void OnWindowResize(uint32 width, uint32 height);
 
-        static void BeginScene(const EditorCamera& camera);
+        static void BeginScene(const Camera& camera, const Matrix4& cameraTransform);
+        static void BeginEditorScene(const EditorCamera& camera);
         static void EndScene();
 
-        // New method to run the compute shader and render the quad
-        static void RenderFullscreenQuad(const Vector2& screenSize);
+        static void RenderScene(Ref<Scene> scene);
+
+        static void RenderFullscreenQuad();
 
     private:
         static void SetupFullscreenQuad();
-        static void RunComputeShader(const Vector2& screenSize);
+        static void RunComputeShader();
     };
 }

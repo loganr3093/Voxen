@@ -22,6 +22,7 @@ namespace Voxen
 		ApplicationSpecification spec;
 		spec.Name = "Voxen-Hub";
 		spec.WorkingDirectory = "./";
+		spec.RendererType = RendererType::VoxRenderer;
 
 		return new VoxenEditor(spec);
 	}
