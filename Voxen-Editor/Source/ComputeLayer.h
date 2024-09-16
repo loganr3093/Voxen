@@ -37,7 +37,7 @@ namespace Voxen
 			fbSpec.Height = screenSize.y;
 			m_Framebuffer = Framebuffer::Create(fbSpec);
 
-			m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1, 1000.0f);
+			m_EditorCamera = EditorCamera(80.0f, 1.778f, 0.001, 1000.0f, { 0.0f, 0.0f, -10.0f });
 		}
 		virtual void OnDetach() override
 		{

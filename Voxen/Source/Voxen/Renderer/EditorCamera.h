@@ -16,7 +16,7 @@ namespace Voxen
 	{
 	public:
 		EditorCamera() = default;
-		EditorCamera(float fov, float aspectRatio, float nearClip, float farClip);
+		EditorCamera(float fov, float aspectRatio, float nearClip, float farClip, const Vector3& position = { 0.0f, 0.0f, 0.0f});
 
 		void OnUpdate(Timestep ts);
 		void OnEvent(Event& e);
@@ -36,11 +36,15 @@ namespace Voxen
 		Vector3 GetForwardDirection() const;
 		const Vector3& GetPosition() const { return m_Position; }
 		Quaternion GetOrientation() const;
+		Matrix4 GetProjectionMatrix() const { return m_Projection; }
 
 		float GetPitch() const { return m_Pitch; }
 		float GetYaw() const { return m_Yaw; }
 
 		float GetFOV() const { return m_FOV; }
+		float GetAspectRatio() const { return m_AspectRatio; }
+		float GetNearClip() const { return m_NearClip; }
+		float GetFarClip() const { return m_FarClip; }
 	private:
 		void UpdateProjection();
 		void UpdateView();
