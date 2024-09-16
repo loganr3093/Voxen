@@ -97,7 +97,7 @@ namespace Voxen
 		}
 		virtual void OnEvent(Event& e) override
 		{
-
+			m_EditorCamera.OnEvent(e);
 		}
 
 		virtual void OnUpdate(Timestep ts) override
@@ -117,18 +117,12 @@ namespace Voxen
 
 			m_Framebuffer->ClearAttachment(1, -1);
 
-			// Begin a new scene (optional, depending on how your renderer works)
+			m_EditorCamera.OnUpdate(ts);
+
 			VoxRenderer::BeginScene(m_EditorCamera);
 
 			VoxRenderer::RenderFullscreenQuad({ Application::Get().GetWindow().GetWidth(), Application::Get().GetWindow().GetHeight() });
 
-			//Renderer2D::BeginScene(m_EditorCamera);
-			
-			//Renderer2D::DrawQuad({0, 0}, {1, 1}, {1, 1, 1, 1});
-
-			//Renderer2D::EndScene();
-
-			// End the scene (flushes any remaining commands)
 			VoxRenderer::EndScene();
 
 			m_Framebuffer->Unbind();

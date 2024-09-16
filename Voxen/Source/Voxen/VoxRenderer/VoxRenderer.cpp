@@ -83,10 +83,10 @@ namespace Voxen
         float fullScreenQuadVertices[] =
         {
             // positions         // texture Coords   // ID
-            -0.5f, -0.5f, 0.0f,  0.0f, 0.0f,         -1,  // Bottom Left
-             0.5f, -0.5f, 0.0f,  1.0f, 0.0f,         -1,  // Bottom Right
-             0.5f,  0.5f, 0.0f,  1.0f, 1.0f,         -1,  // Top Right
-            -0.5f,  0.5f, 0.0f,  0.0f, 1.0f,         -1   // Top Left
+            -1.0f, -1.0f, 0.0f,  0.0f, 0.0f,         -1,  // Bottom Left
+             1.0f, -1.0f, 0.0f,  1.0f, 0.0f,         -1,  // Bottom Right
+             1.0f,  1.0f, 0.0f,  1.0f, 1.0f,         -1,  // Top Right
+            -1.0f,  1.0f, 0.0f,  0.0f, 1.0f,         -1   // Top Left
         };
 
         uint32 indices[] = { 0, 1, 2, 2, 3, 0 };  // Indices for two triangles forming a quad
@@ -114,7 +114,7 @@ namespace Voxen
 
         // Set the uniforms
         s_Data.ComputeShader->SetVector2("u_ScreenSize", screenSize);
-        s_Data.ComputeShader->SetMat4("u_CameraMatrix", s_Data.Camera.GetViewMatrix());
+        s_Data.ComputeShader->SetMat4("u_CameraMatrix", s_Data.Camera.GetViewProjection());
 
         // Bind the texture as an image for writing
         s_Data.RWTexture->BindImage(0);
