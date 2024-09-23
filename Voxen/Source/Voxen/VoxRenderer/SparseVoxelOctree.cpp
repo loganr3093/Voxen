@@ -3,19 +3,19 @@
 
 namespace Voxen
 {
-	void SparseVoxelOctree::Insert(int x, int y, int z, const Voxel& voxel)
+	void SparseVoxelOctree::Insert(int x, int y, int z, const CPUVoxel& voxel)
 	{
 		std::lock_guard<std::mutex> lock(m_Mutex);
 		m_Root = insert(m_Root, { x, y, z }, voxel, 31);
 	}
 
-	void SparseVoxelOctree::Insert(const Vector3& position, const Voxel& voxel)
+	void SparseVoxelOctree::Insert(const Vector3& position, const CPUVoxel& voxel)
 	{
 		std::lock_guard<std::mutex> lock(m_Mutex);
 		m_Root = insert(m_Root, position, voxel, 31);
 	}
 
-	void SparseVoxelOctree::BulkInsert(const std::vector<std::pair<Vector3, Voxel>>& voxelData)
+	void SparseVoxelOctree::BulkInsert(const std::vector<std::pair<Vector3, CPUVoxel>>& voxelData)
 	{
 		std::lock_guard<std::mutex> lock(m_Mutex);
 		for (const auto& [position, voxel] : voxelData)
@@ -61,14 +61,14 @@ namespace Voxen
 		}
 	}
 
-	const std::vector<Voxel>& SparseVoxelOctree::FindUniqueVoxels() const
+	const std::vector<CPUVoxel>& SparseVoxelOctree::FindUniqueVoxels() const
 	{
 		std::lock_guard<std::mutex> lock(m_Mutex);
 		findUniqueVoxels(m_Root);
 		return m_UniqueVoxels;
 	}
 
-	OctreeNode* SparseVoxelOctree::insert(OctreeNode* node, const Vector3& position, const Voxel& voxel, int depth)
+	OctreeNode* SparseVoxelOctree::insert(OctreeNode* node, const Vector3& position, const CPUVoxel& voxel, int depth)
 	{
 		// Bounds checking
 		VOX_CORE_ASSERT(position.x >= 0 && position.y >= 0 && position.z >= 0, "Position out of range");
@@ -137,7 +137,7 @@ namespace Voxen
 	{
 		if (!node) return;
 
-		std::unordered_set<Voxel, VoxelHash> uniqueVoxelsSet;
+		std::unordered_set<CPUVoxel, CPUVoxelHash> uniqueVoxelsSet;
 
 		// Internal recursive function to traverse and collect unique voxels
 		std::function<void(OctreeNode*)> collectVoxels = [&](OctreeNode* currentNode)
@@ -146,7 +146,7 @@ namespace Voxen
 
 				if (currentNode->isLeaf)
 				{
-					const Voxel& voxel = currentNode->voxel;
+					const CPUVoxel& voxel = currentNode->voxel;
 					if (uniqueVoxelsSet.insert(voxel).second)
 					{
 						m_UniqueVoxels.push_back(voxel);

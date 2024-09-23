@@ -7,42 +7,16 @@
 #include <mutex>
 #include <thread>
 
+#include "Voxen/VoxRenderer/Voxel.h"
+
 namespace Voxen
 {
-    struct Voxel
-    {
-        uint8_t red, green, blue;
-        uint8_t reflectivity, roughness, metallic, emissive;
-
-        Voxel() = default;
-        Voxel(const Voxel&) = default;
-        Voxel(uint8_t r, uint8_t g, uint8_t b, uint8_t refl, uint8_t rough, uint8_t metal, uint8_t emiss)
-            : red(r), green(g), blue(b), reflectivity(refl), roughness(rough), metallic(metal), emissive(emiss) {}
-
-        bool operator==(const Voxel& other) const
-        {
-            return red == other.red && green == other.green && blue == other.blue &&
-                reflectivity == other.reflectivity && roughness == other.roughness &&
-                metallic == other.metallic && emissive == other.emissive;
-        }
-    };
-
-    struct VoxelHash
-    {
-        std::size_t operator()(const Voxel& voxel) const
-        {
-            return (std::size_t(voxel.red) << 56) | (std::size_t(voxel.green) << 48) |
-                   (std::size_t(voxel.blue) << 40) | (std::size_t(voxel.reflectivity) << 32) |
-                   (std::size_t(voxel.roughness) << 24) | (std::size_t(voxel.metallic) << 16) |
-                    std::size_t(voxel.emissive);
-        }
-    };
 
     class OctreeNode
     {
     public:
         bool isLeaf;
-        Voxel voxel;
+        CPUVoxel voxel;
         std::vector<OctreeNode*> children;
 
         OctreeNode() : isLeaf(false), voxel({ 0, 0, 0, 0, 0, 0, 0 }), children(8, nullptr) {}
@@ -63,11 +37,11 @@ namespace Voxen
         ~SparseVoxelOctree() { delete m_Root; }
 
         // Single voxel insertion
-        void Insert(int x, int y, int z, const Voxel& voxel);
-        void Insert(const Vector3& position, const Voxel& voxel);
+        void Insert(int x, int y, int z, const CPUVoxel& voxel);
+        void Insert(const Vector3& position, const CPUVoxel& voxel);
 
         // Bulk insertion to optimize multiple voxel adds
-        void BulkInsert(const std::vector<std::pair<Vector3, Voxel>>& voxelData);
+        void BulkInsert(const std::vector<std::pair<Vector3, CPUVoxel>>& voxelData);
 
         // Finding voxels
         bool Find(int x, int y, int z) const;
@@ -81,9 +55,9 @@ namespace Voxen
         void Traverse(OctreeNode* node, int depth, void (*func)(OctreeNode*, int)) const;
 
         // Unique voxel retrieval
-        const std::vector<Voxel>& FindUniqueVoxels() const;
+        const std::vector<CPUVoxel>& FindUniqueVoxels() const;
     private:
-        OctreeNode* insert(OctreeNode* node, const Vector3& position, const Voxel& voxel, int depth);
+        OctreeNode* insert(OctreeNode* node, const Vector3& position, const CPUVoxel& voxel, int depth);
         OctreeNode* find(OctreeNode* node, const Vector3& position, int depth) const;
         OctreeNode* remove(OctreeNode* node, const Vector3& position, int depth);
 
@@ -96,21 +70,6 @@ namespace Voxen
 
         // Root node and unique voxels
         OctreeNode* m_Root;
-        mutable std::vector<Voxel> m_UniqueVoxels;
-    };
-}
-
-namespace std
-{
-    template <>
-    struct hash<Voxen::Voxel>
-    {
-        std::size_t operator()(const Voxen::Voxel& voxel) const
-        {
-            return (std::size_t(voxel.red) << 56) | (std::size_t(voxel.green) << 48) |
-                (std::size_t(voxel.blue) << 40) | (std::size_t(voxel.reflectivity) << 32) |
-                (std::size_t(voxel.roughness) << 24) | (std::size_t(voxel.metallic) << 16) |
-                std::size_t(voxel.emissive);
-        }
+        mutable std::vector<CPUVoxel> m_UniqueVoxels;
     };
 }
