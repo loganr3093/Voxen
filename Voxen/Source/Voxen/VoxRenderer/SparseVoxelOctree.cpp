@@ -176,4 +176,96 @@ namespace Voxen
 
 		return index;
 	}
+
+	std::vector<CPUVoxel> SparseVoxelOctree::GetUniqueVoxels() const
+	{
+		std::lock_guard<std::mutex> lock(m_Mutex);
+		std::unordered_set<CPUVoxel, CPUVoxelHash> uniqueVoxelsSet;
+		std::vector<CPUVoxel> uniqueVoxels;
+
+		std::function<void(OctreeNode*)> collectVoxels = [&](OctreeNode* node)
+		{
+			if (!node) return;
+
+			if (node->isLeaf)
+			{
+				if (uniqueVoxelsSet.insert(node->voxel).second)
+				{
+					uniqueVoxels.push_back(node->voxel);
+				}
+			}
+			else
+			{
+				for (auto* child : node->children)
+				{
+					collectVoxels(child);
+				}
+			}
+		};
+
+		collectVoxels(m_Root);
+		return uniqueVoxels;
+	}
+
+	CPUVoxelShape SparseVoxelOctree::ToCPUVoxelShape() const
+	{
+		std::lock_guard<std::mutex> lock(m_Mutex);
+
+		// Get all unique voxels
+		std::vector<CPUVoxel> uniqueVoxels = GetUniqueVoxels();
+
+		// Define the maximum depth of the octree (assuming 32 levels for 32-bit coordinates)
+		const int maxDepth = 31; // You can adjust this as necessary for your octree depth
+
+		// Calculate the dimensions of the voxel grid based on the octree depth
+		// Each depth level doubles the resolution, so the grid size is 2^maxDepth.
+		int gridSize = static_cast<int>(std::pow(2, maxDepth)); // 2^maxDepth
+
+		// 3D voxel map initialized to 255 (representing empty space)
+		std::vector<uint8> voxelMap(gridSize * gridSize * gridSize, 255);
+
+		// Helper function to compute linear index from 3D coordinates
+		auto computeIndex = [&](int x, int y, int z) -> size_t
+		{
+			return static_cast<size_t>(x) + gridSize * (static_cast<size_t>(y) + gridSize * static_cast<size_t>(z));
+		};
+
+		// Helper function to recursively traverse the octree and fill the voxel map
+		std::function<void(OctreeNode*, int, int, int, int)> fillVoxelMap;
+		fillVoxelMap = [&](OctreeNode* node, int x, int y, int z, int depth)
+		{
+			if (!node) return;
+
+			if (node->isLeaf)
+			{
+				// Find index of this voxel in the unique voxel vector
+				auto it = std::find(uniqueVoxels.begin(), uniqueVoxels.end(), node->voxel);
+				uint8 voxelIndex = static_cast<uint8>(std::distance(uniqueVoxels.begin(), it));
+
+				// Set the voxel map for the current position
+				voxelMap[computeIndex(x, y, z)] = voxelIndex;
+			}
+			else
+			{
+				// If not a leaf, recursively fill children
+				int half = 1 << (maxDepth - depth - 1); // Half the size at the current depth
+				for (int i = 0; i < 8; ++i)
+				{
+					int childX = x + (i & 1) * half;
+					int childY = y + ((i >> 1) & 1) * half;
+					int childZ = z + ((i >> 2) & 1) * half;
+					fillVoxelMap(node->children[i], childX, childY, childZ, depth + 1);
+				}
+			}
+		};
+
+		// Start the traversal from the root of the octree at position (0, 0, 0)
+		fillVoxelMap(m_Root, 0, 0, 0, 0);
+
+		// Use an identity matrix for the transformation and a dummy AABB (can be updated to actual bounds)
+		Matrix4 identityTransform(1.0f);
+		AABB boundingBox(Vector3(0.0f), Vector3(static_cast<float>(gridSize)));
+
+		return CPUVoxelShape(identityTransform, boundingBox, uniqueVoxels, voxelMap);
+	}
 }

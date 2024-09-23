@@ -42,7 +42,7 @@ namespace Voxen
     {
         Matrix4 transform;
         AABB aabb;
-        std::vector<CPUVoxel> voxels;   // Changed from fixed-size array to dynamic vector
+        std::vector<CPUVoxel> voxels;
         std::vector<uint8> voxelMap;
 
         // Default constructor
@@ -64,7 +64,8 @@ namespace Voxen
         // Copy assignment operator
         CPUVoxelShape& operator=(const CPUVoxelShape& other)
         {
-            if (this != &other) {
+            if (this != &other)
+            {
                 transform = other.transform;
                 aabb = other.aabb;
                 voxels = other.voxels;
@@ -288,7 +289,6 @@ namespace Voxen
                     static_cast<uint32>(emissive);
         }
 
-        // Unpacks four indices from a packed uint
         static std::vector<uint8> UnpackVoxelIndices(uint32 packed)
         {
             return
@@ -300,7 +300,6 @@ namespace Voxen
             };
         }
 
-        // Packs four uint8 indices into a single uint
         static uint32 PackVoxelIndices(uint8 i0, uint8 i1, uint8 i2, uint8 i3)
         {
             return (static_cast<uint32>(i0) << 24) |

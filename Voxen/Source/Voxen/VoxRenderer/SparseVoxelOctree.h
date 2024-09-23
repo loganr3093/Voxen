@@ -57,6 +57,10 @@ namespace Voxen
 
         // Unique voxel retrieval
         const std::vector<CPUVoxel>& FindUniqueVoxels() const;
+
+        std::vector<CPUVoxel> GetUniqueVoxels() const;
+
+        CPUVoxelShape ToCPUVoxelShape() const;
     private:
         OctreeNode* insert(OctreeNode* node, const Vector3& position, const CPUVoxel& voxel, int depth);
         OctreeNode* find(OctreeNode* node, const Vector3& position, int depth) const;
