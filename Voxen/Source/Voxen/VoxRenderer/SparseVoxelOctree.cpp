@@ -170,9 +170,9 @@ namespace Voxen
 		int index = 0;
 
 		// Check if the bit at the current depth is set for each coordinate and adjust the index accordingly
-		if (static_cast<uint32_t>(position.x) & (1 << shift)) index |= 1;
-		if (static_cast<uint32_t>(position.y) & (1 << shift)) index |= 2;
-		if (static_cast<uint32_t>(position.z) & (1 << shift)) index |= 4;
+		if (static_cast<uint32>(position.x) & (1 << shift)) index |= 1;
+		if (static_cast<uint32>(position.y) & (1 << shift)) index |= 2;
+		if (static_cast<uint32>(position.z) & (1 << shift)) index |= 4;
 
 		return index;
 	}

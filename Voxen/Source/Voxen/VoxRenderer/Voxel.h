@@ -40,38 +40,26 @@ namespace Voxen
 
     struct CPUVoxelShape
     {
-        Matrix4 transform;            // Transformation matrix
-        AABB aabb;                    // Bounding box
-        CPUVoxel voxels[256];         // Fixed-size array of voxels
-        std::vector<uint8> voxelMap;  // Array for voxel map
+        Matrix4 transform;
+        AABB aabb;
+        std::vector<CPUVoxel> voxels;   // Changed from fixed-size array to dynamic vector
+        std::vector<uint8> voxelMap;
 
-        // Constructors
-        CPUVoxelShape() : transform(Matrix4(1.0f)), aabb(), voxelMap() {}
-        CPUVoxelShape(const Matrix4& trans, const AABB& bbox, const CPUVoxel vox[256], const std::vector<uint8>& voxel_map)
-            : transform(trans), aabb(bbox), voxelMap(voxel_map)
-        {
-            for (int i = 0; i < 256; ++i) {
-                voxels[i] = vox[i];
-            }
-        }
+        // Default constructor
+        CPUVoxelShape() : transform(Matrix4(1.0f)), aabb(), voxels(), voxelMap() {}
+
+        // Constructor with parameters
+        CPUVoxelShape(const Matrix4& trans, const AABB& bbox, const std::vector<CPUVoxel>& vox, const std::vector<uint8>& voxel_map)
+            : transform(trans), aabb(bbox), voxels(vox), voxelMap(voxel_map) {}
 
         // Copy constructor
         CPUVoxelShape(const CPUVoxelShape& other)
-            : transform(other.transform), aabb(other.aabb), voxelMap(other.voxelMap)
-        {
-            for (int i = 0; i < 256; ++i) {
-                voxels[i] = other.voxels[i];
-            }
-        }
+            : transform(other.transform), aabb(other.aabb), voxels(other.voxels), voxelMap(other.voxelMap) {}
 
         // Move constructor
         CPUVoxelShape(CPUVoxelShape&& other) noexcept
-            : transform(std::move(other.transform)), aabb(std::move(other.aabb)), voxelMap(std::move(other.voxelMap))
-        {
-            for (int i = 0; i < 256; ++i) {
-                voxels[i] = std::move(other.voxels[i]);
-            }
-        }
+            : transform(std::move(other.transform)), aabb(std::move(other.aabb)),
+            voxels(std::move(other.voxels)), voxelMap(std::move(other.voxelMap)) {}
 
         // Copy assignment operator
         CPUVoxelShape& operator=(const CPUVoxelShape& other)
@@ -79,10 +67,8 @@ namespace Voxen
             if (this != &other) {
                 transform = other.transform;
                 aabb = other.aabb;
+                voxels = other.voxels;
                 voxelMap = other.voxelMap;
-                for (int i = 0; i < 256; ++i) {
-                    voxels[i] = other.voxels[i];
-                }
             }
             return *this;
         }
@@ -93,10 +79,8 @@ namespace Voxen
             if (this != &other) {
                 transform = std::move(other.transform);
                 aabb = std::move(other.aabb);
+                voxels = std::move(other.voxels);
                 voxelMap = std::move(other.voxelMap);
-                for (int i = 0; i < 256; ++i) {
-                    voxels[i] = std::move(other.voxels[i]);
-                }
             }
             return *this;
         }
@@ -104,15 +88,7 @@ namespace Voxen
         // Equality operator
         bool operator==(const CPUVoxelShape& other) const
         {
-            if (transform != other.transform || aabb != other.aabb || voxelMap != other.voxelMap)
-                return false;
-
-            for (int i = 0; i < 256; ++i) {
-                if (voxels[i] != other.voxels[i]) {
-                    return false;
-                }
-            }
-            return true;
+            return transform == other.transform && aabb == other.aabb && voxels == other.voxels && voxelMap == other.voxelMap;
         }
     };
 
@@ -260,10 +236,17 @@ namespace Voxen
             gpu_shape.voxelMapOffset = voxelMapOffset;
             gpu_shape.voxelMapSize = voxelMapSize;
 
-            // Convert all CPU voxels to GPU voxels
-            for (int i = 0; i < 256; ++i)
+            // Convert CPU voxels to GPU voxels, ensuring we only copy as many as the vector contains
+            size_t voxel_count = std::min(cpu_shape.voxels.size(), size_t(255));
+            for (size_t i = 0; i < voxel_count; ++i)
             {
                 gpu_shape.voxels[i] = CPUVoxelToGPUVoxel(cpu_shape.voxels[i]);
+            }
+
+            // If fewer than 256 voxels are provided, fill the rest with default GPUVoxel
+            for (size_t i = voxel_count; i < 256; ++i)
+            {
+                gpu_shape.voxels[i] = GPUVoxel(); // Default GPUVoxel
             }
 
             return gpu_shape;

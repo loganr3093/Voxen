@@ -1,5 +1,9 @@
 #pragma once
 
+#include "Voxen/Core/Core.h"
+
+#include "Voxen/VoxRenderer/Voxel.h"
+
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
@@ -7,11 +11,8 @@
 #include <mutex>
 #include <thread>
 
-#include "Voxen/VoxRenderer/Voxel.h"
-
 namespace Voxen
 {
-
     class OctreeNode
     {
     public:
