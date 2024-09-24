@@ -11,6 +11,7 @@ namespace Voxen
 
     SparseVoxelOctree::~SparseVoxelOctree()
     {
+        Clear();
         delete m_Root;
     }
 
@@ -44,6 +45,13 @@ namespace Voxen
         std::vector<std::vector<std::vector<uint8>>> grid(m_Bounds.max.x, std::vector<std::vector<uint8_t>>(m_Bounds.max.y, std::vector<uint8>(m_Bounds.max.z, Voxel::EMPTY_VOXEL)));
         ConvertToDenseArrayRecursive(m_Root, grid, IVector3(0, 0, 0), m_Bounds.max.x);
         return grid;
+    }
+
+    void SparseVoxelOctree::Clear()
+    {
+        ClearRecursive(m_Root);
+        delete m_Root;
+        m_Root = new OctreeNode();
     }
 
     int SparseVoxelOctree::GetOctant(const IVector3& position, const IVector3& center)
@@ -141,6 +149,21 @@ namespace Voxen
                 int offsetZ = (i & 4) ? halfSize : 0;
                 IVector3 newPos = IVector3(position.x + offsetX, position.y + offsetY, position.z + offsetZ);
                 ConvertToDenseArrayRecursive(node->children[i], grid, newPos, halfSize);
+            }
+        }
+    }
+
+    void SparseVoxelOctree::ClearRecursive(OctreeNode* node)
+    {
+        if (!node) return;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            if (node->children[i])
+            {
+                ClearRecursive(node->children[i]);
+                delete node->children[i];
+                node->children[i] = nullptr;
             }
         }
     }

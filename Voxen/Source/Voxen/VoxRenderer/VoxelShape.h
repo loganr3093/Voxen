@@ -17,6 +17,8 @@ namespace Voxen
 
 		std::vector<std::vector<std::vector<uint8>>> GetGrid() { return m_Octree.ConvertToDenseArray(); }
 
+		AABB Bounds() { return m_Octree.m_Bounds; }
+
 	private:
 		Matrix4 m_Transform;
 		SparseVoxelOctree m_Octree;

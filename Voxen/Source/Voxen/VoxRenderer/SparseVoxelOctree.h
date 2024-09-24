@@ -64,6 +64,9 @@ namespace Voxen
         // Convert octree to dense 3D array (full grid)
         std::vector<std::vector<std::vector<uint8>>> ConvertToDenseArray();
 
+        // Clears the entire octree
+        void Clear();
+
     private:
         // Helper to calculate which octant a position belongs to
         int GetOctant(const IVector3& position, const IVector3& center);
@@ -76,6 +79,9 @@ namespace Voxen
 
         // Helper to convert octree to a dense array
         void ConvertToDenseArrayRecursive(OctreeNode* node, std::vector<std::vector<std::vector<uint8>>>& grid, const IVector3& position, int size);
+
+        // Recursive helper to clear the octree
+        void ClearRecursive(OctreeNode* node);
     private:
         OctreeNode* m_Root;
         int m_MaxDepth;

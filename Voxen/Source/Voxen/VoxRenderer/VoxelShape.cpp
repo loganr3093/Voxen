@@ -15,7 +15,7 @@ namespace Voxen
 	VoxelShape::~VoxelShape()
 	{
 		m_Transform = Matrix4(1.0f);
-		// m_Octree.Clear();
+		m_Octree.Clear();
 		m_MaterialMap.clear();
 	}
 
