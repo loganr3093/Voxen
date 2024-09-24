@@ -11,6 +11,8 @@
 #include "Voxen/Scripting/ScriptEngine.h"
 #include "Voxen/Scripting/ScriptBuilder.h"
 
+#include "Voxen/VoxRenderer/SparseVoxelOctree.h"
+
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -43,6 +45,44 @@ namespace Voxen
 	void EditorLayer::OnAttach()
 	{
 		VOX_PROFILE_FUNCTION();
+
+		// Define octree bounds and depth
+		AABB bounds = { {0, 0, 0}, {16, 16, 16} };
+		int depth = 4; // Max depth
+
+		// Create octree
+		SparseVoxelOctree svo(bounds, depth);
+
+		// Insert some voxels with material indices
+		svo.InsertVoxel(IVector3(0, 0, 0), 1); // Voxel at (0,0,0) with material index 1
+		svo.InsertVoxel(IVector3(1, 0, 0), 2); // Voxel at (1,0,0) with material index 2
+		svo.InsertVoxel(IVector3(0, 1, 0), 3); // Voxel at (0,2,0) with material index 3
+		svo.InsertVoxel(IVector3(0, 0, 1), 4); // Voxel at (0,0,3) with material index 4
+
+		svo.InsertVoxel(IVector3(1, 1, 1), 5); // Voxel at (1,1,1) with material index 5
+		svo.InsertVoxel(IVector3(2, 2, 2), 8); // Voxel at (2,2,2) with material index 8
+
+		// Get voxel material
+		uint8_t material = svo.GetVoxel(IVector3(1, 1, 1));
+		std::cout << "Material at (1,1,1): " << (int)material << std::endl;
+
+		// Convert to dense 3D array
+		auto denseArray = svo.ConvertToDenseArray(16, 16, 16);
+
+		/*for (int z = 0; z < 16; z++)
+		{
+			for (int y = 0; y < 16; y++)
+			{
+				for (int x = 0; x < 16; x++)
+				{
+					std::cout << "Dense array material at ( " << x << ", " << y << ", " << z << "): " << (int)denseArray[x][y][z] << std::endl;
+				}
+			}
+		}*/
+
+
+
+
 
 		FramebufferSpecification fbSpec;
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };

@@ -13,68 +13,70 @@
 
 namespace Voxen
 {
+    // Octree Node class
     class OctreeNode
     {
     public:
-        bool isLeaf;
-        CPUVoxel voxel;
-        std::vector<OctreeNode*> children;
+        bool isLeaf = false; // True if this node is a leaf
+        uint8 materialIndex = 255; // Material index if this is a leaf
+        OctreeNode* children[8]; // Pointers to 8 child nodes if this is not a leaf
 
-        OctreeNode() : isLeaf(false), voxel({ 0, 0, 0, 0, 0, 0, 0 }), children(8, nullptr) {}
+        // Constructor for a branch node (non-leaf)
+        OctreeNode() : isLeaf(false), materialIndex(255)
+        {
+            for (int i = 0; i < 8; ++i)
+            {
+                children[i] = nullptr;
+            }
+        }
+
+        // Destructor to clean up child nodes
         ~OctreeNode()
         {
-            for (auto child : children)
+            for (int i = 0; i < 8; ++i)
             {
-                delete child;
-                child = nullptr;
+                if (children[i] != nullptr)
+                {
+                    delete children[i];
+                }
             }
         }
     };
 
+    // Octree class
     class SparseVoxelOctree
     {
     public:
-        SparseVoxelOctree() : m_Root(new OctreeNode()) {}
-        ~SparseVoxelOctree() { delete m_Root; }
+        // Constructor: Initialize octree with given bounds and depth
+        SparseVoxelOctree(const AABB& bounds, int depth);
 
-        // Single voxel insertion
-        void Insert(int x, int y, int z, const CPUVoxel& voxel);
-        void Insert(const Vector3& position, const CPUVoxel& voxel);
+        // Destructor
+        ~SparseVoxelOctree();
 
-        // Bulk insertion to optimize multiple voxel adds
-        void BulkInsert(const std::vector<std::pair<Vector3, CPUVoxel>>& voxelData);
+        // Insert a voxel with material index
+        void InsertVoxel(const IVector3& position, uint8 materialIndex);
 
-        // Finding voxels
-        bool Find(int x, int y, int z) const;
-        bool Find(const Vector3& position) const;
+        // Get the material index at a given voxel position
+        uint8 GetVoxel(const IVector3& position);
 
-        // Removing voxels
-        void Remove(int x, int y, int z);
-        void Remove(const Vector3& position);
+        // Convert octree to dense 3D array (full grid)
+        std::vector<std::vector<std::vector<uint8>>> ConvertToDenseArray(int gridWidth, int gridHeight, int gridDepth);
 
-        // Traversal with a user-provided function
-        void Traverse(OctreeNode* node, int depth, void (*func)(OctreeNode*, int)) const;
-
-        // Unique voxel retrieval
-        const std::vector<CPUVoxel>& FindUniqueVoxels() const;
-
-        std::vector<CPUVoxel> GetUniqueVoxels() const;
-
-        CPUVoxelShape ToCPUVoxelShape() const;
     private:
-        OctreeNode* insert(OctreeNode* node, const Vector3& position, const CPUVoxel& voxel, int depth);
-        OctreeNode* find(OctreeNode* node, const Vector3& position, int depth) const;
-        OctreeNode* remove(OctreeNode* node, const Vector3& position, int depth);
+        // Helper to calculate which octant a position belongs to
+        int GetOctant(const IVector3& position, const IVector3& center);
 
-        void findUniqueVoxels(OctreeNode* node) const;
+        // Recursive helper for voxel insertion
+        void InsertVoxelRecursive(OctreeNode* node, const IVector3& position, const IVector3& center, int size, uint8 materialIndex, int depth);
 
-        int getChildIndex(const Vector3& position, int depth) const;
+        // Recursive helper to get voxel material
+        uint8 GetVoxelRecursive(OctreeNode* node, const IVector3& position, const IVector3& center, int size, int depth);
+
+        // Helper to convert octree to a dense array
+        void ConvertToDenseArrayRecursive(OctreeNode* node, std::vector<std::vector<std::vector<uint8>>>& grid, const IVector3& position, int size);
     private:
-        // Thread safety for multi-threaded voxel operations
-        mutable std::mutex m_Mutex;
-
-        // Root node and unique voxels
         OctreeNode* m_Root;
-        mutable std::vector<CPUVoxel> m_UniqueVoxels;
+        int m_MaxDepth;
+        AABB m_Bounds;
     };
 }

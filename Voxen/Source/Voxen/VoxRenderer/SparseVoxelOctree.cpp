@@ -3,269 +3,143 @@
 
 namespace Voxen
 {
-	void SparseVoxelOctree::Insert(int x, int y, int z, const CPUVoxel& voxel)
-	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-		m_Root = insert(m_Root, { x, y, z }, voxel, 31);
-	}
+    SparseVoxelOctree::SparseVoxelOctree(const AABB& bounds, int depth)
+        : m_Bounds(bounds), m_MaxDepth(depth)
+    {
+        m_Root = new OctreeNode();
+    }
 
-	void SparseVoxelOctree::Insert(const Vector3& position, const CPUVoxel& voxel)
-	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-		m_Root = insert(m_Root, position, voxel, 31);
-	}
+    SparseVoxelOctree::~SparseVoxelOctree()
+    {
+        delete m_Root;
+    }
 
-	void SparseVoxelOctree::BulkInsert(const std::vector<std::pair<Vector3, CPUVoxel>>& voxelData)
-	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-		for (const auto& [position, voxel] : voxelData)
-		{
-			m_Root = insert(m_Root, position, voxel, 31);
-		}
-	}
+    void SparseVoxelOctree::InsertVoxel(const IVector3& position, uint8 materialIndex)
+    {
+        if (materialIndex == 255)
+        {
+            VOX_CORE_WARN("Attempting to insert the empty voxel (material index 255). Operation ignored");
+            return;
+        }
 
-	bool SparseVoxelOctree::Find(int x, int y, int z) const
-	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-		OctreeNode* node = find(m_Root, { x, y, z }, 31);
-		return node && node->isLeaf;
-	}
+        IVector3 center = m_Bounds.Center();
+        int size = (m_Bounds.max.x - m_Bounds.min.x) / 2;
+        InsertVoxelRecursive(m_Root, position, center, size, materialIndex, 0);
+    }
 
-	bool SparseVoxelOctree::Find(const Vector3& position) const
-	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-		OctreeNode* node = find(m_Root, position, 31);
-		return node && node->isLeaf;
-	}
+    uint8 SparseVoxelOctree::GetVoxel(const IVector3& position)
+    {
+        if (!m_Bounds.Contains(position))
+        {
+            return 255;
+        }
 
-	void SparseVoxelOctree::Remove(int x, int y, int z)
-	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-		m_Root = remove(m_Root, { x, y, z }, 31);
-	}
+        IVector3 center = m_Bounds.Center();
+        int size = (m_Bounds.max.x - m_Bounds.min.x) / 2;
+        return GetVoxelRecursive(m_Root, position, center, size, 0);
+    }
 
-	void SparseVoxelOctree::Remove(const Vector3& position)
-	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-		m_Root = remove(m_Root, position, 31);
-	}
+    std::vector<std::vector<std::vector<uint8>>> SparseVoxelOctree::ConvertToDenseArray(int gridWidth, int gridHeight, int gridDepth)
+    {
+        std::vector<std::vector<std::vector<uint8>>> grid(gridWidth, std::vector<std::vector<uint8_t>>(gridHeight, std::vector<uint8>(gridDepth, 255)));
+        ConvertToDenseArrayRecursive(m_Root, grid, IVector3(0, 0, 0), gridWidth);
+        return grid;
+    }
 
-	void SparseVoxelOctree::Traverse(OctreeNode* node, int depth, void(*func)(OctreeNode*, int)) const
-	{
-		if (!node) return;
-		func(node, depth);
+    int SparseVoxelOctree::GetOctant(const IVector3& position, const IVector3& center)
+    {
+        return (position.x >= center.x ? 1 : 0) |
+            (position.y >= center.y ? 2 : 0) |
+            (position.z >= center.z ? 4 : 0);
+    }
 
-		for (auto child : node->children)
-		{
-			Traverse(child, depth - 1, func);
-		}
-	}
+    void SparseVoxelOctree::InsertVoxelRecursive(OctreeNode* node, const IVector3& position, const IVector3& center, int size, uint8 materialIndex, int depth)
+    {
+        if (depth == m_MaxDepth)
+        {
+            node->isLeaf = true;
+            node->materialIndex = materialIndex;
+            return;
+        }
 
-	const std::vector<CPUVoxel>& SparseVoxelOctree::FindUniqueVoxels() const
-	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-		findUniqueVoxels(m_Root);
-		return m_UniqueVoxels;
-	}
+        int octant = GetOctant(position, center);
+        IVector3 newCenter = center;
 
-	OctreeNode* SparseVoxelOctree::insert(OctreeNode* node, const Vector3& position, const CPUVoxel& voxel, int depth)
-	{
-		// Bounds checking
-		VOX_CORE_ASSERT(position.x >= 0 && position.y >= 0 && position.z >= 0, "Position out of range");
+        // Calculate the new center of the octant
+        int halfSize = size / 2;
+        if (octant & 1) newCenter.x += halfSize;
+        else newCenter.x -= halfSize;
+        if (octant & 2) newCenter.y += halfSize;
+        else newCenter.y -= halfSize;
+        if (octant & 4) newCenter.z += halfSize;
+        else newCenter.z -= halfSize;
 
-		if (depth == 0)
-		{
-			node->isLeaf = true;
-			node->voxel = voxel;
-			return node;
-		}
+        // If no child exists for this octant, create one
+        if (node->children[octant] == nullptr) {
+            node->children[octant] = new OctreeNode();
+        }
 
-		int index = getChildIndex(position, depth);
-		if (!node->children[index])
-		{
-			node->children[index] = new OctreeNode();
-		}
+        // Recurse into the child
+        InsertVoxelRecursive(node->children[octant], position, newCenter, halfSize, materialIndex, depth + 1);
+    }
 
-		node->children[index] = insert(node->children[index], position, voxel, depth - 1);
-		return node;
-	}
+    uint8 SparseVoxelOctree::GetVoxelRecursive(OctreeNode* node, const IVector3& position, const IVector3& center, int size, int depth)
+    {
+        if (node == nullptr)
+        {
+            return 255;
+        }
 
-	OctreeNode* SparseVoxelOctree::find(OctreeNode* node, const Vector3& position, int depth) const
-	{
-		VOX_CORE_ASSERT(position.x >= 0 && position.y >= 0 && position.z >= 0, "Position out of range");
+        if (node->isLeaf)
+        {
+            return node->materialIndex;
+        }
 
-		if (!node || depth == 0) return node;
+        int octant = GetOctant(position, center);
+        IVector3 newCenter = center;
+        int halfSize = size / 2;
 
-		int index = getChildIndex(position, depth);
-		return find(node->children[index], position, depth - 1);
-	}
+        if (octant & 1) newCenter.x += halfSize;
+        else newCenter.x -= halfSize;
+        if (octant & 2) newCenter.y += halfSize;
+        else newCenter.y -= halfSize;
+        if (octant & 4) newCenter.z += halfSize;
+        else newCenter.z -= halfSize;
 
-	OctreeNode* SparseVoxelOctree::remove(OctreeNode* node, const Vector3& position, int depth)
-	{
-		VOX_CORE_ASSERT(position.x >= 0 && position.y >= 0 && position.z >= 0, "Position out of range");
+        return GetVoxelRecursive(node->children[octant], position, newCenter, halfSize, depth + 1);
+    }
 
-		if (!node) return nullptr;
+    void SparseVoxelOctree::ConvertToDenseArrayRecursive(OctreeNode* node, std::vector<std::vector<std::vector<uint8>>>& grid, const IVector3& position, int size)
+    {
+        if (node == nullptr)
+        {
+            return;
+        }
 
-		if (depth == 0)
-		{
-			delete node;
-			return nullptr;
-		}
-
-		int index = getChildIndex(position, depth);
-		node->children[index] = remove(node->children[index], position, depth - 1);
-
-		bool allChildrenNull = true;
-		for (const auto& child : node->children)
-		{
-			if (child)
-			{
-				allChildrenNull = false;
-				break;
-			}
-		}
-		if (allChildrenNull)
-		{
-			delete node;
-			return nullptr;
-		}
-
-		return node;
-	}
-
-	void SparseVoxelOctree::findUniqueVoxels(OctreeNode* node) const
-	{
-		if (!node) return;
-
-		std::unordered_set<CPUVoxel, CPUVoxelHash> uniqueVoxelsSet;
-
-		// Internal recursive function to traverse and collect unique voxels
-		std::function<void(OctreeNode*)> collectVoxels = [&](OctreeNode* currentNode)
-			{
-				if (!currentNode) return;
-
-				if (currentNode->isLeaf)
-				{
-					const CPUVoxel& voxel = currentNode->voxel;
-					if (uniqueVoxelsSet.insert(voxel).second)
-					{
-						m_UniqueVoxels.push_back(voxel);
-					}
-				}
-				else
-				{
-					for (auto* child : currentNode->children)
-					{
-						collectVoxels(child);
-					}
-				}
-			};
-
-		collectVoxels(node);
-	}
-
-	int SparseVoxelOctree::getChildIndex(const Vector3& position, int depth) const
-	{
-		int shift = 31 - depth;
-		int index = 0;
-
-		// Check if the bit at the current depth is set for each coordinate and adjust the index accordingly
-		if (static_cast<uint32>(position.x) & (1 << shift)) index |= 1;
-		if (static_cast<uint32>(position.y) & (1 << shift)) index |= 2;
-		if (static_cast<uint32>(position.z) & (1 << shift)) index |= 4;
-
-		return index;
-	}
-
-	std::vector<CPUVoxel> SparseVoxelOctree::GetUniqueVoxels() const
-	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-		std::unordered_set<CPUVoxel, CPUVoxelHash> uniqueVoxelsSet;
-		std::vector<CPUVoxel> uniqueVoxels;
-
-		std::function<void(OctreeNode*)> collectVoxels = [&](OctreeNode* node)
-		{
-			if (!node) return;
-
-			if (node->isLeaf)
-			{
-				if (uniqueVoxelsSet.insert(node->voxel).second)
-				{
-					uniqueVoxels.push_back(node->voxel);
-				}
-			}
-			else
-			{
-				for (auto* child : node->children)
-				{
-					collectVoxels(child);
-				}
-			}
-		};
-
-		collectVoxels(m_Root);
-		return uniqueVoxels;
-	}
-
-	CPUVoxelShape SparseVoxelOctree::ToCPUVoxelShape() const
-	{
-		std::lock_guard<std::mutex> lock(m_Mutex);
-
-		// Get all unique voxels
-		std::vector<CPUVoxel> uniqueVoxels = GetUniqueVoxels();
-
-		// Define the maximum depth of the octree (assuming 32 levels for 32-bit coordinates)
-		const int maxDepth = 31; // You can adjust this as necessary for your octree depth
-
-		// Calculate the dimensions of the voxel grid based on the octree depth
-		// Each depth level doubles the resolution, so the grid size is 2^maxDepth.
-		int gridSize = static_cast<int>(std::pow(2, maxDepth)); // 2^maxDepth
-
-		// 3D voxel map initialized to 255 (representing empty space)
-		std::vector<uint8> voxelMap(gridSize * gridSize * gridSize, 255);
-
-		// Helper function to compute linear index from 3D coordinates
-		auto computeIndex = [&](int x, int y, int z) -> size_t
-		{
-			return static_cast<size_t>(x) + gridSize * (static_cast<size_t>(y) + gridSize * static_cast<size_t>(z));
-		};
-
-		// Helper function to recursively traverse the octree and fill the voxel map
-		std::function<void(OctreeNode*, int, int, int, int)> fillVoxelMap;
-		fillVoxelMap = [&](OctreeNode* node, int x, int y, int z, int depth)
-		{
-			if (!node) return;
-
-			if (node->isLeaf)
-			{
-				// Find index of this voxel in the unique voxel vector
-				auto it = std::find(uniqueVoxels.begin(), uniqueVoxels.end(), node->voxel);
-				uint8 voxelIndex = static_cast<uint8>(std::distance(uniqueVoxels.begin(), it));
-
-				// Set the voxel map for the current position
-				voxelMap[computeIndex(x, y, z)] = voxelIndex;
-			}
-			else
-			{
-				// If not a leaf, recursively fill children
-				int half = 1 << (maxDepth - depth - 1); // Half the size at the current depth
-				for (int i = 0; i < 8; ++i)
-				{
-					int childX = x + (i & 1) * half;
-					int childY = y + ((i >> 1) & 1) * half;
-					int childZ = z + ((i >> 2) & 1) * half;
-					fillVoxelMap(node->children[i], childX, childY, childZ, depth + 1);
-				}
-			}
-		};
-
-		// Start the traversal from the root of the octree at position (0, 0, 0)
-		fillVoxelMap(m_Root, 0, 0, 0, 0);
-
-		// Use an identity matrix for the transformation and a dummy AABB (can be updated to actual bounds)
-		Matrix4 identityTransform(1.0f);
-		AABB boundingBox(Vector3(0.0f), Vector3(static_cast<float>(gridSize)));
-
-		return CPUVoxelShape(identityTransform, boundingBox, uniqueVoxels, voxelMap);
-	}
+        if (node->isLeaf)
+        {
+            for (int dx = 0; dx < size; ++dx)
+            {
+                for (int dy = 0; dy < size; ++dy)
+                {
+                    for (int dz = 0; dz < size; ++dz)
+                    {
+                        grid[position.x + dx][position.y + dy][position.z + dz] = node->materialIndex;
+                    }
+                }
+            }
+        }
+        else
+        {
+            int halfSize = size / 2;
+            for (int i = 0; i < 8; ++i)
+            {
+                int offsetX = (i & 1) ? halfSize : 0;
+                int offsetY = (i & 2) ? halfSize : 0;
+                int offsetZ = (i & 4) ? halfSize : 0;
+                IVector3 newPos = IVector3(position.x + offsetX, position.y + offsetY, position.z + offsetZ);
+                ConvertToDenseArrayRecursive(node->children[i], grid, newPos, halfSize);
+            }
+        }
+    }
 }

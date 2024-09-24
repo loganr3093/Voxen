@@ -5,17 +5,44 @@ namespace Voxen
 {
     struct AABB
     {
-        Vector3 min;
-        Vector3 max;
+        IVector3 min;
+        IVector3 max;
 
         // Constructors
         AABB() : min(0.0f), max(0.0f) {}
-        AABB(const Vector3& min, const Vector3& max) : min(min), max(max) {}
+        AABB(const IVector3& min, const IVector3& max) : min(min), max(max) {}
 
         // Equality operator
         bool operator==(const AABB& other) const
         {
             return min == other.min && max == other.max;
+        }
+
+        int Length() { return min.x - max.x; }
+        int Width() { return min.y - max.y; }
+        int Height() { return min.z - max.z; }
+
+        IVector3 Center()
+        {
+            return IVector3
+            (
+                min.x + (max.x - min.x) / 2,
+                min.y + (max.y - min.y) / 2,
+                min.z + (max.z - min.z) / 2
+            );
+        }
+
+        bool Contains(IVector3 position)
+        {
+            return
+            (
+                position.x >= min.x &&
+                position.y >= min.y &&
+                position.z >= min.z &&
+                position.x <= max.x &&
+                position.y <= max.y &&
+                position.z <= max.z
+            );
         }
     };
 
@@ -36,6 +63,21 @@ namespace Voxen
                 reflectivity == other.reflectivity && roughness == other.roughness &&
                 metallic == other.metallic && emissive == other.emissive;
         }
+
+        // Hash function for unordered_set
+        struct Hasher
+        {
+            size_t operator()(const CPUVoxel& voxel) const
+            {
+                return std::hash<uint64_t>()
+                (
+                    (uint64_t(voxel.red) << 48) | (uint64_t(voxel.green) << 40) |
+                    (uint64_t(voxel.blue) << 32) | (uint64_t(voxel.reflectivity) << 24) |
+                    (uint64_t(voxel.roughness) << 16) | (uint64_t(voxel.metallic) << 8) |
+                    voxel.emissive
+                );
+            }
+        };
     };
 
     struct CPUVoxelShape
