@@ -20,7 +20,7 @@ struct VoxelShape
 {
 	mat4 transform;
 	AABB bounds;
-	Material materials[256];
+	Material materials[255];
 	uint materialMapOffset;
 	uint materialMapSize;
 };
@@ -39,7 +39,6 @@ struct Ray
 	vec3 origin;
 	vec3 direction;
 };
-
 
 // Input
 layout(local_size_x = 16, local_size_y = 16) in;
@@ -216,6 +215,7 @@ void main()
 	ray.origin = u_CameraPosition;
 	ray.direction = rayDirection;
 
+	// TODO: Use real bounds
 	shapes[0].bounds = AABB(vec3(0), vec3(16));
 
 	HitInfo hit = FindRayCollisions(ray, shapes[0]);
@@ -224,7 +224,7 @@ void main()
 
 	if (hit.didHit)
 	{
-		pixelColor = vec3(hit.material.rgb);
+		pixelColor = UnpackRGB(hit.material.rgb);
 	}
 	else
 	{

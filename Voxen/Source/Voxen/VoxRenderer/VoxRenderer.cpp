@@ -54,14 +54,18 @@ namespace Voxen
         // Fullscreen quad shader (for rendering the texture)
         s_Data.FullscreenQuadShader = Shader::Create(EditorResources::FullScreenQuadShader);
 
-        
         Ref<VoxelShape> shape = CreateRef<VoxelShape>();
 
-        //VoxelMaterial material0 = { 255, 0, 0, 0, 0, 0, 0 };
-        //shape->SetMaterial(0, material0);
-
-        shape->InsertVoxel({ 0, 0, 0 }, 25);
-        shape->InsertVoxel({ 7, 7, 7 }, 25);
+        for (int z = 0; z < 16; ++z)
+        {
+            for (int y = 0; y < 16; ++y)
+            {
+                for (int x = 0; x < 16; ++x)
+                {
+                    shape->InsertVoxel({ x, y, z }, rand() % 255);
+                }
+            }
+        }
 
         VoxMemoryAllocator::Allocate(shape);
         VoxMemoryAllocator::GenerateBuffers();
