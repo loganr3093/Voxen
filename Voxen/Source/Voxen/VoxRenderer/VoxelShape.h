@@ -24,7 +24,8 @@ namespace Voxen
 		const AABB Bounds() const { return m_Octree.m_Bounds; }
 
 		const Matrix4 GetTransform() const { return m_Transform; }
-
+	private:
+		void LoadDefaultPalette();
 	private:
 		Matrix4 m_Transform;
 		SparseVoxelOctree m_Octree;

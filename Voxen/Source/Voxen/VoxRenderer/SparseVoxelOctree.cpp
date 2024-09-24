@@ -4,7 +4,7 @@
 namespace Voxen
 {
     SparseVoxelOctree::SparseVoxelOctree(int depth)
-        : m_Bounds(IVector3(0), IVector3(std::pow(2, depth))), m_MaxDepth(depth)
+        : m_Bounds(Vector3(0), Vector3(std::pow(2, depth))), m_MaxDepth(depth)
     {
         m_Root = new OctreeNode();
     }

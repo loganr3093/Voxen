@@ -10,12 +10,12 @@ namespace Voxen
 
     struct AABB
     {
-        IVector3 min;
-        IVector3 max;
+        Vector3 min;
+        Vector3 max;
 
         // Constructors
         AABB() : min(0.0f), max(0.0f) {}
-        AABB(const IVector3& min, const IVector3& max) : min(min), max(max) {}
+        AABB(const Vector3& min, const Vector3& max) : min(min), max(max) {}
 
         // Equality operator
         bool operator==(const AABB& other) const
@@ -27,9 +27,9 @@ namespace Voxen
         int Width() { return min.y - max.y; }
         int Height() { return min.z - max.z; }
 
-        IVector3 Center()
+        Vector3 Center()
         {
-            return IVector3
+            return Vector3
             (
                 min.x + (max.x - min.x) / 2,
                 min.y + (max.y - min.y) / 2,
@@ -37,7 +37,7 @@ namespace Voxen
             );
         }
 
-        bool Contains(IVector3 position)
+        bool Contains(Vector3 position)
         {
             return
             (
@@ -85,19 +85,18 @@ namespace Voxen
             return rgb == other.rgb && rrme == other.rrme;
         }
     };
-
     struct GPUVoxelShape
     {
         Matrix4 transform;                  // Transformation matrix
         AABB aabb;                          // Bounding box
         GPUVoxelMaterial materials[256];    // Fixed-size array of materials
-        uint32 voxelMapOffset;              // Starting index of this shape's voxelMap in the global voxelMap buffer
-        uint32 voxelMapSize;                // Number of elements in the voxelMap for this shape
+        uint32 materialMapOffset;              // Starting index of this shape's voxelMap in the global voxelMap buffer
+        uint32 materialMapSize;                // Number of elements in the voxelMap for this shape
 
         // Constructors
-        GPUVoxelShape() : transform(Matrix4(1.0f)), aabb(), voxelMapOffset(0), voxelMapSize(0) {}
+        GPUVoxelShape() : transform(Matrix4(1.0f)), aabb(), materialMapOffset(0), materialMapSize(0) {}
         GPUVoxelShape(const Matrix4& trans, const AABB& bbox, const GPUVoxelMaterial mat[256], uint32 mapOffset, uint32 mapSize)
-            : transform(trans), aabb(bbox), voxelMapOffset(mapOffset), voxelMapSize(mapSize)
+            : transform(trans), aabb(bbox), materialMapOffset(mapOffset), materialMapSize(mapSize)
         {
             for (int i = 0; i < 256; ++i) {
                 materials[i] = mat[i];
@@ -106,7 +105,7 @@ namespace Voxen
 
         // Copy constructor
         GPUVoxelShape(const GPUVoxelShape& other)
-            : transform(other.transform), aabb(other.aabb), voxelMapOffset(other.voxelMapOffset), voxelMapSize(other.voxelMapSize)
+            : transform(other.transform), aabb(other.aabb), materialMapOffset(other.materialMapOffset), materialMapSize(other.materialMapSize)
         {
             for (int i = 0; i < 256; ++i) {
                 materials[i] = other.materials[i];
@@ -115,7 +114,7 @@ namespace Voxen
 
         // Move constructor
         GPUVoxelShape(GPUVoxelShape&& other) noexcept
-            : transform(std::move(other.transform)), aabb(std::move(other.aabb)), voxelMapOffset(other.voxelMapOffset), voxelMapSize(other.voxelMapSize)
+            : transform(std::move(other.transform)), aabb(std::move(other.aabb)), materialMapOffset(other.materialMapOffset), materialMapSize(other.materialMapSize)
         {
             for (int i = 0; i < 256; ++i) {
                 materials[i] = std::move(other.materials[i]);
@@ -128,8 +127,8 @@ namespace Voxen
             if (this != &other) {
                 transform = other.transform;
                 aabb = other.aabb;
-                voxelMapOffset = other.voxelMapOffset;
-                voxelMapSize = other.voxelMapSize;
+                materialMapOffset = other.materialMapOffset;
+                materialMapSize = other.materialMapSize;
                 for (int i = 0; i < 256; ++i) {
                     materials[i] = other.materials[i];
                 }
@@ -143,8 +142,8 @@ namespace Voxen
             if (this != &other) {
                 transform = std::move(other.transform);
                 aabb = std::move(other.aabb);
-                voxelMapOffset = other.voxelMapOffset;
-                voxelMapSize = other.voxelMapSize;
+                materialMapOffset = other.materialMapOffset;
+                materialMapSize = other.materialMapSize;
                 for (int i = 0; i < 256; ++i) {
                     materials[i] = std::move(other.materials[i]);
                 }
@@ -155,7 +154,7 @@ namespace Voxen
         // Equality operator
         bool operator==(const GPUVoxelShape& other) const
         {
-            if (transform != other.transform || aabb != other.aabb || voxelMapOffset != other.voxelMapOffset || voxelMapSize != other.voxelMapSize)
+            if (transform != other.transform || aabb != other.aabb || materialMapOffset != other.materialMapOffset || materialMapSize != other.materialMapSize)
                 return false;
 
             for (int i = 0; i < 256; ++i) {

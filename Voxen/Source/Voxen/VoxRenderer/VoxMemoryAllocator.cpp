@@ -151,8 +151,8 @@ namespace Voxen
 			s_Data.voxelBuffer.insert(s_Data.voxelBuffer.end(), packedGrid.begin(), packedGrid.end());
 
 			// Store the offset and size
-			GPUShape.voxelMapOffset = offset;
-			GPUShape.voxelMapSize = packedGrid.size();
+			GPUShape.materialMapOffset = offset;
+			GPUShape.materialMapSize = packedGrid.size();
 			
 			s_Data.shapeBuffer.push_back(GPUShape);
 		}

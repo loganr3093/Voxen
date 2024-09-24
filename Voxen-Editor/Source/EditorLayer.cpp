@@ -47,61 +47,6 @@ namespace Voxen
 	{
 		VOX_PROFILE_FUNCTION();
 
-		Ref<VoxelShape> shape = CreateRef<VoxelShape>();
-		VoxelMaterial material0 = { 255, 0, 0, 16, 32, 64, 128 };
-		VoxelMaterial material1 = { 0, 255, 0, 16, 32, 64, 128 };
-		VoxelMaterial material2 = { 0, 0, 255, 16, 32, 64, 128 };
-		shape->SetMaterial(0, material0);
-		shape->SetMaterial(1, material1);
-		shape->SetMaterial(2, material2);
-
-		shape->InsertVoxel({ 0, 0, 0 }, 0);
-		shape->InsertVoxel({ 1, 0, 0 }, 1);
-		shape->InsertVoxel({ 0, 1, 0 }, 2);
-		shape->InsertVoxel({ 0, 0, 1 }, 3);
-
-		shape->InsertVoxel({ 1, 2, 3 }, 1);
-		shape->InsertVoxel({ 2, 2, 2 }, 2);
-
-		Ref<VoxelShape> shape2 = CreateRef<VoxelShape>();
-		VoxelMaterial material3 = { 64, 0, 0, 128, 64, 32, 16 };
-		VoxelMaterial material4 = { 0, 64, 0, 128, 64, 32, 16 };
-		VoxelMaterial material5 = { 0, 0, 64, 128, 64, 32, 16 };
-		shape2->SetMaterial(0, material3);
-		shape2->SetMaterial(1, material4);
-		shape2->SetMaterial(2, material5);
-
-		shape2->InsertVoxel({ 0, 0, 0 }, 0);
-		shape2->InsertVoxel({ 1, 0, 0 }, 1);
-		shape2->InsertVoxel({ 0, 1, 0 }, 2);
-		shape2->InsertVoxel({ 0, 0, 1 }, 3);
-
-		shape2->InsertVoxel({ 1, 2, 3 }, 1);
-		shape2->InsertVoxel({ 2, 2, 2 }, 2);
-
-		/*auto grid = shape->GetGrid();
-		int count = 0;
-		for (int z = 0; z < 16; z++)
-		{
-			for (int y = 0; y < 16; y++)
-			{
-				for (int x = 0; x < 16; x++)
-				{
-					std::cout << "Count: " << count << " Material at ( " << x << ", " << y << ", " << z << "): " << (int)grid[x][y][z] << std::endl;
-					count++;
-				}
-			}
-		}*/
-
-		VoxMemoryAllocator::Allocate(shape);
-		VoxMemoryAllocator::Allocate(shape2);
-		VoxMemoryAllocator::GenerateBuffers();
-
-		auto shapeBuffer = VoxMemoryAllocator::GetShapeBuffer();
-		auto voxelBuffer = VoxMemoryAllocator::GetVoxelBuffer();
-
-
-
 		FramebufferSpecification fbSpec;
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 1280;
