@@ -13,6 +13,8 @@
 
 namespace Voxen
 {
+    class VoxelShape;
+
     // Octree Node class
     class OctreeNode
     {
@@ -48,7 +50,7 @@ namespace Voxen
     {
     public:
         // Constructor: Initialize octree with given bounds and depth
-        SparseVoxelOctree(const AABB& bounds, int depth);
+        SparseVoxelOctree(int depth);
 
         // Destructor
         ~SparseVoxelOctree();
@@ -60,7 +62,7 @@ namespace Voxen
         uint8 GetVoxel(const IVector3& position);
 
         // Convert octree to dense 3D array (full grid)
-        std::vector<std::vector<std::vector<uint8>>> ConvertToDenseArray(int gridWidth, int gridHeight, int gridDepth);
+        std::vector<std::vector<std::vector<uint8>>> ConvertToDenseArray();
 
     private:
         // Helper to calculate which octant a position belongs to
@@ -78,5 +80,7 @@ namespace Voxen
         OctreeNode* m_Root;
         int m_MaxDepth;
         AABB m_Bounds;
+    private:
+        friend VoxelShape;
     };
 }

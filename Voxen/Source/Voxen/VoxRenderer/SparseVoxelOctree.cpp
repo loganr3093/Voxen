@@ -3,8 +3,8 @@
 
 namespace Voxen
 {
-    SparseVoxelOctree::SparseVoxelOctree(const AABB& bounds, int depth)
-        : m_Bounds(bounds), m_MaxDepth(depth)
+    SparseVoxelOctree::SparseVoxelOctree(int depth)
+        : m_Bounds(IVector3(0), IVector3(std::pow(2, depth))), m_MaxDepth(depth)
     {
         m_Root = new OctreeNode();
     }
@@ -16,9 +16,9 @@ namespace Voxen
 
     void SparseVoxelOctree::InsertVoxel(const IVector3& position, uint8 materialIndex)
     {
-        if (materialIndex == 255)
+        if (materialIndex == Voxel::EMPTY_VOXEL)
         {
-            VOX_CORE_WARN("Attempting to insert the empty voxel (material index 255). Operation ignored");
+            VOX_CORE_WARN("Attempting to insert the empty voxel (material index {0}). Operation ignored", static_cast<int>(Voxel::EMPTY_VOXEL));
             return;
         }
 
@@ -31,7 +31,7 @@ namespace Voxen
     {
         if (!m_Bounds.Contains(position))
         {
-            return 255;
+            return Voxel::EMPTY_VOXEL;
         }
 
         IVector3 center = m_Bounds.Center();
@@ -39,16 +39,17 @@ namespace Voxen
         return GetVoxelRecursive(m_Root, position, center, size, 0);
     }
 
-    std::vector<std::vector<std::vector<uint8>>> SparseVoxelOctree::ConvertToDenseArray(int gridWidth, int gridHeight, int gridDepth)
+    std::vector<std::vector<std::vector<uint8>>> SparseVoxelOctree::ConvertToDenseArray()
     {
-        std::vector<std::vector<std::vector<uint8>>> grid(gridWidth, std::vector<std::vector<uint8_t>>(gridHeight, std::vector<uint8>(gridDepth, 255)));
-        ConvertToDenseArrayRecursive(m_Root, grid, IVector3(0, 0, 0), gridWidth);
+        std::vector<std::vector<std::vector<uint8>>> grid(m_Bounds.max.x, std::vector<std::vector<uint8_t>>(m_Bounds.max.y, std::vector<uint8>(m_Bounds.max.z, Voxel::EMPTY_VOXEL)));
+        ConvertToDenseArrayRecursive(m_Root, grid, IVector3(0, 0, 0), m_Bounds.max.x);
         return grid;
     }
 
     int SparseVoxelOctree::GetOctant(const IVector3& position, const IVector3& center)
     {
-        return (position.x >= center.x ? 1 : 0) |
+        return
+            (position.x >= center.x ? 1 : 0) |
             (position.y >= center.y ? 2 : 0) |
             (position.z >= center.z ? 4 : 0);
     }
@@ -75,7 +76,8 @@ namespace Voxen
         else newCenter.z -= halfSize;
 
         // If no child exists for this octant, create one
-        if (node->children[octant] == nullptr) {
+        if (node->children[octant] == nullptr)
+        {
             node->children[octant] = new OctreeNode();
         }
 
@@ -87,7 +89,7 @@ namespace Voxen
     {
         if (node == nullptr)
         {
-            return 255;
+            return Voxel::EMPTY_VOXEL;
         }
 
         if (node->isLeaf)

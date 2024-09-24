@@ -11,7 +11,7 @@
 #include "Voxen/Scripting/ScriptEngine.h"
 #include "Voxen/Scripting/ScriptBuilder.h"
 
-#include "Voxen/VoxRenderer/SparseVoxelOctree.h"
+#include "Voxen/VoxRenderer/VoxelShape.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -46,12 +46,10 @@ namespace Voxen
 	{
 		VOX_PROFILE_FUNCTION();
 
-		// Define octree bounds and depth
-		AABB bounds = { {0, 0, 0}, {16, 16, 16} };
 		int depth = 4; // Max depth
 
 		// Create octree
-		SparseVoxelOctree svo(bounds, depth);
+		SparseVoxelOctree svo(depth);
 
 		// Insert some voxels with material indices
 		svo.InsertVoxel(IVector3(0, 0, 0), 1); // Voxel at (0,0,0) with material index 1
@@ -67,7 +65,7 @@ namespace Voxen
 		std::cout << "Material at (1,1,1): " << (int)material << std::endl;
 
 		// Convert to dense 3D array
-		auto denseArray = svo.ConvertToDenseArray(16, 16, 16);
+		auto denseArray = svo.ConvertToDenseArray();
 
 		/*for (int z = 0; z < 16; z++)
 		{
@@ -80,7 +78,30 @@ namespace Voxen
 			}
 		}*/
 
+		VoxelShape shape;
+		VoxelMaterial material0 = { 255, 0, 0, 16, 32, 64, 128 };
+		VoxelMaterial material1 = { 0, 255, 0, 16, 32, 64, 128 };
+		VoxelMaterial material2 = { 0, 0, 255, 16, 32, 64, 128 };
+		shape.SetMaterial(0, material0);
+		shape.SetMaterial(1, material1);
+		shape.SetMaterial(2, material2);
 
+		shape.InsertVoxel({ 0, 0, 0 }, 0);
+		shape.InsertVoxel({ 1, 2, 3 }, 1);
+		shape.InsertVoxel({ 2, 2, 2 }, 2);
+
+		auto grid = shape.GetGrid();
+
+		for (int z = 0; z < 16; z++)
+		{
+			for (int y = 0; y < 16; y++)
+			{
+				for (int x = 0; x < 16; x++)
+				{
+					std::cout << "Dense array material at ( " << x << ", " << y << ", " << z << "): " << (int)grid[x][y][z] << std::endl;
+				}
+			}
+		}
 
 
 

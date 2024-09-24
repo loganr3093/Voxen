@@ -3,6 +3,12 @@
 
 namespace Voxen
 {
+    namespace Voxel
+    {
+        const static int MAX_OCTREE_DEPTH = 12;
+        const static uint8 EMPTY_VOXEL = 255;
+    }
+
     struct AABB
     {
         IVector3 min;
@@ -43,6 +49,25 @@ namespace Voxen
                 position.y <= max.y &&
                 position.z <= max.z
             );
+        }
+    };
+
+    struct VoxelMaterial
+    {
+        uint8 red, green, blue;
+        uint8 reflectivity, roughness, metallic, emissive;
+
+        // Constructors
+        VoxelMaterial() : red(0), green(0), blue(0), reflectivity(0), roughness(0), metallic(0), emissive(0) {}
+        VoxelMaterial(uint8 r, uint8 g, uint8 b, uint8 reflect, uint8 rough, uint8 metal, uint8 emiss)
+            : red(r), green(g), blue(b), reflectivity(reflect), roughness(rough), metallic(metal), emissive(emiss) {}
+
+        // Equality operator
+        bool operator==(const VoxelMaterial& other) const
+        {
+            return red == other.red && green == other.green && blue == other.blue &&
+                reflectivity == other.reflectivity && roughness == other.roughness &&
+                metallic == other.metallic && emissive == other.emissive;
         }
     };
 
