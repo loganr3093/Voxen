@@ -1,6 +1,8 @@
 #pragma once
 #include "Voxen/VoxRenderer/SparseVoxelOctree.h"
 
+#include "Voxen/VoxRenderer/Voxel.h"
+
 #include "Voxen/Types/Types.h"
 
 namespace Voxen
@@ -17,7 +19,11 @@ namespace Voxen
 
 		std::vector<std::vector<std::vector<uint8>>> GetGrid() { return m_Octree.ConvertToDenseArray(); }
 
-		AABB Bounds() { return m_Octree.m_Bounds; }
+		const VoxelMaterial GetMaterial(uint8 index) { return m_MaterialMap[index]; }
+
+		const AABB Bounds() const { return m_Octree.m_Bounds; }
+
+		const Matrix4 GetTransform() const { return m_Transform; }
 
 	private:
 		Matrix4 m_Transform;

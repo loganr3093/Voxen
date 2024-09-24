@@ -12,6 +12,7 @@
 #include "Voxen/Scripting/ScriptBuilder.h"
 
 #include "Voxen/VoxRenderer/VoxelShape.h"
+#include "Voxen/VoxRenderer/VoxMemoryAllocator.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -46,62 +47,58 @@ namespace Voxen
 	{
 		VOX_PROFILE_FUNCTION();
 
-		int depth = 4; // Max depth
-
-		// Create octree
-		SparseVoxelOctree svo(depth);
-
-		// Insert some voxels with material indices
-		svo.InsertVoxel(IVector3(0, 0, 0), 1); // Voxel at (0,0,0) with material index 1
-		svo.InsertVoxel(IVector3(1, 0, 0), 2); // Voxel at (1,0,0) with material index 2
-		svo.InsertVoxel(IVector3(0, 1, 0), 3); // Voxel at (0,2,0) with material index 3
-		svo.InsertVoxel(IVector3(0, 0, 1), 4); // Voxel at (0,0,3) with material index 4
-
-		svo.InsertVoxel(IVector3(1, 1, 1), 5); // Voxel at (1,1,1) with material index 5
-		svo.InsertVoxel(IVector3(2, 2, 2), 8); // Voxel at (2,2,2) with material index 8
-
-		// Get voxel material
-		uint8_t material = svo.GetVoxel(IVector3(1, 1, 1));
-		std::cout << "Material at (1,1,1): " << (int)material << std::endl;
-
-		// Convert to dense 3D array
-		auto denseArray = svo.ConvertToDenseArray();
-
-		/*for (int z = 0; z < 16; z++)
-		{
-			for (int y = 0; y < 16; y++)
-			{
-				for (int x = 0; x < 16; x++)
-				{
-					std::cout << "Dense array material at ( " << x << ", " << y << ", " << z << "): " << (int)denseArray[x][y][z] << std::endl;
-				}
-			}
-		}*/
-
-		VoxelShape shape;
+		Ref<VoxelShape> shape = CreateRef<VoxelShape>();
 		VoxelMaterial material0 = { 255, 0, 0, 16, 32, 64, 128 };
 		VoxelMaterial material1 = { 0, 255, 0, 16, 32, 64, 128 };
 		VoxelMaterial material2 = { 0, 0, 255, 16, 32, 64, 128 };
-		shape.SetMaterial(0, material0);
-		shape.SetMaterial(1, material1);
-		shape.SetMaterial(2, material2);
+		shape->SetMaterial(0, material0);
+		shape->SetMaterial(1, material1);
+		shape->SetMaterial(2, material2);
 
-		shape.InsertVoxel({ 0, 0, 0 }, 0);
-		shape.InsertVoxel({ 1, 2, 3 }, 1);
-		shape.InsertVoxel({ 2, 2, 2 }, 2);
+		shape->InsertVoxel({ 0, 0, 0 }, 0);
+		shape->InsertVoxel({ 1, 0, 0 }, 1);
+		shape->InsertVoxel({ 0, 1, 0 }, 2);
+		shape->InsertVoxel({ 0, 0, 1 }, 3);
 
-		auto grid = shape.GetGrid();
+		shape->InsertVoxel({ 1, 2, 3 }, 1);
+		shape->InsertVoxel({ 2, 2, 2 }, 2);
 
+		Ref<VoxelShape> shape2 = CreateRef<VoxelShape>();
+		VoxelMaterial material3 = { 64, 0, 0, 128, 64, 32, 16 };
+		VoxelMaterial material4 = { 0, 64, 0, 128, 64, 32, 16 };
+		VoxelMaterial material5 = { 0, 0, 64, 128, 64, 32, 16 };
+		shape2->SetMaterial(0, material3);
+		shape2->SetMaterial(1, material4);
+		shape2->SetMaterial(2, material5);
+
+		shape2->InsertVoxel({ 0, 0, 0 }, 0);
+		shape2->InsertVoxel({ 1, 0, 0 }, 1);
+		shape2->InsertVoxel({ 0, 1, 0 }, 2);
+		shape2->InsertVoxel({ 0, 0, 1 }, 3);
+
+		shape2->InsertVoxel({ 1, 2, 3 }, 1);
+		shape2->InsertVoxel({ 2, 2, 2 }, 2);
+
+		/*auto grid = shape->GetGrid();
+		int count = 0;
 		for (int z = 0; z < 16; z++)
 		{
 			for (int y = 0; y < 16; y++)
 			{
 				for (int x = 0; x < 16; x++)
 				{
-					std::cout << "Dense array material at ( " << x << ", " << y << ", " << z << "): " << (int)grid[x][y][z] << std::endl;
+					std::cout << "Count: " << count << " Material at ( " << x << ", " << y << ", " << z << "): " << (int)grid[x][y][z] << std::endl;
+					count++;
 				}
 			}
-		}
+		}*/
+
+		VoxMemoryAllocator::Allocate(shape);
+		VoxMemoryAllocator::Allocate(shape2);
+		VoxMemoryAllocator::GenerateBuffers();
+
+		auto shapeBuffer = VoxMemoryAllocator::GetShapeBuffer();
+		auto voxelBuffer = VoxMemoryAllocator::GetVoxelBuffer();
 
 
 

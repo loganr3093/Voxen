@@ -39,4 +39,5 @@ namespace Voxen
 	{
 		m_Octree.InsertVoxel(IVector3(x, y, z), materialIndex);
 	}
+
 }
