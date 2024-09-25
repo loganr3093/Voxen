@@ -10,12 +10,12 @@ namespace Voxen
 
     struct AABB
     {
-        Vector3 min;
-        Vector3 max;
+        Vector4 min;
+        Vector4 max;
 
         // Constructors
         AABB() : min(0.0f), max(0.0f) {}
-        AABB(const Vector3& min, const Vector3& max) : min(min), max(max) {}
+        AABB(const Vector3& min, const Vector3& max) : min(Vector4(min, 0)), max(Vector4(max, 0)) {}
 
         // Equality operator
         bool operator==(const AABB& other) const

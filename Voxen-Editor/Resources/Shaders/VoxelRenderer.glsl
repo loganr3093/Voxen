@@ -12,15 +12,15 @@ struct Material
 
 struct AABB
 {
-	vec3 min;
-	vec3 max;
+	vec4 min;
+	vec4 max;
 };
 
 struct VoxelShape
 {
 	mat4 transform;
 	AABB bounds;
-	Material materials[255];
+	Material materials[256];
 	uint materialMapOffset;
 	uint materialMapSize;
 };
@@ -98,8 +98,8 @@ HitInfo InitializeHitInfo()
 bool IntersectAABBWithRay(AABB aabb, Ray ray, out float tNear, out float tFar)
 {
 	vec3 invDir = 1.0 / ray.direction;
-	vec3 tMin = (aabb.min - ray.origin) * invDir;
-	vec3 tMax = (aabb.max - ray.origin) * invDir;
+	vec3 tMin = (aabb.min.rgb - ray.origin) * invDir;
+	vec3 tMax = (aabb.max.rgb - ray.origin) * invDir;
 
 	vec3 t1 = min(tMin, tMax);
 	vec3 t2 = max(tMin, tMax);
@@ -214,9 +214,6 @@ void main()
 	Ray ray;
 	ray.origin = u_CameraPosition;
 	ray.direction = rayDirection;
-
-	// TODO: Use real bounds
-	shapes[0].bounds = AABB(vec3(0), vec3(16));
 
 	HitInfo hit = FindRayCollisions(ray, shapes[0]);
 
