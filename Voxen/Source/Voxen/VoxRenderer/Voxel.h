@@ -92,6 +92,7 @@ namespace Voxen
         GPUVoxelMaterial materials[256];    // Fixed-size array of materials
         uint32 materialMapOffset;              // Starting index of this shape's voxelMap in the global voxelMap buffer
         uint32 materialMapSize;                // Number of elements in the voxelMap for this shape
+        uint32 padding[2];
 
         // Constructors
         GPUVoxelShape() : transform(Matrix4(1.0f)), aabb(), materialMapOffset(0), materialMapSize(0) {}

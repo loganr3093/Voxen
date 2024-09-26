@@ -56,7 +56,7 @@ namespace Voxen
 
         Ref<VoxelShape> shape = CreateRef<VoxelShape>();
 
-        for (int z = 0; z < 16; ++z)
+        for (int z = 0; z < 16; z += 2)
         {
             for (int y = 0; y < 16; ++y)
             {
@@ -79,12 +79,13 @@ namespace Voxen
             {
                 for (int x = 0; x < 16; ++x)
                 {
+                    if ((x + y + z) % 2 == 0)
                     shape2->InsertVoxel({ x, y, z }, rand() % 255);
                 }
             }
         }
 
-        shape2->SetTransform(glm::translate(Matrix4(1.0f), Vector3(10, 0, 0)));
+        //shape2->SetTransform(glm::translate(Matrix4(1.0f), Vector3(10, 0, 0)));
 
         VoxMemoryAllocator::Allocate(shape);
         VoxMemoryAllocator::Allocate(shape2);
