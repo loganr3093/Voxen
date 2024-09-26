@@ -49,6 +49,8 @@ layout(location = 0) uniform vec2 u_ScreenSize;
 layout(location = 1) uniform mat4 u_ViewProjectionMatrix;
 layout(location = 2) uniform vec3 u_CameraPosition;
 
+layout(location = 3) uniform int u_NumShapes;
+
 layout(std430, binding = 0) buffer ShapeBuffer
 {
 	VoxelShape shapes[];
@@ -225,7 +227,7 @@ void main()
 	}
 	else
 	{
-		pixelColor = vec3(abs(rayDirection));
+		//pixelColor = vec3(abs(rayDirection));
 	}
 
 	ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);

@@ -24,6 +24,7 @@ namespace Voxen
 		const AABB Bounds() const { return m_Octree.m_Bounds; }
 
 		const Matrix4 GetTransform() const { return m_Transform; }
+		void SetTransform(Matrix4 transform) { m_Transform = transform; }
 	private:
 		void LoadDefaultPalette();
 	private:

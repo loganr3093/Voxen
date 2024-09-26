@@ -67,7 +67,27 @@ namespace Voxen
             }
         }
 
+        Matrix4 transform = glm::translate(Matrix4(1.0f), Vector3(-16, -16, -16));
+
+        shape->SetTransform(glm::rotate(transform, 45.0f, Vector3(1, 1, 1)));
+
+        Ref<VoxelShape> shape2 = CreateRef<VoxelShape>();
+
+        for (int z = 0; z < 16; ++z)
+        {
+            for (int y = 0; y < 16; ++y)
+            {
+                for (int x = 0; x < 16; ++x)
+                {
+                    shape2->InsertVoxel({ x, y, z }, rand() % 255);
+                }
+            }
+        }
+
+        shape2->SetTransform(glm::translate(Matrix4(1.0f), Vector3(10, 0, 0)));
+
         VoxMemoryAllocator::Allocate(shape);
+        VoxMemoryAllocator::Allocate(shape2);
         VoxMemoryAllocator::GenerateBuffers();
 
         std::vector<GPUVoxelShape> shapeBuffer = VoxMemoryAllocator::GetShapeBuffer();
@@ -149,6 +169,8 @@ namespace Voxen
         // Pass the view-projection matrix and camera position
         s_Data.ComputeShader->SetMat4("u_ViewProjectionMatrix", s_Data.Camera.GetViewProjection());
         s_Data.ComputeShader->SetVector3("u_CameraPosition", s_Data.Camera.GetPosition());
+
+        s_Data.ComputeShader->SetInt("u_NumShapes", 2);
 
         // Bind the texture as an image for writing
         s_Data.RWTexture->BindImage(0);
