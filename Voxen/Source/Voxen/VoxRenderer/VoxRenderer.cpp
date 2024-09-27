@@ -126,6 +126,10 @@ namespace Voxen
 
     void VoxRenderer::RenderScene(Ref<Scene> scene)
     {
+        // Run the compute shader to color the texture
+        RunComputeShader();
+
+        // Render quad
         RenderFullscreenQuad();
     }
 
@@ -161,6 +165,17 @@ namespace Voxen
 
     void VoxRenderer::RunComputeShader()
     {
+        // Re-generate buffers using the memory allocator before running the compute shader
+        VoxMemoryAllocator::GenerateBuffers();
+
+        // Retrieve the updated buffers from the memory allocator
+        std::vector<GPUVoxelShape> shapeBuffer = VoxMemoryAllocator::GetShapeBuffer();
+        std::vector<uint32> voxelBuffer = VoxMemoryAllocator::GetVoxelBuffer();
+
+        // Update Shader Storage Buffers (SSBOs) with the new data
+        s_Data.VoxelShapeData->UpdateData(shapeBuffer.data(), shapeBuffer.size() * sizeof(GPUVoxelShape));
+        s_Data.MaterialData->UpdateData(voxelBuffer.data(), voxelBuffer.size() * sizeof(uint32));
+
         // Bind the compute shader
         s_Data.ComputeShader->Bind();
 
@@ -171,7 +186,7 @@ namespace Voxen
         s_Data.ComputeShader->SetMat4("u_ViewProjectionMatrix", s_Data.Camera.GetViewProjection());
         s_Data.ComputeShader->SetVector3("u_CameraPosition", s_Data.Camera.GetPosition());
 
-        s_Data.ComputeShader->SetInt("u_NumShapes", 2);
+        s_Data.ComputeShader->SetInt("u_NumShapes", VoxMemoryAllocator::Count());
 
         // Bind the texture as an image for writing
         s_Data.RWTexture->BindImage(0);
@@ -190,9 +205,6 @@ namespace Voxen
 
     void VoxRenderer::RenderFullscreenQuad()
     {
-        // Run the compute shader to color the texture
-        RunComputeShader();
-
         // Bind the fullscreen quad shader
         s_Data.FullscreenQuadShader->Bind();
         s_Data.FullscreenQuadShader->SetInt("u_Texture", 0);  // Bind texture to texture unit 0

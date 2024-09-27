@@ -167,5 +167,4 @@ namespace Voxen
 	{
 		return s_Data.voxelBuffer;
 	}
-
 }

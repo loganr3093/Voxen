@@ -85,7 +85,7 @@ namespace Voxen
 		EditorResources::Shutdown();
 		ScriptEngine::Shutdown();
 	}
-
+	static Timestep timestep;
 	void EditorLayer::OnImGuiRender()
 	{
 		VOX_PROFILE_FUNCTION();
@@ -188,6 +188,8 @@ namespace Voxen
 		m_ContentBrowserPanel->OnImGuiRender();
 
 		ImGui::Begin("Render Stats");
+		if (timestep.GetMilliseconds() != 0)
+		ImGui::Text("FPS: %f", 1000 / timestep.GetMilliseconds());
 
 		std::string name = "None";
 		if (m_HoveredEntity)
@@ -285,7 +287,7 @@ namespace Voxen
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		VOX_PROFILE_FUNCTION();
-
+		timestep = ts;
 		m_ActiveScene->OnViewportResize((uint32)m_ViewportSize.x, (uint32)m_ViewportSize.y);
 
 		// Resize

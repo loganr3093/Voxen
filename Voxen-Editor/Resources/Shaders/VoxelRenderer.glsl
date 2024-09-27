@@ -57,20 +57,11 @@ layout(std430, binding = 1) buffer VoxelBuffer {
 
 // Utility functions
 vec3 UnpackRGB(uint rgb) {
-    float r = float((rgb >> 16) & 0xFF) / 255.0;
-    float g = float((rgb >> 8) & 0xFF) / 255.0;
-    float b = float((rgb >> 0) & 0xFF) / 255.0;
-
-    return vec3(r, g, b);
+    return vec3(float((rgb >> 16) & 0xFF), float((rgb >> 8) & 0xFF), float((rgb >> 0) & 0xFF)) / 255.0;
 }
 
 uvec4 UnpackIndices(uint indices) {
-    uint index0 = (indices >> 24) & 0xFF;
-    uint index1 = (indices >> 16) & 0xFF;
-    uint index2 = (indices >> 8) & 0xFF;
-    uint index3 = (indices >> 0) & 0xFF;
-
-    return uvec4(index0, index1, index2, index3);
+    return uvec4((indices >> 24) & 0xFF, (indices >> 16) & 0xFF, (indices >> 8) & 0xFF, (indices >> 0) & 0xFF);
 }
 
 HitInfo InitializeHitInfo() {
@@ -83,46 +74,37 @@ bool IntersectAABBWithRay(AABB aabb, Ray ray, out float tNear, out float tFar) {
     vec3 tMin = (aabb.min.rgb - ray.origin) * invDir;
     vec3 tMax = (aabb.max.rgb - ray.origin) * invDir;
 
-    vec3 t1 = min(tMin, tMax);
-    vec3 t2 = max(tMin, tMax);
-
-    tNear = max(max(t1.x, t1.y), t1.z);
-    tFar = min(min(t2.x, t2.y), t2.z);
+    tNear = max(max(min(tMin, tMax).x, min(tMin, tMax).y), min(tMin, tMax).z);
+    tFar = min(min(max(tMin, tMax).x, max(tMin, tMax).y), max(tMin, tMax).z);
 
     return (tNear <= tFar && tFar >= 0.0);
 }
 
 // Perform Amantides and Woo ray marching inside voxel grid
 HitInfo RayMarch(Ray ray, VoxelShape shape, vec3 entryPoint) {
-    // Setup hit
     HitInfo closestHit = InitializeHitInfo();
-    closestHit.dist = 1e8;
 
-    // Find the voxel we entered on and the direction of the next voxel
     ivec3 voxelPos = ivec3(floor(entryPoint));
     ivec3 step = ivec3(sign(ray.direction));
     ray.origin += ray.direction * EPSILON;
 
-    vec3 voxelMin = vec3(voxelPos);
     vec3 invDir = 1.0 / ray.direction;
-    vec3 tMax = ((voxelMin + step * 0.5 + 0.5 - ray.origin) * invDir);
+    vec3 tMax = ((vec3(voxelPos) + step * 0.5 + 0.5 - ray.origin) * invDir);
     vec3 tDelta = abs(invDir);
 
-    // While we have not exited the shape
     while (voxelPos.x >= -1 && voxelPos.y >= -1 && voxelPos.z >= -1 &&
         voxelPos.x <= shape.bounds.max.x && voxelPos.y <= shape.bounds.max.y && voxelPos.z <= shape.bounds.max.z) {
-        // If our voxel is inside the shape
+
         if (voxelPos.x >= 0 && voxelPos.y >= 0 && voxelPos.z >= 0 &&
             voxelPos.x < shape.bounds.max.x && voxelPos.y < shape.bounds.max.y && voxelPos.z < shape.bounds.max.z) {
-            // Find the "3D" index into 1D array
+
             int index = voxelPos.z * int(shape.bounds.max.x) * int(shape.bounds.max.y) + voxelPos.y * int(shape.bounds.max.x) + voxelPos.x;
-            int packedIndex = index / 4;
-            int subIndex = index % 4;
+            int packedIndex = index >> 2;  // Optimized division by 4 using bitshift
+            int subIndex = index & 3;      // Optimized modulus by 4 using bitmask
 
             uvec4 indices = UnpackIndices(voxels[shape.materialMapOffset + packedIndex]);
             uint materialIndex = indices[subIndex];
 
-            // Check if we hit a real voxel
             if (materialIndex < EMPTY_VOXEL) {
                 closestHit.didHit = true;
                 closestHit.dist = length(ray.origin - (vec3(voxelPos) + 0.5));
@@ -152,19 +134,17 @@ HitInfo RayMarch(Ray ray, VoxelShape shape, vec3 entryPoint) {
 
 // Transform ray to local space, considering voxel shape transform
 Ray TransformRayToLocal(Ray ray, mat4 transform) {
-    Ray localRay;
     mat4 invTransform = inverse(transform);
-    localRay.origin = (invTransform * vec4(ray.origin, 1.0)).xyz;
-    localRay.direction = normalize((invTransform * vec4(ray.direction, 0.0)).xyz);
-    return localRay;
+    vec4 localOrigin = invTransform * vec4(ray.origin, 1.0);
+    vec4 localDir = invTransform * vec4(ray.direction, 0.0);
+    return Ray(localOrigin.xyz, normalize(localDir.xyz));
 }
 
 // Transform hit data from local to world space
 HitInfo TransformHitToWorld(HitInfo localHit, mat4 transform) {
-    HitInfo worldHit = localHit;
-    worldHit.hitPoint = (transform * vec4(localHit.hitPoint, 1.0)).xyz;
-    worldHit.normal = normalize((transpose(inverse(transform)) * vec4(localHit.normal, 0.0)).xyz); // Transform normal correctly
-    return worldHit;
+    mat4 invTransT = transpose(inverse(transform));
+    return HitInfo(localHit.didHit, localHit.dist, (transform * vec4(localHit.hitPoint, 1.0)).xyz,
+        normalize((invTransT * vec4(localHit.normal, 0.0)).xyz), localHit.material);
 }
 
 // Check ray collision with all shapes and return the closest hit
@@ -173,20 +153,14 @@ HitInfo FindRayCollisions(Ray ray) {
 
     for (int i = 0; i < u_NumShapes; i++) {
         VoxelShape shape = shapes[i];
-
-        // Transform ray to local space
         Ray localRay = TransformRayToLocal(ray, shape.transform);
 
-        // Check if local ray intersects with this shape's AABB
         float tNear, tFar;
         if (IntersectAABBWithRay(shape.bounds, localRay, tNear, tFar)) {
-            // Find entry point of the ray into the AABB
             vec3 entryPoint = localRay.origin + localRay.direction * max(tNear, 0.0);
 
-            // Ray march through the shape's voxels
             HitInfo localHit = RayMarch(localRay, shape, entryPoint);
             if (localHit.didHit && localHit.dist < closestHit.dist) {
-                // Transform hit info back to world space
                 closestHit = TransformHitToWorld(localHit, shape.transform);
             }
         }
@@ -198,23 +172,14 @@ HitInfo FindRayCollisions(Ray ray) {
 void main() {
     vec2 textureCoords = vec2(gl_GlobalInvocationID.xy) / u_ScreenSize;
     vec4 clipSpaceRayOrigin = vec4(textureCoords * 2.0 - 1.0, -1.0, 1.0);
-
     vec4 viewSpaceRayOrigin = inverse(u_ViewProjectionMatrix) * clipSpaceRayOrigin;
     vec3 rayOrigin = viewSpaceRayOrigin.xyz / viewSpaceRayOrigin.w;
     vec3 rayDirection = normalize(rayOrigin - u_CameraPosition);
 
-    Ray ray;
-    ray.origin = u_CameraPosition;
-    ray.direction = rayDirection;
-
+    Ray ray = Ray(u_CameraPosition, rayDirection);
     HitInfo hit = FindRayCollisions(ray);
 
-    vec3 pixelColor = vec3(0.0);
-
-    if (hit.didHit) {
-        pixelColor = UnpackRGB(hit.material.rgb);
-    }
-
+    vec3 pixelColor = hit.didHit ? UnpackRGB(hit.material.rgb) : vec3(0.0);
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
     imageStore(u_OutputImage, texelCoord, vec4(pixelColor, 1.0));
 }

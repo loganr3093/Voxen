@@ -35,4 +35,16 @@ namespace Voxen
         // Unbind the SSBO
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, 0);
     }
+
+    void OpenGLShaderStorageBuffer::UpdateData(const void* data, uint32_t size)
+    {
+        // Bind the SSBO for modification
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_RendererID);
+
+        // Update the SSBO with new data using glBufferSubData
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, size, data);
+
+        // Unbind the SSBO after updating
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    }
 }

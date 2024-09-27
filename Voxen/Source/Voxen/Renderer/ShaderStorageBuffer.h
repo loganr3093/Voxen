@@ -12,6 +12,8 @@ namespace Voxen
         virtual void Bind(uint32_t binding) const = 0;
         virtual void Unbind() const = 0;
 
+        virtual void UpdateData(const void* data, uint32_t size) = 0;
+
         static Ref<ShaderStorageBuffer> Create(const void* data, uint32_t size);
     };
 }

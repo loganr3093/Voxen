@@ -13,6 +13,8 @@ namespace Voxen
         virtual void Bind(uint32_t binding) const override;
         virtual void Unbind() const override;
 
+        virtual void UpdateData(const void* data, uint32_t size) override;
+
     private:
         uint32_t m_RendererID;
     };
