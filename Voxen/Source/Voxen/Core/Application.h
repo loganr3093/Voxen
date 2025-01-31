@@ -54,12 +54,12 @@ namespace Voxen
 
 		void ExecuteMainThreadQueue();
 	private:
+		static Application* s_Instance;
+
 		ApplicationSpecification m_Specification;
 
 		std::vector<std::function<void()>> m_MainThreadQueue;
 		std::mutex m_MainThreadQueueMutex;
-
-		static Application* s_Instance;
 
 		float m_LastFrameTime = 0.0f;
 		std::unique_ptr<Window> m_Window;
