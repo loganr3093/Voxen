@@ -5,85 +5,48 @@
 #include "Voxen/VoxRenderer/Voxel.h"
 
 #include <vector>
-#include <cstdint>
-#include <>
+
+#include "Voxen/Utilities/VoxParser.h"
 
 namespace Voxen
 {
     class VoxelShape;
 
-    // Octree Node class
-    class OctreeNode
+    // Sparse Voxel 64-Tree Node
+    struct [[gnu::packed]] SparseVoxelTreeNode
     {
-    public:
-        bool isLeaf = false; // True if this node is a leaf
-        uint8 materialIndex = 255; // Material index if this is a leaf
-        OctreeNode* children[8]; // Pointers to 8 child nodes if this is not a leaf
-
-        // Constructor for a branch node (non-leaf)
-        OctreeNode() : isLeaf(false), materialIndex(255)
-        {
-            for (int i = 0; i < 8; ++i)
-            {
-                children[i] = nullptr;
-            }
-        }
-
-        // Destructor to clean up child nodes
-        ~OctreeNode()
-        {
-            for (int i = 0; i < 8; ++i)
-            {
-                if (children[i] != nullptr)
-                {
-                    delete children[i];
-                }
-            }
-        }
+        uint32 IsLeaf : 1;     // Indicates if this node is a leaf containing plain voxels.
+        uint32 ChildPtr : 31;  // Absolute offset to array of existing child nodes/voxels.
+        uint64 ChildMask;      // Indicates which children/voxels are present in array.
     };
 
-    // Octree class
-    class SparseVoxelOctree
+	// Sparse Voxel 64-Tree
+    class SparseVoxelTree
     {
     public:
-        // Constructor: Initialize octree with given bounds and depth
-        SparseVoxelOctree(int depth);
+        SparseVoxelTree(const VoxelMap& voxelMap);
 
-        // Destructor
-        ~SparseVoxelOctree();
+        void GenerateTree(const VoxelMap& voxelMap);
 
-        // Insert a voxel with material index
-        void InsertVoxel(const IVector3& position, uint8 materialIndex);
+        size_t GetTotalVoxels() const;
 
-        // Get the material index at a given voxel position
-        uint8 GetVoxel(const IVector3& position);
-
-        // Convert octree to dense 3D array (full grid)
-        std::vector<std::vector<std::vector<uint8>>> ConvertToDenseArray();
-
-        // Clears the entire octree
-        void Clear();
+        uint8_t At(int32 x, int32 y, int32 z) const;
 
     private:
-        // Helper to calculate which octant a position belongs to
-        int GetOctant(const IVector3& position, const IVector3& center);
+        SparseVoxelTreeNode generateTree(const VoxelMap& voxelMap, int32 scale, glm::ivec3 pos);
 
-        // Recursive helper for voxel insertion
-        void InsertVoxelRecursive(OctreeNode* node, const IVector3& position, const IVector3& center, int size, uint8 materialIndex, int depth);
+        uint64 packBits64(const uint8* data);
 
-        // Recursive helper to get voxel material
-        uint8 GetVoxelRecursive(OctreeNode* node, const IVector3& position, const IVector3& center, int size, int depth);
+        void leftPack(uint8* data, uint64 mask);
 
-        // Helper to convert octree to a dense array
-        void ConvertToDenseArrayRecursive(OctreeNode* node, std::vector<std::vector<std::vector<uint8>>>& grid, const IVector3& position, int size);
+        uint8_t at(const SparseVoxelTreeNode& node, int32_t scale, glm::ivec3 pos, int32_t x, int32_t y, int32_t z) const;
 
-        // Recursive helper to clear the octree
-        void ClearRecursive(OctreeNode* node);
+	private:
+        SparseVoxelTreeNode root;
+        std::vector<SparseVoxelTreeNode> nodePool;
+        std::vector<uint8_t> leafData;
+        
     private:
-        OctreeNode* m_Root;
-        int m_MaxDepth;
-        AABB m_Bounds;
-    private:
-        friend VoxelShape;
+		friend VoxelShape;
     };
 }
