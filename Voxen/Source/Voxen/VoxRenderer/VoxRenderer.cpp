@@ -126,6 +126,7 @@ namespace Voxen
 
     void VoxRenderer::RenderScene(Ref<Scene> scene)
     {
+        VOX_PROFILE_FUNCTION();
         // Run the compute shader to color the texture
         RunComputeShader();
 
@@ -135,6 +136,7 @@ namespace Voxen
 
     void VoxRenderer::SetupFullscreenQuad()
     {
+        VOX_PROFILE_FUNCTION();
         // Fullscreen quad vertices (positions, texture coords, and entity ID)
         float fullScreenQuadVertices[] =
         {
@@ -165,6 +167,7 @@ namespace Voxen
 
     void VoxRenderer::RunComputeShader()
     {
+        VOX_PROFILE_FUNCTION();
         // Re-generate buffers using the memory allocator before running the compute shader
         VoxMemoryAllocator::GenerateBuffers();
 
@@ -205,6 +208,7 @@ namespace Voxen
 
     void VoxRenderer::RenderFullscreenQuad()
     {
+        VOX_PROFILE_FUNCTION();
         // Bind the fullscreen quad shader
         s_Data.FullscreenQuadShader->Bind();
         s_Data.FullscreenQuadShader->SetInt("u_Texture", 0);  // Bind texture to texture unit 0
