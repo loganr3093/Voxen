@@ -11,7 +11,6 @@
 #include "Voxen/Scripting/ScriptEngine.h"
 #include "Voxen/Scripting/ScriptBuilder.h"
 
-#include "Voxen/VoxRenderer/VoxelShape.h"
 #include "Voxen/VoxRenderer/VoxMemoryAllocator.h"
 
 #include <imgui/imgui.h>
