@@ -4,7 +4,7 @@
 
 #include "Voxen/Scene/SceneCamera.h"
 
-#include "Voxen/VoxRenderer/SparseVoxelOctree.h"
+#include "Voxen/VoxRenderer/SparseVoxelTree.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -126,10 +126,15 @@ namespace Voxen
 
     struct VoxelRendererComponent
     {
-        //SparseVoxelOctree SVO;
-        std::string Name;
+        SparseVoxelTree SVT;
+        std::filesystem::path ModelPath;
+
         VoxelRendererComponent() = default;
         VoxelRendererComponent(const VoxelRendererComponent&) = default;
+        VoxelRendererComponent(const std::filesystem::path modelPath) : ModelPath(modelPath)
+        {
+            SVT = SparseVoxelTree(modelPath);
+        }
     };
 
     template<typename... Component>

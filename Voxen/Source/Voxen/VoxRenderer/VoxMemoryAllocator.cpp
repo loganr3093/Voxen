@@ -1,5 +1,12 @@
 #include "voxpch.h"
 #include "Voxen/VoxRenderer/VoxMemoryAllocator.h"
+#include "Voxen/VoxRenderer/SparseVoxelTree.h"
+
+#include "ogt/vox.h"
+
+#include "Voxen/Scene/Entity.h"
+#include "Voxen/Scene/Components.h"
+#include <bitset>
 
 namespace Voxen
 {
@@ -8,15 +15,15 @@ namespace Voxen
 		GPUVoxelMaterial PackMaterial(const VoxelMaterial& material)
 		{
 			uint32 rgb = 0;
-			rgb |= (static_cast<uint32>(material.red)   << 16);
+			rgb |= (static_cast<uint32>(material.red) << 16);
 			rgb |= (static_cast<uint32>(material.green) << 8);
-			rgb |= (static_cast<uint32>(material.blue)  << 0);
+			rgb |= (static_cast<uint32>(material.blue) << 0);
 
 			uint32 rrme = 0;
 			rrme |= (static_cast<uint32>(material.reflectivity) << 24);
-			rrme |= (static_cast<uint32>(material.roughness)    << 16);
-			rrme |= (static_cast<uint32>(material.metallic)		<< 8);
-			rrme |= (static_cast<uint32>(material.emissive)		<< 0);
+			rrme |= (static_cast<uint32>(material.roughness) << 16);
+			rrme |= (static_cast<uint32>(material.metallic) << 8);
+			rrme |= (static_cast<uint32>(material.emissive) << 0);
 
 			return GPUVoxelMaterial(rgb, rrme);
 		}
@@ -35,7 +42,7 @@ namespace Voxen
 				uint32_t packedValue = 0;
 
 				// Pack up to four uint8 values into one uint32
-				packedValue |= (i + 0 < grid.size() ? static_cast<uint32>(grid[i + 0]) : 0)	<< 24; // 1st byte (MSB)
+				packedValue |= (i + 0 < grid.size() ? static_cast<uint32>(grid[i + 0]) : 0) << 24; // 1st byte (MSB)
 				packedValue |= (i + 1 < grid.size() ? static_cast<uint32>(grid[i + 1]) : 0) << 16; // 2nd byte
 				packedValue |= (i + 2 < grid.size() ? static_cast<uint32>(grid[i + 2]) : 0) << 8;  // 3rd byte
 				packedValue |= (i + 3 < grid.size() ? static_cast<uint32>(grid[i + 3]) : 0) << 0;  // 4th byte (LSB)
@@ -78,93 +85,204 @@ namespace Voxen
 
 	struct MemoryAllocatorData
 	{
-		std::vector<Ref<VoxelShape>> shapes;
+		std::vector<Entity> entities;
+		bool isDirty = false;
 
-		std::vector<GPUVoxelShape> shapeBuffer;
-		std::vector<uint32> voxelBuffer;
+		std::vector<GPUSparseVoxelTree>		treeData;
+		std::vector<GPUSparseVoxelTreeNode> nodeData;
+		std::vector<uint32>					leafData;
+		std::vector<Vector4>				paletteData;
+
+		uint32 nodeOffset = 0;
+		uint32 leafOffset = 0;
 	};
 
 	static MemoryAllocatorData s_Data;
 
-	void VoxMemoryAllocator::Allocate(const Ref<VoxelShape>& shape)
+	void VoxMemoryAllocator::Allocate(const Entity& entity)
 	{
-		s_Data.shapes.push_back(shape);
+		s_Data.entities.push_back(entity);
+		s_Data.isDirty = true;
 	}
 
-	void VoxMemoryAllocator::Deallocate(const Ref<VoxelShape>& shape)
+	void VoxMemoryAllocator::Deallocate(const Entity& entity)
 	{
-		// Find the shape in the vector
-		auto it = std::find(s_Data.shapes.begin(), s_Data.shapes.end(), shape);
-		if (it != s_Data.shapes.end())
-		{
-			// Swap with the last element and pop for fast removal
-			std::swap(*it, s_Data.shapes.back());
-			s_Data.shapes.pop_back();
-		}
-	}
+		auto it = std::find(s_Data.entities.begin(), s_Data.entities.end(), entity);
 
-	const Ref<VoxelShape>& VoxMemoryAllocator::GetShape(size_t index)
-	{
-		// Return the VoxelShape pointer at the specified index
-		if (index >= s_Data.shapes.size())
+		if (it != s_Data.entities.end())
 		{
-			VOX_CORE_WARN("Index out of range: {0}", index);
-			return nullptr;
+			std::swap(*it, s_Data.entities.back());
+			s_Data.entities.pop_back();
+			s_Data.isDirty = true;
 		}
-		return s_Data.shapes[index];
 	}
 
 	size_t VoxMemoryAllocator::Count()
 	{
-		return s_Data.shapes.size();
+		return s_Data.entities.size();
 	}
 
-	void VoxMemoryAllocator::GenerateBuffers()
+	const bool VoxMemoryAllocator::IsDirty()
 	{
-		// Clear existing data inside buffers
-		s_Data.shapeBuffer.clear();
-		s_Data.voxelBuffer.clear();
+		return s_Data.isDirty;
+	}
 
-		// Create array of GPU voxel shapes
-		std::vector<GPUVoxelShape> GPUShapes;
-
-		// Loop through each allocated shape
-		for (auto shape : s_Data.shapes)
+	void VoxMemoryAllocator::Flush()
+	{
+		if (s_Data.isDirty)
 		{
-			// Assign basic data
-			GPUVoxelShape GPUShape;
-			GPUShape.transform = shape->GetTransform();
-			GPUShape.aabb = shape->Bounds();
-
-			// Loop through each material in the material map and pack it to the GPU shape's map
-			for (uint8 i = 0; i < 255; ++i)
-			{
-				GPUShape.materials[i] = Utils::PackMaterial(shape->GetMaterial(i));
-			}
-
-			// Pack the shape's grid and find offset
-			std::vector<uint8> grid = Utils::FlattenGrid(shape->GetGrid());
-			std::vector<uint32> packedGrid = Utils::PackGrid(grid);
-			uint32 offset = static_cast<uint32>(s_Data.voxelBuffer.size());
-
-			// Append the packed grid to the voxel buffer
-			s_Data.voxelBuffer.insert(s_Data.voxelBuffer.end(), packedGrid.begin(), packedGrid.end());
-
-			// Store the offset and size
-			GPUShape.materialMapOffset = offset;
-			GPUShape.materialMapSize = packedGrid.size();
-			
-			s_Data.shapeBuffer.push_back(GPUShape);
+			GenerateData();
+			s_Data.isDirty = false;
 		}
 	}
 
-	std::vector<GPUVoxelShape> VoxMemoryAllocator::GetShapeBuffer()
+	const std::vector<GPUSparseVoxelTree> VoxMemoryAllocator::GetTreeData()
 	{
-		return s_Data.shapeBuffer;
+		Flush();
+
+		return s_Data.treeData;
 	}
 
-	std::vector<uint32> VoxMemoryAllocator::GetVoxelBuffer()
+	const std::vector<GPUSparseVoxelTreeNode> VoxMemoryAllocator::GetNodeData()
 	{
-		return s_Data.voxelBuffer;
+		Flush();
+
+		return s_Data.nodeData;
+	}
+
+	const std::vector<uint32> VoxMemoryAllocator::GetLeafData()
+	{
+		Flush();
+
+		return s_Data.leafData;
+	}
+
+	const std::vector<Vector4> VoxMemoryAllocator::GetPaletteData()
+	{
+		Flush();
+
+		return s_Data.paletteData;
+	}
+
+	void VoxMemoryAllocator::PrintStats()
+	{
+		Flush();
+
+		size_t treeMem = s_Data.treeData.size() * sizeof(GPUSparseVoxelTree);
+		size_t nodeMem = s_Data.nodeData.size() * sizeof(GPUSparseVoxelTreeNode);
+		size_t leafMem = s_Data.leafData.size() * sizeof(uint32);
+		size_t paletteMem = s_Data.paletteData.size() * sizeof(Vector4);
+
+		std::cout << "===== Voxel Tree Stats =====" << std::endl;
+		std::cout << "Sparse Voxel Trees: " <<	s_Data.treeData.size() << " entries, " << treeMem << " bytes" << std::endl;
+		std::cout << "Node Data: " <<			s_Data.nodeData.size() << " entries, " << nodeMem << " bytes" << std::endl;
+		std::cout << "Leaf Data: " <<			s_Data.leafData.size() << " entries, " << leafMem << " bytes" << std::endl;
+		std::cout << "Palette Data: " <<		s_Data.paletteData.size() << " entries, " << paletteMem << " bytes" << std::endl;
+		std::cout << "Total Memory Usage: " 
+			<< (treeMem + nodeMem + leafMem + paletteMem) / (1024.0) << " KB, "
+			<< (treeMem + nodeMem + leafMem + paletteMem) / (1024.0 * 1024.0) << " MB"
+			<< std::endl;
+	}
+
+	void VoxMemoryAllocator::PrintMemory()
+	{
+		Flush();
+		
+		std::cout << "===== Voxel Tree Memory Allocation =====" << std::endl;
+
+		std::cout << "\nGPU Sparse Voxel Trees (" << s_Data.treeData.size() << " entries):" << std::endl;
+		for (size_t i = 0; i < s_Data.treeData.size(); ++i)
+		{
+			const auto& tree = s_Data.treeData[i];
+			std::cout << "Tree " << i << ":\n";
+			std::cout << "  NodePoolPtr: " << tree.NodePoolPtr << "\n";
+			std::cout << "  LeafDataPtr: " << tree.LeafDataPtr << "\n";
+			std::cout << "  AABBMin: (" << tree.Bounds.Min.x << ", " << tree.Bounds.Min.y << ", " << tree.Bounds.Min.z << ", " << tree.Bounds.Min.w << ")\n";
+			std::cout << "  AABBMax: (" << tree.Bounds.Max.x << ", " << tree.Bounds.Max.y << ", " << tree.Bounds.Max.z << ", " << tree.Bounds.Max.w << ")\n";
+		}
+
+		std::cout << "\nGPU Node Pool (" << s_Data.nodeData.size() << " entries):" << std::endl;
+		for (size_t i = 0; i < s_Data.nodeData.size(); ++i)
+		{
+			const auto& node = s_Data.nodeData[i];
+			std::cout << "Node " << i << ": ";
+			std::cout << "PackedData[0]: " << std::bitset<32>(node.PackedData[0]) << " ";
+			std::cout << "PackedData[1]: " << std::bitset<32>(node.PackedData[1]) << " ";
+			std::cout << "PackedData[2]: " << std::bitset<32>(node.PackedData[2]) << std::endl;
+		}
+
+		std::cout << "\nGPU Leaf Data (" << s_Data.leafData.size() << " bytes):" << std::endl;
+		for (size_t i = 0; i < s_Data.leafData.size(); ++i)
+		{
+			if (i % 16 == 0) std::cout << "\n" << i << ": ";
+			std::cout << static_cast<int>(s_Data.leafData[i]) << " ";
+		}
+		std::cout << "\n======================================\n";
+	}
+
+	void VoxMemoryAllocator::GenerateData()
+	{
+		s_Data.treeData.clear();
+		s_Data.nodeData.clear();
+		s_Data.leafData.clear();
+
+		s_Data.nodeOffset = 0;
+		s_Data.leafOffset = 0;
+
+		for (auto& entity : s_Data.entities)
+		{
+			AddTree(entity.GetComponent<VoxelRendererComponent>().SVT, s_Data.nodeOffset, s_Data.leafOffset);
+		}
+	}
+
+	void VoxMemoryAllocator::AddTree(const SparseVoxelTree tree, uint32& nodeOffset, uint32& leafOffset)
+	{
+		GPUSparseVoxelTree gpuTree;
+
+		// Convert Root Node
+		GPUSparseVoxelTreeNode gpuRoot;
+		gpuRoot.PackedData[0] = (tree.root.IsLeaf << 31) | tree.root.ChildPtr;
+		gpuRoot.PackedData[1] = static_cast<uint32_t>(tree.root.ChildMask);
+		gpuRoot.PackedData[2] = static_cast<uint32_t>(tree.root.ChildMask >> 32);
+		gpuTree.Root = gpuRoot;
+
+		// Set AABB and Transform
+		gpuTree.Bounds.Min = Vector4(tree.AABBMin, 0);
+		gpuTree.Bounds.Max = Vector4(tree.AABBMax, 0);
+		gpuTree.Transform = tree.Transform;
+
+		// Set NodePool and LeafData pointers
+		gpuTree.NodePoolPtr = nodeOffset;
+		gpuTree.LeafDataPtr = leafOffset;
+
+		// Append to GPU Trees
+		s_Data.treeData.push_back(gpuTree);
+
+		// Append Nodes to GPU Pool
+		for (const auto& node : tree.nodePool)
+		{
+			GPUSparseVoxelTreeNode gpuNode;
+			gpuNode.PackedData[0] = (node.IsLeaf << 31) | node.ChildPtr;
+			gpuNode.PackedData[1] = static_cast<uint32_t>(node.ChildMask);
+			gpuNode.PackedData[2] = static_cast<uint32_t>(node.ChildMask >> 32);
+			s_Data.nodeData.push_back(gpuNode);
+		}
+
+		// Append Leaf Data
+		s_Data.leafData.insert(s_Data.leafData.end(), tree.leafData.begin(), tree.leafData.end());
+
+		// Update offsets
+		nodeOffset += tree.nodePool.size();
+		leafOffset += tree.leafData.size();
+
+		s_Data.paletteData = std::vector<Vector4>(255);
+
+		for (int i = 0; i < 255; i++)
+		{
+			float r = tree.voxelMap->palette[i].r / 255.0f;
+			float g = tree.voxelMap->palette[i].g / 255.0f;
+			float b = tree.voxelMap->palette[i].b / 255.0f;
+			s_Data.paletteData[i] = Vector4(r, g, b, 1.0f);
+		}
 	}
 }
