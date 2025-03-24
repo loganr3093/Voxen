@@ -78,7 +78,7 @@ namespace Voxen
 		m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1, 1000.0f);
 
 		Entity deer = m_EditorScene->CreateEntity("Deer");
-		auto& vrc = deer.AddComponent<VoxelRendererComponent>(EditorResources::DeerModel);
+		auto& vrc = deer.AddComponent<VoxelRendererComponent>(EditorResources::HorseModel);
 	}
 
 	void EditorLayer::OnDetach()
