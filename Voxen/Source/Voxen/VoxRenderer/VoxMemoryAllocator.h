@@ -21,6 +21,7 @@ namespace Voxen
 		static const std::vector<GPUSparseVoxelTree>		GetTreeData();
 		static const std::vector<GPUSparseVoxelTreeNode>	GetNodeData();
 		static const std::vector<uint32>					GetLeafData();
+		static const std::vector<Vector4>					GetPaletteData();
 
 		static void PrintStats();
 		static void PrintMemory();

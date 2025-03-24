@@ -33,6 +33,7 @@ namespace Voxen
         Ref<ShaderStorageBuffer> TreeBuffer;
         Ref<ShaderStorageBuffer> NodeBuffer;
         Ref<ShaderStorageBuffer> LeafBuffer;
+        Ref<ShaderStorageBuffer> PaletteBuffer;
     };
 
     static VoxRendererData s_Data;
@@ -57,10 +58,12 @@ namespace Voxen
         std::vector<GPUSparseVoxelTree>		treeData = VoxMemoryAllocator::GetTreeData();
         std::vector<GPUSparseVoxelTreeNode> nodeData = VoxMemoryAllocator::GetNodeData();
         std::vector<uint32>					leafData = VoxMemoryAllocator::GetLeafData();
+        std::vector<Vector4>			    paletteData = VoxMemoryAllocator::GetPaletteData();
 
         s_Data.TreeBuffer = ShaderStorageBuffer::Create(treeData.data(), treeData.size() * sizeof(GPUSparseVoxelTree));
         s_Data.NodeBuffer = ShaderStorageBuffer::Create(nodeData.data(), nodeData.size() * sizeof(GPUSparseVoxelTreeNode));
         s_Data.LeafBuffer = ShaderStorageBuffer::Create(leafData.data(), leafData.size() * sizeof(uint32));
+        s_Data.PaletteBuffer = ShaderStorageBuffer::Create(paletteData.data(), paletteData.size() * sizeof(Vector4));
     }
 
     void VoxRenderer::Shutdown()
@@ -137,15 +140,20 @@ namespace Voxen
     {
         VOX_PROFILE_FUNCTION();
 
-        std::vector<GPUSparseVoxelTree>		treeData = VoxMemoryAllocator::GetTreeData();
-        std::vector<GPUSparseVoxelTreeNode> nodeData = VoxMemoryAllocator::GetNodeData();
-        std::vector<uint32>					leafData = VoxMemoryAllocator::GetLeafData();
-
-        s_Data.TreeBuffer->UpdateData(treeData.data(), treeData.size() * sizeof(GPUVoxelShape));
-        s_Data.NodeBuffer->UpdateData(nodeData.data(), nodeData.size() * sizeof(uint32));
-        s_Data.LeafBuffer->UpdateData(leafData.data(), leafData.size() * sizeof(uint32));
-
         s_Data.ComputeShader->Bind();
+
+        if (VoxMemoryAllocator::IsDirty())
+        {
+            std::vector<GPUSparseVoxelTree>		treeData = VoxMemoryAllocator::GetTreeData();
+            std::vector<GPUSparseVoxelTreeNode> nodeData = VoxMemoryAllocator::GetNodeData();
+            std::vector<uint32>					leafData = VoxMemoryAllocator::GetLeafData();
+            std::vector<Vector4>			    paletteData = VoxMemoryAllocator::GetPaletteData();
+
+            s_Data.TreeBuffer->UpdateData(treeData.data(), treeData.size() * sizeof(GPUVoxelShape));
+            s_Data.NodeBuffer->UpdateData(nodeData.data(), nodeData.size() * sizeof(GPUSparseVoxelTreeNode));
+            s_Data.LeafBuffer->UpdateData(leafData.data(), leafData.size() * sizeof(uint32));
+            s_Data.PaletteBuffer->UpdateData(paletteData.data(), paletteData.size() * sizeof(Vector4));
+        }
 
         s_Data.ComputeShader->SetVector2("u_ScreenSize", { s_Data.RWTexture->GetWidth() , s_Data.RWTexture->GetHeight() });
         s_Data.ComputeShader->SetInt("u_NumShapes", VoxMemoryAllocator::Count());
@@ -156,6 +164,7 @@ namespace Voxen
         s_Data.TreeBuffer->Bind(0);
         s_Data.NodeBuffer->Bind(1);
         s_Data.LeafBuffer->Bind(2);
+        s_Data.PaletteBuffer->Bind(3);
 
         // Dispatch the compute shader (assuming 1280x720 texture)
         int dispatchX = static_cast<int>(s_Data.RWTexture->GetWidth() / 16);

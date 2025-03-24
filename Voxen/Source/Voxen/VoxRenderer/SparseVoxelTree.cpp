@@ -8,8 +8,10 @@ namespace Voxen
     {
     }
 
-    SparseVoxelTree::SparseVoxelTree(const Ref<VoxelMap> voxelMap)
+    SparseVoxelTree::SparseVoxelTree(const Ref<VoxelMap> data)
     {
+        voxelMap = data;
+
         // Clear existing data
         nodePool.clear();
         leafData.clear();
@@ -21,7 +23,7 @@ namespace Voxen
     SparseVoxelTree::SparseVoxelTree(const std::filesystem::path modelPath)
     {
         // Make the voxel map from the path
-        Ref<VoxelMap> voxelMap = VoxLoader::Load(modelPath);
+        voxelMap = VoxLoader::Load(modelPath);
 
         // Clear existing data
         nodePool.clear();
@@ -36,7 +38,7 @@ namespace Voxen
         root = generateTree(voxelMap, 6, IVector3(0, 0, 0));
     }
 
-    SparseVoxelTreeNode SparseVoxelTree::generateTree(const Ref<VoxelMap> voxelMap, int32 scale, IVector3 pos)
+    SparseVoxelTreeNode SparseVoxelTree::generateTree(const Ref<VoxelMap> data, int32 scale, IVector3 pos)
     {
         SparseVoxelTreeNode node = {};
 

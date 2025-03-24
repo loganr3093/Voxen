@@ -25,17 +25,19 @@ namespace Voxen
     public:
         SparseVoxelTree();
 
-        SparseVoxelTree(const Ref<VoxelMap> voxelMap);
+        SparseVoxelTree(const Ref<VoxelMap> data);
         SparseVoxelTree(const std::filesystem::path modelPath);
 
     private:
-        SparseVoxelTreeNode generateTree(const Ref<VoxelMap> voxelMap, int32 scale, IVector3 pos);
+        SparseVoxelTreeNode generateTree(const Ref<VoxelMap> data, int32 scale, IVector3 pos);
 
         uint64 packBits64(const uint8* data);
 
         void leftPack(uint8* data, uint64 mask);
 
     private:
+        Ref<VoxelMap> voxelMap;
+
         // The sparse 64 tree structure members
         SparseVoxelTreeNode root;
         std::vector<SparseVoxelTreeNode> nodePool;

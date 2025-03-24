@@ -2,6 +2,8 @@
 #include "Voxen/VoxRenderer/VoxMemoryAllocator.h"
 #include "Voxen/VoxRenderer/SparseVoxelTree.h"
 
+#include "ogt/vox.h"
+
 #include "Voxen/Scene/Entity.h"
 #include "Voxen/Scene/Components.h"
 #include <bitset>
@@ -89,6 +91,7 @@ namespace Voxen
 		std::vector<GPUSparseVoxelTree>		treeData;
 		std::vector<GPUSparseVoxelTreeNode> nodeData;
 		std::vector<uint32>					leafData;
+		std::vector<Vector4>				paletteData;
 
 		uint32 nodeOffset = 0;
 		uint32 leafOffset = 0;
@@ -154,6 +157,13 @@ namespace Voxen
 		return s_Data.leafData;
 	}
 
+	const std::vector<Vector4> VoxMemoryAllocator::GetPaletteData()
+	{
+		Flush();
+
+		return s_Data.paletteData;
+	}
+
 	void VoxMemoryAllocator::PrintStats()
 	{
 		Flush();
@@ -161,12 +171,17 @@ namespace Voxen
 		size_t treeMem = s_Data.treeData.size() * sizeof(GPUSparseVoxelTree);
 		size_t nodeMem = s_Data.nodeData.size() * sizeof(GPUSparseVoxelTreeNode);
 		size_t leafMem = s_Data.leafData.size() * sizeof(uint32);
+		size_t paletteMem = s_Data.paletteData.size() * sizeof(Vector4);
 
 		std::cout << "===== Voxel Tree Stats =====" << std::endl;
-		std::cout << "GPU Sparse Voxel Trees: " <<	s_Data.treeData.size() << " entries, " << treeMem << " bytes" << std::endl;
-		std::cout << "GPU Node Pool: " <<			s_Data.nodeData.size() << " entries, " << nodeMem << " bytes" << std::endl;
-		std::cout << "GPU Leaf Data: " <<			s_Data.leafData.size() << " entries, " << leafMem << " bytes" << std::endl;
-		std::cout << "Total Memory Usage: " << (treeMem + nodeMem + leafMem) / (1024.0 * 1024.0) << " MB" << std::endl;
+		std::cout << "Sparse Voxel Trees: " <<	s_Data.treeData.size() << " entries, " << treeMem << " bytes" << std::endl;
+		std::cout << "Node Data: " <<			s_Data.nodeData.size() << " entries, " << nodeMem << " bytes" << std::endl;
+		std::cout << "Leaf Data: " <<			s_Data.leafData.size() << " entries, " << leafMem << " bytes" << std::endl;
+		std::cout << "Palette Data: " <<		s_Data.paletteData.size() << " entries, " << paletteMem << " bytes" << std::endl;
+		std::cout << "Total Memory Usage: " 
+			<< (treeMem + nodeMem + leafMem + paletteMem) / (1024.0) << " KB, "
+			<< (treeMem + nodeMem + leafMem + paletteMem) / (1024.0 * 1024.0) << " MB"
+			<< std::endl;
 	}
 
 	void VoxMemoryAllocator::PrintMemory()
@@ -259,5 +274,15 @@ namespace Voxen
 		// Update offsets
 		nodeOffset += tree.nodePool.size();
 		leafOffset += tree.leafData.size();
+
+		s_Data.paletteData = std::vector<Vector4>(255);
+
+		for (int i = 0; i < 255; i++)
+		{
+			float r = tree.voxelMap->palette[i].r / 255.0f;
+			float g = tree.voxelMap->palette[i].g / 255.0f;
+			float b = tree.voxelMap->palette[i].b / 255.0f;
+			s_Data.paletteData[i] = Vector4(r, g, b, 1.0f);
+		}
 	}
 }
