@@ -12,8 +12,8 @@ namespace Voxen
 		VoxenEditor(const Voxen::ApplicationSpecification& specification)
 			: Voxen::Application(specification)
 		{
-			PushLayer(new EditorLayer());
-			//PushLayer(new VoxEditorLayer());
+			//PushLayer(new EditorLayer());
+			PushLayer(new VoxEditorLayer());
 		}
 	};
 

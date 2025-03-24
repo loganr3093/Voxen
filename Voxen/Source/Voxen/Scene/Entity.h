@@ -52,6 +52,8 @@ namespace Voxen
 		void RemoveComponent()
 		{
 			VOX_CORE_ASSERT(HasComponent<T>(), "Entity does not have component");
+			T& component = GetComponent<T>();
+			m_Scene->OnComponentRemoved<T>(*this, component);
 			m_Scene->m_Registry.remove<T>(m_EntityHandle);
 		}
 

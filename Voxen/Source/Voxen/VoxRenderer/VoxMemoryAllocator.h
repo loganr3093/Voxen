@@ -1,22 +1,33 @@
 #pragma once
-#include "Voxen/VoxRenderer/VoxelShape.h"
 
 namespace Voxen
 {
+	class Entity;
+	struct SparseVoxelTree;
+	struct GPUSparseVoxelTree;
+	struct GPUSparseVoxelTreeNode;
+
 	class VoxMemoryAllocator
 	{
 	public:
-		static void Allocate(const Ref<VoxelShape>& shape);
-		static void Deallocate(const Ref<VoxelShape>& shape);
+		static void Allocate(const Entity& entity);
+		static void Deallocate(const Entity& entity);
 
-		static const Ref<VoxelShape>& GetShape(size_t index);
-		
 		static size_t Count();
 
-		static void GenerateBuffers();
+		static const bool IsDirty();
+		static void Flush();
 
-		static std::vector<GPUVoxelShape> GetShapeBuffer();
-		static std::vector<uint32> GetVoxelBuffer();
+		static const std::vector<GPUSparseVoxelTree>		GetTreeData();
+		static const std::vector<GPUSparseVoxelTreeNode>	GetNodeData();
+		static const std::vector<uint32>					GetLeafData();
 
+		static void PrintStats();
+		static void PrintMemory();
+
+	private:
+		static void GenerateData();
+
+		static void AddTree(const SparseVoxelTree tree, uint32& nodeOffset, uint32& leafOffset);
 	};
 }

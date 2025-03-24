@@ -1,5 +1,7 @@
 #include "voxpch.h"
 #include "Voxen/VoxRenderer/VoxRenderer.h"
+#include "Voxen/VoxRenderer/SparseVoxelTree.h"
+#include "Voxen/VoxRenderer/VoxMemoryAllocator.h"
 
 #include "Voxen/Renderer/ComputeShader.h"
 #include "Voxen/Renderer/Texture.h"
@@ -7,9 +9,6 @@
 #include "Voxen/Renderer/VertexArray.h"
 #include "Voxen/Renderer/RenderCommand.h"
 #include "Voxen/Renderer/ShaderStorageBuffer.h"
-
-#include "Voxen/VoxRenderer/VoxelShape.h"
-#include "Voxen/VoxRenderer/VoxMemoryAllocator.h"
 
 #include "Voxen/Editor/EditorResources.h"
 
@@ -27,14 +26,13 @@ namespace Voxen
 
         Ref<ComputeShader> ComputeShader;
         Ref<TextureRW> RWTexture;
-        Ref<Shader> FullscreenQuadShader;
+        Ref<Shader> QuadShader;
 
         Ref<Texture2D> ScreenTexture;
 
-        Ref<ShaderStorageBuffer> VoxelShapeData;
-        Ref<ShaderStorageBuffer> MaterialData;
-
-        EditorCamera Camera;
+        Ref<ShaderStorageBuffer> TreeBuffer;
+        Ref<ShaderStorageBuffer> NodeBuffer;
+        Ref<ShaderStorageBuffer> LeafBuffer;
     };
 
     static VoxRendererData s_Data;
@@ -44,58 +42,25 @@ namespace Voxen
         VOX_PROFILE_FUNCTION();
 
         // Set up the fullscreen quad vertices and indices
-        SetupFullscreenQuad();
+        SetupQuad();
 
+        // Set up quad's textures
         s_Data.RWTexture = TextureRW::Create(1600, 900);
         s_Data.ScreenTexture = Texture2D::Create(1600, 900);
 
         s_Data.ComputeShader = ComputeShader::Create(EditorResources::VoxelRendererShader);
 
         // Fullscreen quad shader (for rendering the texture)
-        s_Data.FullscreenQuadShader = Shader::Create(EditorResources::FullScreenQuadShader);
+        s_Data.QuadShader = Shader::Create(EditorResources::FullScreenQuadShader);
 
-        Ref<VoxelShape> shape = CreateRef<VoxelShape>();
+        // Set up the buffers
+        std::vector<GPUSparseVoxelTree>		treeData = VoxMemoryAllocator::GetTreeData();
+        std::vector<GPUSparseVoxelTreeNode> nodeData = VoxMemoryAllocator::GetNodeData();
+        std::vector<uint32>					leafData = VoxMemoryAllocator::GetLeafData();
 
-        for (int z = 0; z < 16; z += 2)
-        {
-            for (int y = 0; y < 16; ++y)
-            {
-                for (int x = 0; x < 16; ++x)
-                {
-                    shape->InsertVoxel({ x, y, z }, rand() % 255);
-                }
-            }
-        }
-
-        Matrix4 transform = glm::translate(Matrix4(1.0f), Vector3(-16, -16, -16));
-
-        shape->SetTransform(glm::rotate(transform, 45.0f, Vector3(1, 1, 1)));
-
-        Ref<VoxelShape> shape2 = CreateRef<VoxelShape>();
-
-        for (int z = 0; z < 16; ++z)
-        {
-            for (int y = 0; y < 16; ++y)
-            {
-                for (int x = 0; x < 16; ++x)
-                {
-                    if ((x + y + z) % 2 == 0)
-                    shape2->InsertVoxel({ x, y, z }, rand() % 255);
-                }
-            }
-        }
-
-        //shape2->SetTransform(glm::translate(Matrix4(1.0f), Vector3(10, 0, 0)));
-
-        VoxMemoryAllocator::Allocate(shape);
-        VoxMemoryAllocator::Allocate(shape2);
-        VoxMemoryAllocator::GenerateBuffers();
-
-        std::vector<GPUVoxelShape> shapeBuffer = VoxMemoryAllocator::GetShapeBuffer();
-        std::vector<uint32> voxelBuffer = VoxMemoryAllocator::GetVoxelBuffer();
-
-        s_Data.VoxelShapeData = ShaderStorageBuffer::Create(shapeBuffer.data(), shapeBuffer.size() * sizeof(GPUVoxelShape));
-        s_Data.MaterialData = ShaderStorageBuffer::Create(voxelBuffer.data(), voxelBuffer.size() * sizeof(uint32));
+        s_Data.TreeBuffer = ShaderStorageBuffer::Create(treeData.data(), treeData.size() * sizeof(GPUSparseVoxelTree));
+        s_Data.NodeBuffer = ShaderStorageBuffer::Create(nodeData.data(), nodeData.size() * sizeof(GPUSparseVoxelTreeNode));
+        s_Data.LeafBuffer = ShaderStorageBuffer::Create(leafData.data(), leafData.size() * sizeof(uint32));
     }
 
     void VoxRenderer::Shutdown()
@@ -116,7 +81,10 @@ namespace Voxen
     void VoxRenderer::BeginEditorScene(const EditorCamera& camera)
     {
         VOX_PROFILE_FUNCTION();
-        s_Data.Camera = camera;
+        s_Data.ComputeShader->Bind();
+
+        s_Data.ComputeShader->SetMat4("u_ViewProjectionMatrix", camera.GetViewProjection());
+        s_Data.ComputeShader->SetVector3("u_CameraPosition", camera.GetPosition());
     }
 
     void VoxRenderer::EndScene()
@@ -131,10 +99,10 @@ namespace Voxen
         RunComputeShader();
 
         // Render quad
-        RenderFullscreenQuad();
+        RenderQuad();
     }
 
-    void VoxRenderer::SetupFullscreenQuad()
+    void VoxRenderer::SetupQuad()
     {
         VOX_PROFILE_FUNCTION();
         // Fullscreen quad vertices (positions, texture coords, and entity ID)
@@ -168,34 +136,26 @@ namespace Voxen
     void VoxRenderer::RunComputeShader()
     {
         VOX_PROFILE_FUNCTION();
-        // Re-generate buffers using the memory allocator before running the compute shader
-        VoxMemoryAllocator::GenerateBuffers();
 
-        // Retrieve the updated buffers from the memory allocator
-        std::vector<GPUVoxelShape> shapeBuffer = VoxMemoryAllocator::GetShapeBuffer();
-        std::vector<uint32> voxelBuffer = VoxMemoryAllocator::GetVoxelBuffer();
+        std::vector<GPUSparseVoxelTree>		treeData = VoxMemoryAllocator::GetTreeData();
+        std::vector<GPUSparseVoxelTreeNode> nodeData = VoxMemoryAllocator::GetNodeData();
+        std::vector<uint32>					leafData = VoxMemoryAllocator::GetLeafData();
 
-        // Update Shader Storage Buffers (SSBOs) with the new data
-        s_Data.VoxelShapeData->UpdateData(shapeBuffer.data(), shapeBuffer.size() * sizeof(GPUVoxelShape));
-        s_Data.MaterialData->UpdateData(voxelBuffer.data(), voxelBuffer.size() * sizeof(uint32));
+        s_Data.TreeBuffer->UpdateData(treeData.data(), treeData.size() * sizeof(GPUVoxelShape));
+        s_Data.NodeBuffer->UpdateData(nodeData.data(), nodeData.size() * sizeof(uint32));
+        s_Data.LeafBuffer->UpdateData(leafData.data(), leafData.size() * sizeof(uint32));
 
-        // Bind the compute shader
         s_Data.ComputeShader->Bind();
 
-        // Set the screen size uniform
         s_Data.ComputeShader->SetVector2("u_ScreenSize", { s_Data.RWTexture->GetWidth() , s_Data.RWTexture->GetHeight() });
-
-        // Pass the view-projection matrix and camera position
-        s_Data.ComputeShader->SetMat4("u_ViewProjectionMatrix", s_Data.Camera.GetViewProjection());
-        s_Data.ComputeShader->SetVector3("u_CameraPosition", s_Data.Camera.GetPosition());
-
         s_Data.ComputeShader->SetInt("u_NumShapes", VoxMemoryAllocator::Count());
 
         // Bind the texture as an image for writing
         s_Data.RWTexture->BindImage(0);
 
-        s_Data.VoxelShapeData->Bind(0);
-        s_Data.MaterialData->Bind(1);
+        s_Data.TreeBuffer->Bind(0);
+        s_Data.NodeBuffer->Bind(1);
+        s_Data.LeafBuffer->Bind(2);
 
         // Dispatch the compute shader (assuming 1280x720 texture)
         int dispatchX = static_cast<int>(s_Data.RWTexture->GetWidth() / 16);
@@ -206,12 +166,12 @@ namespace Voxen
         s_Data.RWTexture->Unbind();
     }
 
-    void VoxRenderer::RenderFullscreenQuad()
+    void VoxRenderer::RenderQuad()
     {
         VOX_PROFILE_FUNCTION();
         // Bind the fullscreen quad shader
-        s_Data.FullscreenQuadShader->Bind();
-        s_Data.FullscreenQuadShader->SetInt("u_Texture", 0);  // Bind texture to texture unit 0
+        s_Data.QuadShader->Bind();
+        s_Data.QuadShader->SetInt("u_Texture", 0);
 
         // Bind the read-write texture as the screen texture
         s_Data.RWTexture->Bind(0);
@@ -223,7 +183,7 @@ namespace Voxen
         RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexBuffer->GetCount());
 
         // Unbind the shader and texture
-        s_Data.FullscreenQuadShader->Unbind();
+        s_Data.QuadShader->Unbind();
         s_Data.RWTexture->Unbind();
     }
 }

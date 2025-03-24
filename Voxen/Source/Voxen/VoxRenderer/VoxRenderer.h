@@ -25,10 +25,9 @@ namespace Voxen
 
         static void RenderScene(Ref<Scene> scene);
 
-        static void RenderFullscreenQuad();
-
     private:
-        static void SetupFullscreenQuad();
+        static void SetupQuad();
+        static void RenderQuad();
         static void RunComputeShader();
     };
 }

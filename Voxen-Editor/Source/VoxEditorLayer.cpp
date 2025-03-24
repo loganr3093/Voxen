@@ -11,6 +11,8 @@
 #include "Voxen/Scripting/ScriptEngine.h"
 #include "Voxen/Scripting/ScriptBuilder.h"
 
+#include "Voxen/VoxRenderer/VoxMemoryAllocator.h"
+
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -24,7 +26,6 @@ namespace Voxen
 	VoxEditorLayer::VoxEditorLayer()
 		: Layer("VoxEditorLayer")
 	{
-
 	}
 
 	void VoxEditorLayer::OnAttach()
@@ -40,6 +41,19 @@ namespace Voxen
 		m_EditorScene = CreateRef<Scene>();
 
 		m_EditorCamera = EditorCamera(80.0f, 1.778f, 0.001, 1000.0f, { 0.0f, 0.0f, -10.0f });
+
+		VOX_CORE_INFO("Vox memory allocator entries: {0}", VoxMemoryAllocator::Count());
+
+		VoxMemoryAllocator::PrintStats();
+		VoxMemoryAllocator::PrintMemory();
+
+		Entity deer = m_EditorScene->CreateEntity("Deer");
+		auto& vrc = deer.AddComponent<VoxelRendererComponent>(EditorResources::DeerModel);
+
+		VOX_CORE_INFO("Vox memory allocator entries: {0}", VoxMemoryAllocator::Count());
+
+		VoxMemoryAllocator::PrintStats();
+		VoxMemoryAllocator::PrintMemory();
 	}
 
 	void VoxEditorLayer::OnDetach()
@@ -108,7 +122,7 @@ namespace Voxen
 	void VoxEditorLayer::OnUpdate(Timestep ts)
 	{
 		if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
-			Application::Get().GetWindow().GetWidth() > 0.0f && Application::Get().GetWindow().GetHeight() > 0.0f && // zero sized framebuffer is invalid
+			Application::Get().GetWindow().GetWidth() > 0.0f && Application::Get().GetWindow().GetHeight() > 0.0f &&
 			(spec.Width != Application::Get().GetWindow().GetWidth() || spec.Height != Application::Get().GetWindow().GetHeight()))
 		{
 			m_Framebuffer->Resize(Application::Get().GetWindow().GetWidth(), Application::Get().GetWindow().GetHeight());
@@ -116,6 +130,7 @@ namespace Voxen
 		}
 
 		m_Framebuffer->Bind();
+
 		RenderCommand::SetClearColor({ 1.0f, 0.1f, 1.0f, 1 });
 		RenderCommand::Clear();
 
@@ -124,9 +139,7 @@ namespace Voxen
 		m_EditorCamera.OnUpdate(ts);
 
 		Renderer::BeginScene(m_EditorCamera);
-
 		Renderer::RenderScene(m_EditorScene);
-
 		Renderer::EndScene();
 
 		m_Framebuffer->Unbind();

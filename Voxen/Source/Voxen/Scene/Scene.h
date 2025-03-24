@@ -56,6 +56,9 @@ namespace Voxen
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
 
+		template<typename T>
+		void OnComponentRemoved(Entity entity, T& component);
+
 		void RenderScene(EditorCamera& camera);
 	private:
 		std::string m_Name;

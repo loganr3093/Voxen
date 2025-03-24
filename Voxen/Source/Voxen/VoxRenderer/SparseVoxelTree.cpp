@@ -3,35 +3,40 @@
 
 namespace Voxen
 {
-
-    SparseVoxelTree::SparseVoxelTree(const VoxelMap& voxelMap)
+    SparseVoxelTree::SparseVoxelTree()
+        : root(), AABBMin(), AABBMax(), Transform()
     {
-        GenerateTree(voxelMap);
     }
 
-    void SparseVoxelTree::GenerateTree(const VoxelMap& voxelMap)
+    SparseVoxelTree::SparseVoxelTree(const Ref<VoxelMap> voxelMap)
     {
         // Clear existing data
         nodePool.clear();
         leafData.clear();
 
         // Start generating the tree from the root
-        root = generateTree(voxelMap, 6, glm::ivec3(0, 0, 0));
+        root = generateTree(voxelMap, 6, IVector3(0, 0, 0));
     }
 
-    // Function to count the total number of voxels in the tree
-    size_t SparseVoxelTree::GetTotalVoxels() const
+    SparseVoxelTree::SparseVoxelTree(const std::filesystem::path modelPath)
     {
-        return leafData.size();
+        // Make the voxel map from the path
+        Ref<VoxelMap> voxelMap = VoxLoader::Load(modelPath);
+
+        // Clear existing data
+        nodePool.clear();
+        leafData.clear();
+
+        // TODO: Move this to appropriate places
+        AABBMin = Vector3(0.0f, 0.0f, 0.0f);
+        AABBMax = Vector3(voxelMap->size_x, voxelMap->size_y, voxelMap->size_z);
+        Transform = glm::mat4(1.0f);
+
+        // Start generating the tree from the root
+        root = generateTree(voxelMap, 6, IVector3(0, 0, 0));
     }
 
-    // Function to get the voxel data at a specific coordinate
-    uint8_t SparseVoxelTree::At(int32_t x, int32_t y, int32_t z) const
-    {
-        return at(root, 6, glm::ivec3(0, 0, 0), x, y, z);
-    }
-
-    SparseVoxelTreeNode SparseVoxelTree::generateTree(const VoxelMap& voxelMap, int32_t scale, glm::ivec3 pos)
+    SparseVoxelTreeNode SparseVoxelTree::generateTree(const Ref<VoxelMap> voxelMap, int32 scale, IVector3 pos)
     {
         SparseVoxelTreeNode node = {};
 
@@ -49,16 +54,16 @@ namespace Voxen
                 int32_t y = pos.y + ((i >> 2) & 3);
                 int32_t z = pos.z + ((i >> 4) & 3);
 
-                if (x < voxelMap.size_x && y < voxelMap.size_y && z < voxelMap.size_z) {
-                    int32_t index = x + y * voxelMap.size_x + z * voxelMap.size_x * voxelMap.size_y;
-                    temp[i] = voxelMap.voxels[index];
+                if (x < voxelMap->size_x && y < voxelMap->size_y && z < voxelMap->size_z) {
+                    int32_t index = x + y * voxelMap->size_x + z * voxelMap->size_x * voxelMap->size_y;
+                    temp[i] = voxelMap->voxels[index];
                 }
             }
 
             node.IsLeaf = 1;
-            node.ChildMask = packBits64(temp); // Generate bitmask of `temp[i] != 0`.
+            node.ChildMask = packBits64(temp);
 
-            leftPack(temp, node.ChildMask); // "Remove" entries where respective mask bit is zero.
+            leftPack(temp, node.ChildMask);
             node.ChildPtr = leafData.size();
             leafData.insert(leafData.end(), temp, temp + std::popcount(node.ChildMask));
 
@@ -88,7 +93,7 @@ namespace Voxen
         return node;
     }
 
-    uint64_t SparseVoxelTree::packBits64(const uint8_t* data)
+    uint64_t SparseVoxelTree::packBits64(const uint8* data)
     {
         uint64_t mask = 0;
         for (int i = 0; i < 64; ++i)
@@ -101,7 +106,7 @@ namespace Voxen
         return mask;
     }
 
-    void SparseVoxelTree::leftPack(uint8_t* data, uint64_t mask)
+    void SparseVoxelTree::leftPack(uint8* data, uint64 mask)
     {
         int writeIndex = 0;
         for (int i = 0; i < 64; ++i)
@@ -112,46 +117,4 @@ namespace Voxen
             }
         }
     }
-
-    uint8_t SparseVoxelTree::at(const SparseVoxelTreeNode& node, int32_t scale, glm::ivec3 pos, int32_t x, int32_t y, int32_t z) const
-    {
-        if (node.IsLeaf)
-        {
-            // Calculate the index within the 4x4x4 block
-            int32_t localX = x - pos.x;
-            int32_t localY = y - pos.y;
-            int32_t localZ = z - pos.z;
-            int32_t index = localX + localY * 4 + localZ * 16;
-
-            // Check if the voxel exists
-            if (node.ChildMask & (1ull << index))
-            {
-                // Calculate the index in the leafData array
-                int32_t dataIndex = node.ChildPtr + std::popcount(node.ChildMask & ((1ull << index) - 1));
-                return leafData[dataIndex];
-            }
-            else
-            {
-                return 0;
-            }
-        }
-        else
-        {
-            // Calculate the child index
-            int32_t childIndex = ((x - pos.x) >> (scale - 2)) + ((y - pos.y) >> (scale - 2)) * 4 + ((z - pos.z) >> (scale - 2)) * 16;
-
-            // Check if the child exists
-            if (node.ChildMask & (1ull << childIndex))
-            {
-                // Calculate the index in the nodePool array
-                int32_t childPtr = node.ChildPtr + std::popcount(node.ChildMask & ((1ull << childIndex) - 1));
-                return at(nodePool[childPtr], scale - 2, pos + glm::ivec3((childIndex & 3) << (scale - 2), ((childIndex >> 2) & 3) << (scale - 2), ((childIndex >> 4) & 3) << (scale - 2)), x, y, z);
-            }
-            else
-            {
-                return 0;
-            }
-        }
-    }
-
 }

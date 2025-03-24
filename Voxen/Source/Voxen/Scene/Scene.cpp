@@ -2,6 +2,7 @@
 #include "Voxen/Scene/Scene.h"
 
 #include "Voxen/Renderer/Renderer.h"
+#include "Voxen/VoxRenderer/VoxMemoryAllocator.h"
 
 #include "Voxen/Scene/Entity.h"
 #include "Voxen/Scene/Components.h"
@@ -288,6 +289,10 @@ namespace Voxen
         Renderer::EndScene();
     }
 
+    // ***********************************
+    // Component Added
+    // ***********************************
+
     template<typename T>
     void Scene::OnComponentAdded(Entity entity, T& component)
     {
@@ -334,5 +339,57 @@ namespace Voxen
     template<>
     void Scene::OnComponentAdded<VoxelRendererComponent>(Entity entity, VoxelRendererComponent& component)
     {
+        VoxMemoryAllocator::Allocate(entity);
+    }
+
+    // ***********************************
+    // Component Removed
+    // ***********************************
+
+    template<typename T>
+    void Scene::OnComponentRemoved(Entity entity, T& component)
+    {
+        static_assert(sizeof(T) == 0);
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<IDComponent>(Entity entity, IDComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<TransformComponent>(Entity entity, TransformComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<CameraComponent>(Entity entity, CameraComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<TagComponent>(Entity entity, TagComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<ScriptComponent>(Entity entity, ScriptComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<VoxelRendererComponent>(Entity entity, VoxelRendererComponent& component)
+    {
+        VoxMemoryAllocator::Deallocate(entity);
     }
 }
