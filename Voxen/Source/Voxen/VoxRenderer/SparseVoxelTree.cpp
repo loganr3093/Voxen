@@ -4,7 +4,7 @@
 namespace Voxen
 {
     SparseVoxelTree::SparseVoxelTree()
-        : root(), AABBMin(), AABBMax(), Transform()
+        : root(), AABBMin(), AABBMax()
     {
     }
 
@@ -32,7 +32,6 @@ namespace Voxen
         // TODO: Move this to appropriate places
         AABBMin = Vector3(0.0f, 0.0f, 0.0f);
         AABBMax = Vector3(voxelMap->size_x, voxelMap->size_y, voxelMap->size_z);
-        Transform = glm::mat4(1.0f);
 
         // Start generating the tree from the root
         root = generateTree(voxelMap, 6, IVector3(0, 0, 0));

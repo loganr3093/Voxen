@@ -16,6 +16,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -76,7 +77,13 @@ namespace Voxen
 
 		m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1, 1000.0f);
 
+		Matrix4 mat = Matrix4(1.0f);
+
+		mat = glm::translate(mat, Vector3(0, 0, -50));
+		mat = glm::rotate(mat, glm::radians(-90.0f), Vector3(1.0f, 0.0f, 0.0f));
+
 		Entity deer = m_EditorScene->CreateEntity("Deer");
+		deer.GetComponent<TransformComponent>().SetTransform(mat);
 		auto& vrc = deer.AddComponent<VoxelRendererComponent>(EditorResources::HorseModel);
 	}
 

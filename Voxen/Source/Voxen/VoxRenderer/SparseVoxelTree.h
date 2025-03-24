@@ -46,7 +46,6 @@ namespace Voxen
         // TODO: Remove from SparseVoxelTree
         Vector3 AABBMin;
         Vector3 AABBMax;
-        Matrix4 Transform;
 
     private:
         friend VoxMemoryAllocator;

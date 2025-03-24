@@ -247,12 +247,19 @@ uvec2 ChildMask(in Node node)
 
 HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
 {
-    // --- Compute intersection with the tree's AABB ---
+    // --- Apply inverse transform to bring the ray into the tree's local space ---
+    mat4 inverseTransform = inverse(tree.Transform);
+    vec4 localOriginH = inverseTransform * vec4(ray.Origin, 1.0);
+    vec3 localOrigin = localOriginH.xyz / localOriginH.w;
+    vec3 localDirection = (inverseTransform * vec4(ray.Direction, 0.0)).xyz;
+    Ray localRay = Ray(localOrigin, localDirection);
+
+    // --- Compute intersection with the tree's local AABB ---
     vec3 boundsMin = tree.Bounds.Min.xyz;
     vec3 boundsMax = tree.Bounds.Max.xyz;
-    vec3 invDir = 1.0 / ray.Direction;
-    vec3 t1 = (boundsMin - ray.Origin) * invDir;
-    vec3 t2 = (boundsMax - ray.Origin) * invDir;
+    vec3 invDir = 1.0 / localRay.Direction;
+    vec3 t1 = (boundsMin - localRay.Origin) * invDir;
+    vec3 t2 = (boundsMax - localRay.Origin) * invDir;
     vec3 tMinVec = min(t1, t2);
     vec3 tMaxVec = max(t1, t2);
     float tEntry = max(max(tMinVec.x, tMinVec.y), tMinVec.z);
@@ -262,12 +269,10 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
 
     // Start at the AABB entry point.
     float t = (tEntry > 0.0) ? tEntry : 0.0;
-    vec3 rayPos = ray.Origin + t * ray.Direction;
+    vec3 rayPos = localRay.Origin + t * localRay.Direction;
 
     // --- Set up initial tree traversal parameters ---
-    // currentScale is 6 because 2^6 = 64, matching the voxel map size.
     int currentScale = 6;
-    // Assume the tree's AABB.Min is at an integer coordinate (e.g., (0,0,0)).
     ivec3 nodeOrigin = ivec3(boundsMin);
     Node node = tree.Root;
 
@@ -275,9 +280,9 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
     for (int i = 0; i < 256; i++)
     {
         // Determine the size of the current node region.
-        int nodeSize = 1 << currentScale; // region covers [nodeOrigin, nodeOrigin + nodeSize)
+        int nodeSize = 1 << currentScale;
         ivec3 ipos = ivec3(floor(rayPos));
-        // If the current voxel position is outside the current node region, reset to root.
+        // Reset to root if outside current node region
         if (any(lessThan(ipos, nodeOrigin)) || any(greaterThanEqual(ipos, nodeOrigin + ivec3(nodeSize))))
         {
             node = tree.Root;
@@ -285,30 +290,23 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
             nodeOrigin = ivec3(boundsMin);
         }
 
-        // At the current level, each cell spans 2^(currentScale-2) voxels.
         int shift = currentScale - 2;
         ivec3 localCoord = ipos - nodeOrigin;
         int cell_x = (localCoord.x >> shift) & 3;
         int cell_y = (localCoord.y >> shift) & 3;
         int cell_z = (localCoord.z >> shift) & 3;
-        // IMPORTANT: Use the same ordering as your CPU code: x + y*4 + z*16.
         uint cellIndex = uint(cell_x + cell_y * 4 + cell_z * 16);
 
-        // Descend the tree while a child exists for this cell.
+        // Descend the tree while a child exists for this cell
         while (!IsLeaf(node) && IsBitSet(ChildMask(node), cellIndex))
         {
-            // Determine the child offset by counting the number of set bits below cellIndex.
             uint childSlot = Popcnt64Below(ChildMask(node), cellIndex);
             node = NodePool[ChildPtr(node) + childSlot];
-
-            // Update nodeOrigin for the child.
             nodeOrigin += ivec3((int(cellIndex) & 3) << shift,
                 ((int(cellIndex) >> 2) & 3) << shift,
                 ((int(cellIndex) >> 4) & 3) << shift);
             currentScale -= 2;
             shift = currentScale - 2;
-
-            // Recompute local coordinates and cell index at the new level.
             localCoord = ipos - nodeOrigin;
             cell_x = (localCoord.x >> shift) & 3;
             cell_y = (localCoord.y >> shift) & 3;
@@ -316,40 +314,29 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
             cellIndex = uint(cell_x + cell_y * 4 + cell_z * 16);
         }
 
-        // Check for a hit: if we're at a leaf and the cell is set.
         if (IsLeaf(node) && IsBitSet(ChildMask(node), cellIndex))
         {
-            // Return a white hit.
             return HitInfo(true, Palette[LeafData[ChildPtr(node) + Popcnt64Below(ChildMask(node), cellIndex)]].rgb);
         }
 
-        // --- Advance the ray using a standard voxel DDA step ---
+        // --- Advance the ray using DDA ---
         vec3 cellMin = floor(rayPos);
         vec3 tCandidate;
-        if (ray.Direction.x > 0.0)
-            tCandidate.x = (cellMin.x + 1.0 - rayPos.x) / ray.Direction.x;
-        else if (ray.Direction.x < 0.0)
-            tCandidate.x = (rayPos.x - cellMin.x) / -ray.Direction.x;
-        else
-            tCandidate.x = 1e30;
-        if (ray.Direction.y > 0.0)
-            tCandidate.y = (cellMin.y + 1.0 - rayPos.y) / ray.Direction.y;
-        else if (ray.Direction.y < 0.0)
-            tCandidate.y = (rayPos.y - cellMin.y) / -ray.Direction.y;
-        else
-            tCandidate.y = 1e30;
-        if (ray.Direction.z > 0.0)
-            tCandidate.z = (cellMin.z + 1.0 - rayPos.z) / ray.Direction.z;
-        else if (ray.Direction.z < 0.0)
-            tCandidate.z = (rayPos.z - cellMin.z) / -ray.Direction.z;
-        else
-            tCandidate.z = 1e30;
+        tCandidate.x = (localRay.Direction.x != 0.0) ?
+            ((localRay.Direction.x > 0.0) ? (cellMin.x + 1.0 - rayPos.x) / localRay.Direction.x :
+                (rayPos.x - cellMin.x) / -localRay.Direction.x) : 1e30;
+        tCandidate.y = (localRay.Direction.y != 0.0) ?
+            ((localRay.Direction.y > 0.0) ? (cellMin.y + 1.0 - rayPos.y) / localRay.Direction.y :
+                (rayPos.y - cellMin.y) / -localRay.Direction.y) : 1e30;
+        tCandidate.z = (localRay.Direction.z != 0.0) ?
+            ((localRay.Direction.z > 0.0) ? (cellMin.z + 1.0 - rayPos.z) / localRay.Direction.z :
+                (rayPos.z - cellMin.z) / -localRay.Direction.z) : 1e30;
 
-        float dt = min(tCandidate.x, min(tCandidate.y, tCandidate.z));
+        float dt = min(min(tCandidate.x, tCandidate.y), tCandidate.z);
         t += dt + 0.0001;
         if (t > tExit)
             break;
-        rayPos = ray.Origin + t * ray.Direction;
+        rayPos = localRay.Origin + t * localRay.Direction;
     }
 
     return HitInfo(false, vec3(0.0));

@@ -29,6 +29,6 @@ namespace Voxen
 	private:
 		static void GenerateData();
 
-		static void AddTree(const SparseVoxelTree tree, uint32& nodeOffset, uint32& leafOffset);
+		static void AddTree(Entity& entity, uint32& nodeOffset, uint32& leafOffset);
 	};
 }

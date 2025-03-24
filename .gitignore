@@ -17,8 +17,3 @@ obj/
 *.log
 *.user
 *.obj
-
-# Ignore all .ini files
-*.ini
-Voxen-Editor/imgui.ini
-*.ini

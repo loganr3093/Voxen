@@ -231,12 +231,13 @@ namespace Voxen
 
 		for (auto& entity : s_Data.entities)
 		{
-			AddTree(entity.GetComponent<VoxelRendererComponent>().SVT, s_Data.nodeOffset, s_Data.leafOffset);
+			AddTree(entity, s_Data.nodeOffset, s_Data.leafOffset);
 		}
 	}
 
-	void VoxMemoryAllocator::AddTree(const SparseVoxelTree tree, uint32& nodeOffset, uint32& leafOffset)
+	void VoxMemoryAllocator::AddTree(Entity& entity, uint32& nodeOffset, uint32& leafOffset)
 	{
+		SparseVoxelTree tree = entity.GetComponent<VoxelRendererComponent>().SVT;
 		GPUSparseVoxelTree gpuTree;
 
 		// Convert Root Node
@@ -249,7 +250,7 @@ namespace Voxen
 		// Set AABB and Transform
 		gpuTree.Bounds.Min = Vector4(tree.AABBMin, 0);
 		gpuTree.Bounds.Max = Vector4(tree.AABBMax, 0);
-		gpuTree.Transform = tree.Transform;
+		gpuTree.Transform = entity.GetComponent<TransformComponent>().GetTransform();
 
 		// Set NodePool and LeafData pointers
 		gpuTree.NodePoolPtr = nodeOffset;
