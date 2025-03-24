@@ -232,6 +232,22 @@ namespace Voxen
 
     void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
     {
+        auto view = m_Registry.view<TransformComponent, VoxelRendererComponent>();
+        for (auto entityID : view)
+        {
+            Entity entity = { entityID, this };
+            auto& transform = entity.GetComponent<TransformComponent>();
+
+            // Get current transform matrix
+            const glm::mat4 currentTransform = transform.GetTransform();
+
+            // Check against last known transform in allocator
+            if (VoxMemoryAllocator::HasTransformChanged(entity, currentTransform))
+            {
+                VoxMemoryAllocator::MarkDirty(entity);
+            }
+        }
+
         RenderScene(camera);
     }
 

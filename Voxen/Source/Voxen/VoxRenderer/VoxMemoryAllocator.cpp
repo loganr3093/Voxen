@@ -83,58 +83,64 @@ namespace Voxen
 		}
 	}
 
-	struct MemoryAllocatorData
-	{
-		std::vector<Entity> entities;
-		bool isDirty = false;
+	VoxMemoryAllocator::MemoryAllocatorData VoxMemoryAllocator::s_Data;
 
-		std::vector<GPUSparseVoxelTree>		treeData;
-		std::vector<GPUSparseVoxelTreeNode> nodeData;
-		std::vector<uint32>					leafData;
-		std::vector<Vector4>				paletteData;
-
-		uint32 nodeOffset = 0;
-		uint32 leafOffset = 0;
-	};
-
-	static MemoryAllocatorData s_Data;
-
-	void VoxMemoryAllocator::Allocate(const Entity& entity)
+	void VoxMemoryAllocator::Allocate(Entity& entity)
 	{
 		s_Data.entities.push_back(entity);
-		s_Data.isDirty = true;
+		s_Data.isStructureDirty = true;
+
+		// Store initial transform
+		const auto& transform = entity.GetComponent<TransformComponent>().GetTransform();
+		s_Data.lastTransforms[entity.GetUUID()] = transform;
 	}
 
-	void VoxMemoryAllocator::Deallocate(const Entity& entity)
+	void VoxMemoryAllocator::Deallocate(Entity& entity)
 	{
 		auto it = std::find(s_Data.entities.begin(), s_Data.entities.end(), entity);
+		if (it != s_Data.entities.end()) {
+			// Cleanup tracking data
+			const UUID uuid = entity.GetUUID();
+			s_Data.lastTransforms.erase(uuid);
+			s_Data.dirtyEntities.erase(uuid);
 
-		if (it != s_Data.entities.end())
-		{
 			std::swap(*it, s_Data.entities.back());
 			s_Data.entities.pop_back();
-			s_Data.isDirty = true;
+			s_Data.isStructureDirty = true;
 		}
 	}
+
+	bool VoxMemoryAllocator::HasTransformChanged(Entity& entity, const glm::mat4& currentTransform)
+	{
+		const UUID uuid = entity.GetUUID();
+		auto& transforms = s_Data.lastTransforms;
+
+		if (transforms.find(uuid) == transforms.end())
+			return false; // Should never happen for valid entities
+
+		return transforms[uuid] != currentTransform;
+	}
+
+	void VoxMemoryAllocator::MarkDirty(Entity& entity)
+	{
+		s_Data.dirtyEntities.insert(entity.GetUUID());
+		s_Data.isDataDirty = true;
+	}
+
+	void VoxMemoryAllocator::UpdateStoredTransform(Entity& entity, const glm::mat4& transform)
+	{
+		s_Data.lastTransforms[entity.GetUUID()] = transform;
+	}
+
+	// Dirty state management
+	bool VoxMemoryAllocator::IsStructureDirty() { return s_Data.isStructureDirty; }
+	bool VoxMemoryAllocator::IsDataDirty() { return s_Data.isDataDirty; }
 
 	size_t VoxMemoryAllocator::Count()
 	{
 		return s_Data.entities.size();
 	}
 
-	const bool VoxMemoryAllocator::IsDirty()
-	{
-		return s_Data.isDirty;
-	}
-
-	void VoxMemoryAllocator::Flush()
-	{
-		if (s_Data.isDirty)
-		{
-			GenerateData();
-			s_Data.isDirty = false;
-		}
-	}
 
 	const std::vector<GPUSparseVoxelTree> VoxMemoryAllocator::GetTreeData()
 	{
@@ -220,18 +226,56 @@ namespace Voxen
 		std::cout << "\n======================================\n";
 	}
 
+	void VoxMemoryAllocator::Flush()
+	{
+		if (s_Data.isStructureDirty) {
+			GenerateData();
+			s_Data.isStructureDirty = false;
+			s_Data.isDataDirty = false;
+		}
+		else if (s_Data.isDataDirty)
+		{
+			// Partial update of transform matrices
+			for (const UUID& uuid : s_Data.dirtyEntities)
+			{
+				auto it = std::find_if(s_Data.entities.begin(), s_Data.entities.end(),
+					[&](Entity& e) { return e.GetUUID() == uuid; });
+
+				if (it != s_Data.entities.end())
+				{
+					const size_t index = std::distance(s_Data.entities.begin(), it);
+					const auto& transform = it->GetComponent<TransformComponent>().GetTransform();
+
+					s_Data.treeData[index].Transform = transform;
+					UpdateStoredTransform(*it, transform);
+				}
+			}
+			s_Data.dirtyEntities.clear();
+			s_Data.isDataDirty = false;
+		}
+	}
+
+	// Existing data generation implementation
 	void VoxMemoryAllocator::GenerateData()
 	{
 		s_Data.treeData.clear();
 		s_Data.nodeData.clear();
 		s_Data.leafData.clear();
+		s_Data.paletteData.clear();
 
 		s_Data.nodeOffset = 0;
 		s_Data.leafOffset = 0;
 
-		for (auto& entity : s_Data.entities)
-		{
+		// Refresh all transform data
+		s_Data.lastTransforms.clear();
+		s_Data.dirtyEntities.clear();
+
+		for (auto& entity : s_Data.entities) {
 			AddTree(entity, s_Data.nodeOffset, s_Data.leafOffset);
+
+			// Refresh stored transform
+			const auto& transform = entity.GetComponent<TransformComponent>().GetTransform();
+			s_Data.lastTransforms[entity.GetUUID()] = transform;
 		}
 	}
 
