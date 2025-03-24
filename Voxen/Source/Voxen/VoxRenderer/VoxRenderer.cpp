@@ -88,6 +88,8 @@ namespace Voxen
 
         s_Data.ComputeShader->SetMat4("u_ViewProjectionMatrix", camera.GetViewProjection());
         s_Data.ComputeShader->SetVector3("u_CameraPosition", camera.GetPosition());
+
+        glm::vec3 pos = camera.GetPosition();
     }
 
     void VoxRenderer::EndScene()
@@ -149,16 +151,14 @@ namespace Voxen
             std::vector<uint32>					leafData = VoxMemoryAllocator::GetLeafData();
             std::vector<Vector4>			    paletteData = VoxMemoryAllocator::GetPaletteData();
 
-            s_Data.TreeBuffer->UpdateData(treeData.data(), treeData.size() * sizeof(GPUVoxelShape));
+            s_Data.TreeBuffer->UpdateData(treeData.data(), treeData.size() * sizeof(GPUSparseVoxelTree));
             s_Data.NodeBuffer->UpdateData(nodeData.data(), nodeData.size() * sizeof(GPUSparseVoxelTreeNode));
             s_Data.LeafBuffer->UpdateData(leafData.data(), leafData.size() * sizeof(uint32));
             s_Data.PaletteBuffer->UpdateData(paletteData.data(), paletteData.size() * sizeof(Vector4));
         }
 
         s_Data.ComputeShader->SetVector2("u_ScreenSize", { s_Data.RWTexture->GetWidth() , s_Data.RWTexture->GetHeight() });
-        s_Data.ComputeShader->SetInt("u_NumShapes", VoxMemoryAllocator::Count());
 
-        // Bind the texture as an image for writing
         s_Data.RWTexture->BindImage(0);
 
         s_Data.TreeBuffer->Bind(0);

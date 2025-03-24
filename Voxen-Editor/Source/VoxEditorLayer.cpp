@@ -42,18 +42,8 @@ namespace Voxen
 
 		m_EditorCamera = EditorCamera(80.0f, 1.778f, 0.001, 1000.0f, { 0.0f, 0.0f, -10.0f });
 
-		VOX_CORE_INFO("Vox memory allocator entries: {0}", VoxMemoryAllocator::Count());
-
-		VoxMemoryAllocator::PrintStats();
-		VoxMemoryAllocator::PrintMemory();
-
 		Entity deer = m_EditorScene->CreateEntity("Deer");
 		auto& vrc = deer.AddComponent<VoxelRendererComponent>(EditorResources::DeerModel);
-
-		VOX_CORE_INFO("Vox memory allocator entries: {0}", VoxMemoryAllocator::Count());
-
-		VoxMemoryAllocator::PrintStats();
-		VoxMemoryAllocator::PrintMemory();
 	}
 
 	void VoxEditorLayer::OnDetach()
