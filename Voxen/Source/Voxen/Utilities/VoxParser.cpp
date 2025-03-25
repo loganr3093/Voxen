@@ -1,6 +1,8 @@
 #include "voxpch.h"
 #include "VoxParser.h"
 
+#include "Voxen/VoxRenderer/VoxMemoryAllocator.h"
+
 #define OGT_VOX_IMPLEMENTATION
 #include "ogt/vox.h"
 

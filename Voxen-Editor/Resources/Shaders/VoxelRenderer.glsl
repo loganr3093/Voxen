@@ -34,6 +34,7 @@ struct HitInfo
 {
     bool Hit;
     vec3 Color;
+    float Distance;
 };
 
 //*************************************
@@ -62,6 +63,7 @@ struct AABB
 // - Root: Root node of the tree
 // - NodePoolPtr: Offset into the NodePool buffer
 // - LeafDataPtr: Offset into the LeafData buffer
+// - PaletteDataPtr: Offset into the PaletteData buffer
 // - AABB: Bounding box
 // - Transform: Transform matrix
 //
@@ -70,7 +72,8 @@ struct SparseVoxelTree
     Node Root;
     uint NodePoolPtr;
     uint LeafDataPtr;
-    uint _padding[3];
+    uint PaletteDataPtr;
+    uint _padding[2];
     AABB Bounds;
     mat4 Transform;
 };
@@ -170,9 +173,7 @@ layout(std430, binding = 3) buffer PaletteBuffer
 
 void main()
 {
-    // Compute pixel coordinates from the global invocation ID.
     ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
-    // Discard if the pixel is outside the screen bounds.
     if (pixelCoords.x >= int(u_ScreenSize.x) || pixelCoords.y >= int(u_ScreenSize.y))
     {
         return;
@@ -181,21 +182,18 @@ void main()
     Ray ray;
     GetPrimaryRay(ray);
 
-    // For now we only have one tree, so use Trees[0].
-    SparseVoxelTree tree = Trees[0];
+    HitInfo closestHit = HitInfo(false, vec3(0.0), 1.0 / 0.0);
 
-    HitInfo hit = RayCast(ray, tree);
-
-    vec3 albedo;
-
-    if (hit.Hit)
+    for (int i = 0; i < u_NumShapes; ++i)
     {
-        albedo = hit.Color;
+        SparseVoxelTree tree = Trees[i];
+
+        HitInfo hit = RayCast(ray, tree);
+        if (hit.Hit && hit.Distance < closestHit.Distance)
+            closestHit = hit;
     }
-    else
-    {
-        albedo = GetSkyColor(ray.Direction);
-    }
+
+    vec3 albedo = closestHit.Hit ? closestHit.Color : GetSkyColor(ray.Direction);
 
     // Write the pixel color to the output image.
     imageStore(u_OutputImage, pixelCoords, vec4(albedo, 1.0));
@@ -265,7 +263,7 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
     float tEntry = max(max(tMinVec.x, tMinVec.y), tMinVec.z);
     float tExit = min(min(tMaxVec.x, tMaxVec.y), tMaxVec.z);
     if (tExit < 0.0 || tEntry > tExit)
-        return HitInfo(false, vec3(0.0));
+        return HitInfo(false, vec3(0.0), 1.0 / 0.0);
 
     // Start at the AABB entry point.
     float t = (tEntry > 0.0) ? tEntry : 0.0;
@@ -301,7 +299,7 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
         while (!IsLeaf(node) && IsBitSet(ChildMask(node), cellIndex))
         {
             uint childSlot = Popcnt64Below(ChildMask(node), cellIndex);
-            node = NodePool[ChildPtr(node) + childSlot];
+            node = NodePool[tree.NodePoolPtr + ChildPtr(node) + childSlot];
             nodeOrigin += ivec3((int(cellIndex) & 3) << shift,
                 ((int(cellIndex) >> 2) & 3) << shift,
                 ((int(cellIndex) >> 4) & 3) << shift);
@@ -316,7 +314,18 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
 
         if (IsLeaf(node) && IsBitSet(ChildMask(node), cellIndex))
         {
-            return HitInfo(true, Palette[LeafData[ChildPtr(node) + Popcnt64Below(ChildMask(node), cellIndex)]].rgb);
+            uint leafDataIndex = tree.LeafDataPtr + ChildPtr(node) + Popcnt64Below(ChildMask(node), cellIndex);
+            uint paletteIndex = tree.PaletteDataPtr + LeafData[leafDataIndex];
+
+            // Calculate hit point in local space
+            vec3 localHitPoint = localRay.Origin + t * localRay.Direction;
+            // Transform to world space
+            vec4 worldHitPointH = tree.Transform * vec4(localHitPoint, 1.0);
+            vec3 worldHitPoint = worldHitPointH.xyz / worldHitPointH.w;
+            // Compute distance from original ray origin
+            float distance = length(worldHitPoint - ray.Origin);
+
+            return HitInfo(true, Palette[paletteIndex].rgb, distance);
         }
 
         // --- Advance the ray using DDA ---
@@ -339,7 +348,7 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
         rayPos = localRay.Origin + t * localRay.Direction;
     }
 
-    return HitInfo(false, vec3(0.0));
+    return HitInfo(false, vec3(0.0), 1.0 / 0.0);
 }
 
 //*****************************************************************************

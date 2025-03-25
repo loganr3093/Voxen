@@ -24,6 +24,8 @@ namespace Voxen
         float getSpec(uint8_t index) const;
         float getIOR(uint8_t index) const;
 
+        uint8_t paletteBaseOffset;
+
         void PrintMap();
     };
 

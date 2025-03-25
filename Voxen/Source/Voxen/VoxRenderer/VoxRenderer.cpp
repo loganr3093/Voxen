@@ -163,6 +163,7 @@ namespace Voxen
         }
 
         s_Data.ComputeShader->SetVector2("u_ScreenSize", { s_Data.RWTexture->GetWidth() , s_Data.RWTexture->GetHeight() });
+        s_Data.ComputeShader->SetInt("u_NumShapes", VoxMemoryAllocator::Count());
 
         s_Data.RWTexture->BindImage(0);
 

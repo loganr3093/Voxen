@@ -82,9 +82,12 @@ namespace Voxen
 		mat = glm::translate(mat, Vector3(0, 0, -50));
 		mat = glm::rotate(mat, glm::radians(-90.0f), Vector3(1.0f, 0.0f, 0.0f));
 
+		Entity horse = m_EditorScene->CreateEntity("Horse");
+		horse.GetComponent<TransformComponent>().SetTransform(mat);
+		horse.AddComponent<VoxelRendererComponent>(EditorResources::HorseModel);
+
 		Entity deer = m_EditorScene->CreateEntity("Deer");
-		deer.GetComponent<TransformComponent>().SetTransform(mat);
-		auto& vrc = deer.AddComponent<VoxelRendererComponent>(EditorResources::HorseModel);
+		deer.AddComponent<VoxelRendererComponent>(EditorResources::DeerModel);
 	}
 
 	void EditorLayer::OnDetach()

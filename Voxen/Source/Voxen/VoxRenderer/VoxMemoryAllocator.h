@@ -31,6 +31,7 @@ namespace Voxen
         static bool IsStructureDirty();
         static bool IsDataDirty();
         static void Flush();
+        static void Refresh();
 
         // Data access
         static const std::vector<GPUSparseVoxelTree> GetTreeData();
@@ -40,6 +41,8 @@ namespace Voxen
 
         static void PrintStats();
         static void PrintMemory();
+
+        static uint8 GetCurrentPaletteSize();
 
     private:
         static void GenerateData();

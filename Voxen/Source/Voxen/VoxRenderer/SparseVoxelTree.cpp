@@ -55,6 +55,8 @@ namespace Voxen
                 int32_t y = pos.y + ((i >> 2) & 3);
                 int32_t z = pos.z + ((i >> 4) & 3);
 
+                uint8_t basePaletteOffset = voxelMap->paletteBaseOffset;
+
                 if (x < voxelMap->size_x && y < voxelMap->size_y && z < voxelMap->size_z) {
                     int32_t index = x + y * voxelMap->size_x + z * voxelMap->size_x * voxelMap->size_y;
                     temp[i] = voxelMap->voxels[index];

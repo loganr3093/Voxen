@@ -172,7 +172,7 @@ namespace Voxen
 
 	void VoxMemoryAllocator::PrintStats()
 	{
-		Flush();
+		Refresh();
 
 		size_t treeMem = s_Data.treeData.size() * sizeof(GPUSparseVoxelTree);
 		size_t nodeMem = s_Data.nodeData.size() * sizeof(GPUSparseVoxelTreeNode);
@@ -192,7 +192,7 @@ namespace Voxen
 
 	void VoxMemoryAllocator::PrintMemory()
 	{
-		Flush();
+		Refresh();
 		
 		std::cout << "===== Voxel Tree Memory Allocation =====" << std::endl;
 
@@ -203,6 +203,7 @@ namespace Voxen
 			std::cout << "Tree " << i << ":\n";
 			std::cout << "  NodePoolPtr: " << tree.NodePoolPtr << "\n";
 			std::cout << "  LeafDataPtr: " << tree.LeafDataPtr << "\n";
+			std::cout << "  PaletteDataPtr: " << tree.PaletteDataPtr << "\n";
 			std::cout << "  AABBMin: (" << tree.Bounds.Min.x << ", " << tree.Bounds.Min.y << ", " << tree.Bounds.Min.z << ", " << tree.Bounds.Min.w << ")\n";
 			std::cout << "  AABBMax: (" << tree.Bounds.Max.x << ", " << tree.Bounds.Max.y << ", " << tree.Bounds.Max.z << ", " << tree.Bounds.Max.w << ")\n";
 		}
@@ -223,12 +224,31 @@ namespace Voxen
 			if (i % 16 == 0) std::cout << "\n" << i << ": ";
 			std::cout << static_cast<int>(s_Data.leafData[i]) << " ";
 		}
+
+		std::cout << "\n===== Palette Data =====" << std::endl;
+		for (size_t i = 0; i < s_Data.paletteData.size(); ++i)
+		{
+			const auto& color = s_Data.paletteData[i];
+			std::cout << "Index " << i << ": "
+				<< "R=" << color.r << " "
+				<< "G=" << color.g << " "
+				<< "B=" << color.b
+				<< " (Model: " << (i / 256)
+				<< ", Local Index: " << (i % 256) << ")\n";
+			if ((i + 1) % 256 == 0) std::cout << "----- End of Model Palette -----\n";
+		}
 		std::cout << "\n======================================\n";
+	}
+
+	uint8 VoxMemoryAllocator::GetCurrentPaletteSize()
+	{
+		return s_Data.paletteData.size();
 	}
 
 	void VoxMemoryAllocator::Flush()
 	{
-		if (s_Data.isStructureDirty) {
+		if (s_Data.isStructureDirty)
+		{
 			GenerateData();
 			s_Data.isStructureDirty = false;
 			s_Data.isDataDirty = false;
@@ -252,6 +272,32 @@ namespace Voxen
 			}
 			s_Data.dirtyEntities.clear();
 			s_Data.isDataDirty = false;
+		}
+	}
+
+	void VoxMemoryAllocator::Refresh()
+	{
+		if (s_Data.isStructureDirty)
+		{
+			GenerateData();
+		}
+		else if (s_Data.isDataDirty)
+		{
+			// Partial update of transform matrices
+			for (const UUID& uuid : s_Data.dirtyEntities)
+			{
+				auto it = std::find_if(s_Data.entities.begin(), s_Data.entities.end(),
+					[&](Entity& e) { return e.GetUUID() == uuid; });
+
+				if (it != s_Data.entities.end())
+				{
+					const size_t index = std::distance(s_Data.entities.begin(), it);
+					const auto& transform = it->GetComponent<TransformComponent>().GetTransform();
+
+					s_Data.treeData[index].Transform = transform;
+					UpdateStoredTransform(*it, transform);
+				}
+			}
 		}
 	}
 
@@ -300,6 +346,21 @@ namespace Voxen
 		gpuTree.NodePoolPtr = nodeOffset;
 		gpuTree.LeafDataPtr = leafOffset;
 
+		// Set palette
+		gpuTree.PaletteDataPtr = s_Data.paletteData.size();
+
+		for (int i = 0; i < 256; i++)
+		{
+			const auto& color = tree.voxelMap->palette[i];
+
+			s_Data.paletteData.emplace_back(
+				color.r / 255.0f,
+				color.g / 255.0f,
+				color.b / 255.0f,
+				1.0f
+			);
+		}
+
 		// Append to GPU Trees
 		s_Data.treeData.push_back(gpuTree);
 
@@ -319,15 +380,5 @@ namespace Voxen
 		// Update offsets
 		nodeOffset += tree.nodePool.size();
 		leafOffset += tree.leafData.size();
-
-		s_Data.paletteData = std::vector<Vector4>(255);
-
-		for (int i = 0; i < 255; i++)
-		{
-			float r = tree.voxelMap->palette[i].r / 255.0f;
-			float g = tree.voxelMap->palette[i].g / 255.0f;
-			float b = tree.voxelMap->palette[i].b / 255.0f;
-			s_Data.paletteData[i] = Vector4(r, g, b, 1.0f);
-		}
 	}
 }

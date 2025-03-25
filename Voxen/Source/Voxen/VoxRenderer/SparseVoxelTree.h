@@ -75,21 +75,16 @@ namespace Voxen
 
     struct GPUSparseVoxelTree
     {
-        // Root node of the tree
-        GPUSparseVoxelTreeNode Root; // 12 bytes
+        GPUSparseVoxelTreeNode Root;        // 12 bytes
 
-        // Offset into the NodePool buffer
-        alignas(4) uint32_t NodePoolPtr; // 4 bytes
-        // Offset into the LeafData buffer
-        alignas(4) uint32_t LeafDataPtr; // 4 bytes
+        alignas(4) uint32_t NodePoolPtr;    // 4 bytes
+        alignas(4) uint32_t LeafDataPtr;    // 4 bytes
+        alignas(4) uint32_t PaletteDataPtr; // 4 bytes
 
-        // Padding for 16-byte alignment of `bounds`
-        alignas(4) uint32_t _padding[3]; // 12 bytes
+        alignas(4) uint32_t _padding[2];    // 8 bytes
 
-        // Axis-aligned bounding box of the tree
-        alignas(16) GPUAABB Bounds; // 32 bytes
+        alignas(16) GPUAABB Bounds;         // 32 bytes
 
-        // Transform matrix
-        alignas(16)  glm::mat4 Transform; // 64 bytes
+        alignas(16) glm::mat4 Transform;    // 64 bytes
     };
 }
