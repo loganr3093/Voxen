@@ -50,6 +50,8 @@ namespace Voxen
 		void OnScenePlay();
 		void OnSceneStop();
 
+		void CloseScene();
+
 		// UI Panels
 		void UI_Toolbar();
 

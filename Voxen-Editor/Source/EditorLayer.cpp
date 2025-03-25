@@ -492,8 +492,10 @@ namespace Voxen
 
 	void EditorLayer::NewScene(const std::string& sceneName)
 	{
-		m_ActiveScene = CreateRef<Scene>(sceneName);
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		CloseScene();
+
+		m_EditorScene = CreateRef<Scene>(sceneName);
+		m_SceneHierarchyPanel.SetContext(m_EditorScene);
 
 		m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1, 1000.0f);
 
@@ -501,11 +503,17 @@ namespace Voxen
 		std::filesystem::path sceneDirectory = assetDirectory / "Scenes";
 
 		if (std::filesystem::exists(sceneDirectory))
+		{
 			m_SceneFilePath = sceneDirectory;
+		}
 		else if (std::filesystem::exists(assetDirectory))
+		{
 			m_SceneFilePath = Project::GetAssetDirectory();
+		}
 		else
+		{
 			m_SceneFilePath = std::filesystem::current_path();
+		}
 	}
 
 	bool EditorLayer::OpenScene()
@@ -537,8 +545,7 @@ namespace Voxen
 			}
 		}
 
-		if (m_SceneState == SceneState::Play)
-			OnSceneStop();
+		CloseScene();
 
 		Ref<Scene> newScene = CreateRef<Scene>();
 		SceneSerializer serializer(newScene);
@@ -711,6 +718,14 @@ namespace Voxen
 		m_ActiveScene = m_EditorScene;
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+	}
+
+	void EditorLayer::CloseScene()
+	{
+		if (m_SceneState == SceneState::Play)
+			OnSceneStop();
+
+		VoxMemoryAllocator::Clear();
 	}
 
 	// UI Panels

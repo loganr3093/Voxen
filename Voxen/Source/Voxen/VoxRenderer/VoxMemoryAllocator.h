@@ -21,6 +21,7 @@ namespace Voxen
         static void Allocate(Entity& entity);
         static void Deallocate(Entity& entity);
         static size_t Count();
+        static void Clear();
 
         // Transform tracking API
         static bool HasTransformChanged(Entity& entity, const glm::mat4& currentTransform);

@@ -141,6 +141,26 @@ namespace Voxen
 		return s_Data.entities.size();
 	}
 
+	void VoxMemoryAllocator::Clear()
+	{
+		s_Data.entities.clear();
+		s_Data.isStructureDirty = true;
+		s_Data.isDataDirty = true;
+
+		// Transform tracking
+		s_Data.lastTransforms.clear();
+		s_Data.dirtyEntities.clear();
+
+		// GPU data
+		s_Data.treeData.clear();
+		s_Data.nodeData.clear();
+		s_Data.leafData.clear();
+		s_Data.paletteData.clear();
+
+		s_Data.nodeOffset = 0;
+		s_Data.leafOffset = 0;
+	}
+
 
 	const std::vector<GPUSparseVoxelTree> VoxMemoryAllocator::GetTreeData()
 	{
