@@ -76,18 +76,6 @@ namespace Voxen
 		}
 
 		m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1, 1000.0f);
-
-		Matrix4 mat = Matrix4(1.0f);
-
-		mat = glm::translate(mat, Vector3(0, 0, -50));
-		mat = glm::rotate(mat, glm::radians(-90.0f), Vector3(1.0f, 0.0f, 0.0f));
-
-		Entity horse = m_EditorScene->CreateEntity("Horse");
-		horse.GetComponent<TransformComponent>().SetTransform(mat);
-		horse.AddComponent<VoxelRendererComponent>(EditorResources::HorseModel);
-
-		Entity deer = m_EditorScene->CreateEntity("Deer");
-		deer.AddComponent<VoxelRendererComponent>(EditorResources::DeerModel);
 	}
 
 	void EditorLayer::OnDetach()
@@ -909,8 +897,21 @@ namespace Voxen
 		const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM");
 		if (payload)
 		{
-			const wchar_t* path = (const wchar_t*)payload->Data;
-			OpenScene(path, true);
+			const wchar_t* pathData = (const wchar_t*)payload->Data;
+			std::filesystem::path filePath = pathData;
+			std::string extension = filePath.extension().string();
+
+			if (extension == ".vscene")
+			{
+				OpenScene(filePath, true);
+			}
+			else if (extension == ".vox")
+			{
+				std::string fileName = filePath.stem().string();
+
+				Entity model = m_EditorScene->CreateEntity(fileName);
+				auto& vrc = model.AddComponent<VoxelRendererComponent>(filePath);
+			}
 		}
 		ImGui::EndDragDropTarget();
 	}

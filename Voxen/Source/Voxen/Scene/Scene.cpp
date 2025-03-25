@@ -119,6 +119,11 @@ namespace Voxen
             return false;
         }
 
+        if (entity.HasComponent<VoxelRendererComponent>())
+        {
+            entity.RemoveComponent<VoxelRendererComponent>();
+        }
+
         m_EntityMap.erase(entity.GetUUID());
         m_Registry.destroy(entity);
 

@@ -13,9 +13,6 @@ namespace Voxen
 		inline static std::filesystem::path SpriteRendererShader = "Resources/Shaders/SpriteRenderer.glsl";
 		inline static std::filesystem::path VoxelRendererShader = "Resources/Shaders/VoxelRenderer.glsl";
 
-		inline static std::filesystem::path DeerModel = "Resources/Models/deer.vox";
-		inline static std::filesystem::path HorseModel = "Resources/Models/horse.vox";
-
 		// Viewport
 		inline static Ref<Texture2D> PlayIcon = nullptr;
 		inline static Ref<Texture2D> StopIcon = nullptr;
