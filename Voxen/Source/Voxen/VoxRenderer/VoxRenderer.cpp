@@ -27,6 +27,7 @@ namespace Voxen
         Ref<ComputeShader> ComputeShader;
         Ref<TextureRW> ColorRWTexture;
         Ref<TextureRW> EntityRWTexture;
+        Ref<TextureRW> NormalRWTexture;
 
         Ref<Shader> QuadShader;
 
@@ -48,6 +49,7 @@ namespace Voxen
         // Set up quad's textures
         s_Data.ColorRWTexture = TextureRW::Create(1600, 900, TextureFormat::RGBA8);
         s_Data.EntityRWTexture = TextureRW::Create(1600, 900, TextureFormat::RED_INTEGER);
+        s_Data.NormalRWTexture = TextureRW::Create(1600, 900, TextureFormat::RGBA16F);
 
         s_Data.ComputeShader = ComputeShader::Create(EditorResources::VoxelRendererShader);
 
@@ -75,6 +77,7 @@ namespace Voxen
     {
         s_Data.ColorRWTexture = TextureRW::Create(width, height, TextureFormat::RGBA8);
         s_Data.EntityRWTexture = TextureRW::Create(width, height, TextureFormat::RED_INTEGER);
+        s_Data.NormalRWTexture = TextureRW::Create(width, height, TextureFormat::RGBA16F);
     }
 
     void VoxRenderer::BeginScene(const Camera& camera, const Matrix4& cameraTransform)
@@ -167,6 +170,7 @@ namespace Voxen
 
         s_Data.ColorRWTexture->BindImage(0);
         s_Data.EntityRWTexture->BindImage(1);
+        s_Data.NormalRWTexture->BindImage(2);
 
         s_Data.TreeBuffer->Bind(0);
         s_Data.NodeBuffer->Bind(1);
@@ -194,6 +198,7 @@ namespace Voxen
         // Bind the read-write texture as the screen texture
         s_Data.ColorRWTexture->Bind(0);
         s_Data.EntityRWTexture->Bind(1);
+        s_Data.NormalRWTexture->Bind(2);
 
         // Bind the quad vertex array for rendering
         s_Data.QuadVertexArray->Bind();

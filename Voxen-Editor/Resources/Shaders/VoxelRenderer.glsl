@@ -10,6 +10,7 @@ layout(local_size_x = 16, local_size_y = 16) in;
 // Output
 layout(rgba8, binding = 0) writeonly uniform image2D u_OutputColor;
 layout(r32i, binding = 1) writeonly uniform iimage2D u_OutputEntity;
+layout(rgba16f, binding = 2) writeonly uniform image2D u_OutputNormal;
 
 //*****************************************************************************
 // Structures
@@ -37,6 +38,7 @@ struct HitInfo
     vec3 Color;
     float Distance;
 	int EntityID;
+    vec3 Normal;
 };
 
 //*************************************
@@ -185,7 +187,7 @@ void main()
     Ray ray;
     GetPrimaryRay(ray);
 
-    HitInfo closestHit = HitInfo(false, vec3(0.0), 1.0 / 0.0, -1);
+    HitInfo closestHit = HitInfo(false, vec3(0.0), 1.0 / 0.0, -1, vec3(0));
 
     for (int i = 0; i < u_NumShapes; ++i)
     {
@@ -196,15 +198,17 @@ void main()
             closestHit = hit;
     }
 
+    // Write the pixel color to the output.
     vec3 albedo = closestHit.Hit ? closestHit.Color : GetSkyColor(ray.Direction);
-
-    // Write the pixel color to the output image.
     imageStore(u_OutputColor, pixelCoords, vec4(albedo, 1.0));
 
+	// Write the entity ID to the output.
 	int entityID = closestHit.Hit ? closestHit.EntityID : -1;
-
-	// Write the entity ID to the output image.
     imageStore(u_OutputEntity, pixelCoords, ivec4(entityID, 0, 0, 0));
+
+	// Write the normal to the output.
+	vec3 normal = closestHit.Hit ? closestHit.Normal : vec3(0.0);
+	imageStore(u_OutputNormal, pixelCoords, vec4(normal, 0.0));
 }
 
 //*****************************************************************************
@@ -271,7 +275,7 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
     float tEntry = max(max(tMinVec.x, tMinVec.y), tMinVec.z);
     float tExit = min(min(tMaxVec.x, tMaxVec.y), tMaxVec.z);
     if (tExit < 0.0 || tEntry > tExit)
-        return HitInfo(false, vec3(0.0), 1.0 / 0.0, -1);
+        return HitInfo(false, vec3(0.0), 1.0 / 0.0, -1, vec3(0));
 
     // Start at the AABB entry point.
     float t = (tEntry > 0.0) ? tEntry : 0.0;
@@ -333,7 +337,30 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
             // Compute distance from original ray origin
             float distance = length(worldHitPoint - ray.Origin);
 
-            return HitInfo(true, Palette[paletteIndex].rgb, distance, tree.EntityID);
+            // Calculate normal
+            ivec3 voxelCoord = ivec3(floor(localHitPoint));
+            vec3 voxelMin = vec3(voxelCoord);
+            vec3 voxelMax = voxelMin + 1.0;
+            vec3 hitInVoxel = localHitPoint - voxelMin;
+
+            vec3 distToMin = hitInVoxel;
+            vec3 distToMax = vec3(1.0) - hitInVoxel;
+
+            float minDist = min(min(min(distToMin.x, distToMin.y), distToMin.z),
+                min(min(distToMax.x, distToMax.y), distToMax.z));
+
+            vec3 normal;
+            if (minDist == distToMin.x)       normal = vec3(-1, 0, 0);
+            else if (minDist == distToMax.x)  normal = vec3(1, 0, 0);
+            else if (minDist == distToMin.y)  normal = vec3(0, -1, 0);
+            else if (minDist == distToMax.y)  normal = vec3(0, 1, 0);
+            else if (minDist == distToMin.z)  normal = vec3(0, 0, -1);
+            else                              normal = vec3(0, 0, 1);
+
+            // Transform normal to world space
+            normal = normalize(mat3(tree.Transform) * normal);
+
+            return HitInfo(true, Palette[paletteIndex].rgb, distance, tree.EntityID, normal);
         }
 
         // --- Advance the ray using DDA ---
@@ -356,7 +383,7 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
         rayPos = localRay.Origin + t * localRay.Direction;
     }
 
-    return HitInfo(false, vec3(0.0), 1.0 / 0.0, -1);
+    return HitInfo(false, vec3(0.0), 1.0 / 0.0, -1, vec3(0));
 }
 
 //*****************************************************************************

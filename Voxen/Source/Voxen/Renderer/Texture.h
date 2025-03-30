@@ -10,7 +10,8 @@ namespace Voxen
 	{
 		None = 0,
 		RGBA8,			// 8-bit per channel RGBA
-		RED_INTEGER		// Integer red channel
+		RED_INTEGER,	// 32-bit integer red channel
+		RGBA16F,		// 16-bit per channel RGBA
 	};
 
 	class Texture
