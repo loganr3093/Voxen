@@ -65,44 +65,74 @@ namespace Voxen
 
 		int width, height, channels;
 		stbi_set_flip_vertically_on_load(1);
-		stbi_uc* data = nullptr;
+
+		// Check for HDR file extension
+		bool isHDR = path.find(".hdr") != std::string::npos ||
+			path.find(".HDR") != std::string::npos;
+
+		if (isHDR)
 		{
-			VOX_PROFILE_SCOPE("stbi_load - OpenGLTexture2D::OpenGLTexture2D(const std::string&)");
-			data = stbi_load(path.c_str(), &width, &height, &channels, 0);
-		}
-		VOX_CORE_ASSERT(data, "Failed to load image!");
-		m_Width = width;
-		m_Height = height;
+			// Load HDR image
+			float* data = stbi_loadf(path.c_str(), &width, &height, &channels, 0);
+			VOX_CORE_ASSERT(data, "Failed to load HDR image!");
+			m_Width = width;
+			m_Height = height;
 
-		GLenum internalFormat = 0, dataFormat = 0;
-		if (channels == 4)
+			// Set format based on channels
+			if (channels == 4)
+			{
+				m_InternalFormat = GL_RGBA16F;
+				m_DataFormat = GL_RGBA;
+			}
+			else
+			{
+				m_InternalFormat = GL_RGB16F;
+				m_DataFormat = GL_RGB;
+			}
+
+			// Create and upload texture
+			glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+			glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
+			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height,
+				m_DataFormat, GL_FLOAT, data);
+
+			stbi_image_free(data);
+		}
+		else
 		{
-			internalFormat = GL_RGBA8;
-			dataFormat = GL_RGBA;
+			// Load LDR image
+			stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+			VOX_CORE_ASSERT(data, "Failed to load image!");
+			m_Width = width;
+			m_Height = height;
+
+			// Set format based on channels
+			if (channels == 4) {
+				m_InternalFormat = GL_RGBA8;
+				m_DataFormat = GL_RGBA;
+			}
+			else if (channels == 3) {
+				m_InternalFormat = GL_RGB8;
+				m_DataFormat = GL_RGB;
+			}
+			else {
+				VOX_CORE_ASSERT(false, "Unsupported number of channels!");
+			}
+
+			// Create and upload texture
+			glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+			glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
+			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height,
+				m_DataFormat, GL_UNSIGNED_BYTE, data);
+
+			stbi_image_free(data);
 		}
-		else if (channels == 3)
-		{
-			internalFormat = GL_RGB8;
-			dataFormat = GL_RGB;
-		}
 
-		m_InternalFormat = internalFormat;
-		m_DataFormat = dataFormat;
-
-		VOX_CORE_ASSERT(internalFormat & dataFormat, "Format not supported!");
-
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-		glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
-
+		// Set common texture parameters
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-		glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
-
-		stbi_image_free(data);
 	}
 
 	OpenGLTexture2D::~OpenGLTexture2D()

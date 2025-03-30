@@ -27,6 +27,7 @@ namespace Voxen
         Ref<ComputeShader> ComputeShader;
         Ref<TextureRW> ColorRWTexture;
         Ref<TextureRW> EntityRWTexture;
+
         Ref<Shader> QuadShader;
 
         Ref<ShaderStorageBuffer> TreeBuffer;

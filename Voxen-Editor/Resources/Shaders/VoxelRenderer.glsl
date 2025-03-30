@@ -456,5 +456,29 @@ void GetPrimaryRay(out Ray ray)
 //
 vec3 GetSkyColor(in vec3 direction)
 {
-    return vec3(0.25, 0.25, 0.4);
+    // Unity-style gradient parameters
+    const vec3 topColor = vec3(0.2, 0.3, 0.5);      // Darker blue
+    const vec3 bottomColor = vec3(0.6, 0.8, 1.0);   // Lighter blue
+    const vec3 sunColor = vec3(1.0, 0.9, 0.7);      // Warm sun color
+    const float sunRadius = 0.9999;                 // Sun angular radius
+    const float sunPower = 5.0;                     // Sun intensity
+    const float exposure = 1.5;                     // Overall brightness
+    const vec3 sunDirection = normalize(vec3(0.2, 0.65, 0.4));
+
+    // Normalize direction
+    vec3 dir = normalize(direction);
+
+    // Vertical gradient
+    float gradientFactor = clamp(dir.y * 0.5 + 0.5, 0.0, 1.0);
+    vec3 skyColor = mix(bottomColor, topColor, pow(gradientFactor, 0.75));
+
+    // Sun disc
+    float sunDot = dot(dir, sunDirection);
+    float sunIntensity = smoothstep(sunRadius, sunRadius + 0.0001, sunDot);
+    skyColor += sunColor * sunIntensity * sunPower;
+
+    // Apply exposure
+    skyColor = vec3(1.0) - exp(-skyColor * exposure);
+
+    return skyColor;
 }
