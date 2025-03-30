@@ -59,6 +59,17 @@ namespace Voxen
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
+	void OpenGLRendererAPI::MemBarrier(MemoryBarrierBit barriers)
+	{
+		switch (barriers)
+		{
+		case Voxen::MemoryBarrierBit::None: VOX_CORE_ASSERT(false, "MemoryBarrierBit::None is not a valid memory barrier bit!"); break;
+		case Voxen::MemoryBarrierBit::ShaderImageAccess: glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT); break;
+		default:
+			break;
+		}
+	}
+
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32 indexCount)
 	{
 		vertexArray->Bind();

@@ -27,6 +27,11 @@ namespace Voxen
 			s_RendererAPI->Clear();
 		}
 
+		inline static void MemBarrier(MemoryBarrierBit barriers)
+		{
+			s_RendererAPI->MemBarrier(barriers);
+		}
+
 		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32 indexCount = 0)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, indexCount);

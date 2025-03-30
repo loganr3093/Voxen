@@ -25,10 +25,9 @@ namespace Voxen
         Ref<IndexBuffer> QuadIndexBuffer;
 
         Ref<ComputeShader> ComputeShader;
-        Ref<TextureRW> RWTexture;
+        Ref<TextureRW> ColorRWTexture;
+        Ref<TextureRW> EntityRWTexture;
         Ref<Shader> QuadShader;
-
-        Ref<Texture2D> ScreenTexture;
 
         Ref<ShaderStorageBuffer> TreeBuffer;
         Ref<ShaderStorageBuffer> NodeBuffer;
@@ -46,8 +45,8 @@ namespace Voxen
         SetupQuad();
 
         // Set up quad's textures
-        s_Data.RWTexture = TextureRW::Create(1600, 900);
-        s_Data.ScreenTexture = Texture2D::Create(1600, 900);
+        s_Data.ColorRWTexture = TextureRW::Create(1600, 900, TextureFormat::RGBA8);
+        s_Data.EntityRWTexture = TextureRW::Create(1600, 900, TextureFormat::RED_INTEGER);
 
         s_Data.ComputeShader = ComputeShader::Create(EditorResources::VoxelRendererShader);
 
@@ -73,8 +72,8 @@ namespace Voxen
 
     void VoxRenderer::OnWindowResize(uint32 width, uint32 height)
     {
-        s_Data.RWTexture = TextureRW::Create(width, height);
-        s_Data.ScreenTexture = Texture2D::Create(width, height);
+        s_Data.ColorRWTexture = TextureRW::Create(width, height, TextureFormat::RGBA8);
+        s_Data.EntityRWTexture = TextureRW::Create(width, height, TextureFormat::RED_INTEGER);
     }
 
     void VoxRenderer::BeginScene(const Camera& camera, const Matrix4& cameraTransform)
@@ -162,10 +161,11 @@ namespace Voxen
             s_Data.TreeBuffer->UpdateData(treeData.data(), treeData.size() * sizeof(GPUSparseVoxelTree));
         }
 
-        s_Data.ComputeShader->SetVector2("u_ScreenSize", { s_Data.RWTexture->GetWidth() , s_Data.RWTexture->GetHeight() });
+        s_Data.ComputeShader->SetVector2("u_ScreenSize", { s_Data.ColorRWTexture->GetWidth() , s_Data.ColorRWTexture->GetHeight() });
         s_Data.ComputeShader->SetInt("u_NumShapes", VoxMemoryAllocator::Count());
 
-        s_Data.RWTexture->BindImage(0);
+        s_Data.ColorRWTexture->BindImage(0);
+        s_Data.EntityRWTexture->BindImage(1);
 
         s_Data.TreeBuffer->Bind(0);
         s_Data.NodeBuffer->Bind(1);
@@ -173,12 +173,13 @@ namespace Voxen
         s_Data.PaletteBuffer->Bind(3);
 
         // Dispatch the compute shader (assuming 1280x720 texture)
-        int dispatchX = static_cast<int>(s_Data.RWTexture->GetWidth() / 16);
-        int dispatchY = static_cast<int>(s_Data.RWTexture->GetHeight() / 16);
+        int dispatchX = static_cast<int>(s_Data.ColorRWTexture->GetWidth() / 16);
+        int dispatchY = static_cast<int>(s_Data.ColorRWTexture->GetHeight() / 16);
         s_Data.ComputeShader->Dispatch(dispatchX, dispatchY, 1);
 
         // Ensure memory is synchronized before rendering
-        s_Data.RWTexture->Unbind();
+        s_Data.ColorRWTexture->Unbind();
+        s_Data.EntityRWTexture->Unbind();
     }
 
     void VoxRenderer::RenderQuad()
@@ -186,10 +187,12 @@ namespace Voxen
         VOX_PROFILE_FUNCTION();
         // Bind the fullscreen quad shader
         s_Data.QuadShader->Bind();
-        s_Data.QuadShader->SetInt("u_Texture", 0);
+        s_Data.QuadShader->SetInt("u_ColorTexture", 0);
+        s_Data.QuadShader->SetInt("u_EntityTexture", 1);
 
         // Bind the read-write texture as the screen texture
-        s_Data.RWTexture->Bind(0);
+        s_Data.ColorRWTexture->Bind(0);
+        s_Data.EntityRWTexture->Bind(1);
 
         // Bind the quad vertex array for rendering
         s_Data.QuadVertexArray->Bind();
@@ -199,6 +202,7 @@ namespace Voxen
 
         // Unbind the shader and texture
         s_Data.QuadShader->Unbind();
-        s_Data.RWTexture->Unbind();
+        s_Data.ColorRWTexture->Unbind();
+        s_Data.EntityRWTexture->Unbind();
     }
 }

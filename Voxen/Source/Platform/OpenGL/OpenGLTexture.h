@@ -36,6 +36,7 @@ namespace Voxen
     {
     public:
         OpenGLTextureRW(uint32_t width, uint32_t height, GLenum internalFormat = GL_RGBA32F, GLenum format = GL_RGBA, GLenum type = GL_FLOAT);
+        OpenGLTextureRW(uint32_t width, uint32_t height, TextureFormat format);
         virtual ~OpenGLTextureRW();
 
         virtual uint32_t GetWidth() const override { return m_Width; }

@@ -6,6 +6,13 @@
 
 namespace Voxen
 {
+	enum class TextureFormat
+	{
+		None = 0,
+		RGBA8,			// 8-bit per channel RGBA
+		RED_INTEGER		// Integer red channel
+	};
+
 	class Texture
 	{
 	public:
@@ -35,6 +42,7 @@ namespace Voxen
 	public:
 		virtual void BindImage(uint32_t unit) const = 0;
 		static Ref<TextureRW> Create(uint32_t width, uint32_t height);
+		static Ref<TextureRW> Create(uint32_t width, uint32_t height, TextureFormat format);
 	};
 }
 

@@ -42,4 +42,15 @@ namespace Voxen
 		VOX_CORE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
+
+	Ref<TextureRW> TextureRW::Create(uint32_t width, uint32_t height, TextureFormat format)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::None:	VOX_CORE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+		case RendererAPI::API::OpenGL:	return CreateRef<OpenGLTextureRW>(width, height, format);
+		}
+		VOX_CORE_ASSERT(false, "Unknown RendererAPI!");
+		return nullptr;
+	}
 }

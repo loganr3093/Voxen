@@ -5,6 +5,39 @@
 
 namespace Voxen
 {
+	namespace Utils
+	{
+		static GLenum TextureFormatToGLInternal(TextureFormat format)
+		{
+			switch (format)
+			{
+			case TextureFormat::RGBA8:      return GL_RGBA8;
+			case TextureFormat::RED_INTEGER: return GL_R32I;
+			default: VOX_CORE_ASSERT(false, "Unknown texture format!"); return 0;
+			}
+		}
+
+		static GLenum TextureFormatToGLFormat(TextureFormat format)
+		{
+			switch (format)
+			{
+			case TextureFormat::RGBA8:      return GL_RGBA;
+			case TextureFormat::RED_INTEGER: return GL_RED_INTEGER;
+			default: VOX_CORE_ASSERT(false, "Unknown texture format!"); return 0;
+			}
+		}
+
+		static GLenum TextureFormatToGLType(TextureFormat format)
+		{
+			switch (format)
+			{
+			case TextureFormat::RGBA8:      return GL_UNSIGNED_BYTE;
+			case TextureFormat::RED_INTEGER: return GL_INT;
+			default: VOX_CORE_ASSERT(false, "Unknown texture format!"); return 0;
+			}
+		}
+	}
+
 	// Texture 2D
 
 	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height)
@@ -108,6 +141,23 @@ namespace Voxen
 		: m_Width(width), m_Height(height), m_InternalFormat(internalFormat), m_Format(format), m_Type(type)
 	{
 		VOX_PROFILE_FUNCTION();
+
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
+
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	}
+
+	OpenGLTextureRW::OpenGLTextureRW(uint32_t width, uint32_t height, TextureFormat format)
+		: m_Width(width), m_Height(height)
+	{
+		VOX_PROFILE_FUNCTION();
+		m_InternalFormat = Utils::TextureFormatToGLInternal(format);
+		m_Format = Utils::TextureFormatToGLFormat(format);
+		m_Type = Utils::TextureFormatToGLType(format);
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
 		glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);

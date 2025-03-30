@@ -80,8 +80,9 @@ namespace Voxen
         alignas(4) uint32_t NodePoolPtr;    // 4 bytes
         alignas(4) uint32_t LeafDataPtr;    // 4 bytes
         alignas(4) uint32_t PaletteDataPtr; // 4 bytes
+        alignas(4) int32_t EntityID;        // 4 bytes
 
-        alignas(4) uint32_t _padding[2];    // 8 bytes
+        alignas(4) uint32_t _padding;       // 4 bytes
 
         alignas(16) GPUAABB Bounds;         // 32 bytes
 

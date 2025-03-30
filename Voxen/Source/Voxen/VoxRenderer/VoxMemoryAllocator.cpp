@@ -381,6 +381,9 @@ namespace Voxen
 			);
 		}
 
+		// Set Entity ID
+		gpuTree.EntityID = (uint32)entity;
+
 		// Append to GPU Trees
 		s_Data.treeData.push_back(gpuTree);
 
