@@ -50,10 +50,11 @@ namespace Voxen
 		FramebufferSpecification fbSpec;
 		fbSpec.Attachments =
 		{
-			FramebufferTextureFormat::RGBA8,
-			FramebufferTextureFormat::RED_INTEGER,
-			FramebufferTextureFormat::RGBA16F,
-			FramebufferTextureFormat::Depth
+			FramebufferTextureFormat::RGBA8,		// Color
+			FramebufferTextureFormat::RED_INTEGER,	// Entity ID
+			FramebufferTextureFormat::RGBA16F,		// Normal
+			FramebufferTextureFormat::R32F,			// Depth
+			FramebufferTextureFormat::Depth			// Depth stencil for raster
 		};
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;

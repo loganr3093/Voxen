@@ -14,6 +14,7 @@ namespace Voxen
 			case TextureFormat::RGBA8:			return GL_RGBA8;
 			case TextureFormat::RED_INTEGER:	return GL_R32I;
 			case TextureFormat::RGBA16F:		return GL_RGBA16F;
+			case TextureFormat::R32F:			return GL_R32F;
 			default: VOX_CORE_ASSERT(false, "Unknown texture format!"); return 0;
 			}
 		}
@@ -25,6 +26,7 @@ namespace Voxen
 			case TextureFormat::RGBA8:			return GL_RGBA;
 			case TextureFormat::RED_INTEGER:	return GL_RED_INTEGER;
 			case TextureFormat::RGBA16F:		return GL_RGBA;
+			case TextureFormat::R32F:			return GL_RED;
 			default: VOX_CORE_ASSERT(false, "Unknown texture format!"); return 0;
 			}
 		}
@@ -36,6 +38,7 @@ namespace Voxen
 			case TextureFormat::RGBA8:			return GL_UNSIGNED_BYTE;
 			case TextureFormat::RED_INTEGER:	return GL_INT;
 			case TextureFormat::RGBA16F:		return GL_FLOAT;
+			case TextureFormat::R32F:			return GL_FLOAT;
 			default: VOX_CORE_ASSERT(false, "Unknown texture format!"); return 0;
 			}
 		}

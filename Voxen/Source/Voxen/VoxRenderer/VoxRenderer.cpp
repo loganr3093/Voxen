@@ -28,6 +28,7 @@ namespace Voxen
         Ref<TextureRW> ColorRWTexture;
         Ref<TextureRW> EntityRWTexture;
         Ref<TextureRW> NormalRWTexture;
+        Ref<TextureRW> DepthRWTexture;
 
         Ref<Shader> QuadShader;
 
@@ -50,6 +51,7 @@ namespace Voxen
         s_Data.ColorRWTexture = TextureRW::Create(1600, 900, TextureFormat::RGBA8);
         s_Data.EntityRWTexture = TextureRW::Create(1600, 900, TextureFormat::RED_INTEGER);
         s_Data.NormalRWTexture = TextureRW::Create(1600, 900, TextureFormat::RGBA16F);
+        s_Data.DepthRWTexture = TextureRW::Create(1600, 900, TextureFormat::R32F);
 
         s_Data.ComputeShader = ComputeShader::Create(EditorResources::VoxelRendererShader);
 
@@ -78,6 +80,7 @@ namespace Voxen
         s_Data.ColorRWTexture = TextureRW::Create(width, height, TextureFormat::RGBA8);
         s_Data.EntityRWTexture = TextureRW::Create(width, height, TextureFormat::RED_INTEGER);
         s_Data.NormalRWTexture = TextureRW::Create(width, height, TextureFormat::RGBA16F);
+        s_Data.DepthRWTexture = TextureRW::Create(width, height, TextureFormat::R32F);
     }
 
     void VoxRenderer::BeginScene(const Camera& camera, const Matrix4& cameraTransform)
@@ -171,6 +174,7 @@ namespace Voxen
         s_Data.ColorRWTexture->BindImage(0);
         s_Data.EntityRWTexture->BindImage(1);
         s_Data.NormalRWTexture->BindImage(2);
+        s_Data.DepthRWTexture->BindImage(3);
 
         s_Data.TreeBuffer->Bind(0);
         s_Data.NodeBuffer->Bind(1);
@@ -199,6 +203,7 @@ namespace Voxen
         s_Data.ColorRWTexture->Bind(0);
         s_Data.EntityRWTexture->Bind(1);
         s_Data.NormalRWTexture->Bind(2);
+		s_Data.DepthRWTexture->Bind(3);
 
         // Bind the quad vertex array for rendering
         s_Data.QuadVertexArray->Bind();

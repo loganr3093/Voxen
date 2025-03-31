@@ -12,6 +12,7 @@ namespace Voxen
 		RGBA8,			// 8-bit per channel RGBA
 		RED_INTEGER,	// 32-bit integer red channel
 		RGBA16F,		// 16-bit per channel RGBA
+		R32F,			// 32-bit float red channel
 	};
 
 	class Texture

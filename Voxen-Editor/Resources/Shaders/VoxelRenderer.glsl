@@ -11,6 +11,7 @@ layout(local_size_x = 16, local_size_y = 16) in;
 layout(rgba8, binding = 0) writeonly uniform image2D u_OutputColor;
 layout(r32i, binding = 1) writeonly uniform iimage2D u_OutputEntity;
 layout(rgba16f, binding = 2) writeonly uniform image2D u_OutputNormal;
+layout(r32f, binding = 3) writeonly uniform image2D u_OutputDepth;
 
 //*****************************************************************************
 // Structures
@@ -209,6 +210,29 @@ void main()
 	// Write the normal to the output.
 	vec3 normal = closestHit.Hit ? closestHit.Normal : vec3(0.0);
 	imageStore(u_OutputNormal, pixelCoords, vec4(normal, 0.0));
+
+    // Write the depth to the output.
+    float depth;
+    if (closestHit.Hit)
+    {
+        // Calculate the world position of the hit point
+        vec3 worldHitPoint = ray.Origin + closestHit.Distance * ray.Direction;
+        // Transform to clip space using the view-projection matrix
+        vec4 clipPos = u_ViewProjectionMatrix * vec4(worldHitPoint, 1.0);
+        // Perform perspective divide to get NDC coordinates
+        clipPos.xyz /= clipPos.w;
+        // Convert NDC z from [-1, 1] to [0, 1] depth range
+        float ndcZ = clipPos.z;
+        depth = ndcZ * 0.5 + 0.5;
+        // Clamp to valid depth range
+        depth = clamp(depth, 0.0, 1.0);
+    }
+    else
+    {
+        // No hit, set to far plane depth (1.0)
+        depth = 1.0;
+    }
+    imageStore(u_OutputDepth, pixelCoords, vec4(depth, 0.0, 0.0, 0.0));
 }
 
 //*****************************************************************************
