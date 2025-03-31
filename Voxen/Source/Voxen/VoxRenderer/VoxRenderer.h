@@ -28,6 +28,7 @@ namespace Voxen
     private:
         static void SetupQuad();
         static void RenderQuad();
-        static void RunComputeShader();
+        static void RunVoxelShader();
+        static void RunAOShader();
     };
 }

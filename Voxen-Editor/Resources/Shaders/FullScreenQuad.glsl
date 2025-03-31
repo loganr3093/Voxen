@@ -32,10 +32,18 @@ layout(binding = 0) uniform sampler2D u_ColorTexture;
 layout(binding = 1) uniform isampler2D u_EntityTexture;
 layout(binding = 2) uniform sampler2D u_NormalTexture;
 layout(binding = 3) uniform sampler2D u_DepthTexture;
+layout(binding = 4) uniform sampler2D u_AOTexture;
 
 void main()
 {
-	o_Color = texture(u_ColorTexture, v_TexCoords);
+	vec4 color = texture(u_ColorTexture, v_TexCoords);
+	float ao = texture(u_AOTexture, v_TexCoords).r;
+
+	// Apply Ambient Occlusion
+	vec3 ambient = color.rgb * 0.1;
+	vec3 litColor = ambient * ao + color.rgb * 0.9;
+
+	o_Color = vec4(litColor, color.a);
 	o_EntityID = texture(u_EntityTexture, v_TexCoords).r;
 	o_Normal = texture(u_NormalTexture, v_TexCoords);
 	o_Depth = texture(u_DepthTexture, v_TexCoords).r;
