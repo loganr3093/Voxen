@@ -38,6 +38,8 @@ namespace Voxen
     private:
         Ref<VoxelMap> voxelMap;
 
+        int32 initialScale;
+
         // The sparse 64 tree structure members
         SparseVoxelTreeNode root;
         std::vector<SparseVoxelTreeNode> nodePool;
@@ -81,8 +83,7 @@ namespace Voxen
         alignas(4) uint32_t LeafDataPtr;    // 4 bytes
         alignas(4) uint32_t PaletteDataPtr; // 4 bytes
         alignas(4) int32_t EntityID;        // 4 bytes
-
-        alignas(4) uint32_t _padding;       // 4 bytes
+        alignas(4) int32_t InitialScale;    // 4 bytes
 
         alignas(16) GPUAABB Bounds;         // 32 bytes
 

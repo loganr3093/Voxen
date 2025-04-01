@@ -16,8 +16,12 @@ namespace Voxen
         nodePool.clear();
         leafData.clear();
 
+        int max_dim = std::max(voxelMap->size_x, std::max(voxelMap->size_y, voxelMap->size_z));
+        initialScale = static_cast<int>(ceil(log2(max_dim)));
+        if (initialScale % 2 != 0) initialScale += 1;
+
         // Start generating the tree from the root
-        root = generateTree(voxelMap, 6, IVector3(0, 0, 0));
+        root = generateTree(voxelMap, initialScale, IVector3(0, 0, 0));
     }
 
     SparseVoxelTree::SparseVoxelTree(const std::filesystem::path modelPath)
@@ -33,8 +37,12 @@ namespace Voxen
         AABBMin = Vector3(0.0f, 0.0f, 0.0f);
         AABBMax = Vector3(voxelMap->size_x, voxelMap->size_y, voxelMap->size_z);
 
+        int max_dim = std::max(voxelMap->size_x, std::max(voxelMap->size_y, voxelMap->size_z));
+        initialScale = static_cast<int>(ceil(log2(max_dim)));
+        if (initialScale % 2 != 0) initialScale += 1;
+
         // Start generating the tree from the root
-        root = generateTree(voxelMap, 6, IVector3(0, 0, 0));
+        root = generateTree(voxelMap, initialScale, IVector3(0, 0, 0));
     }
 
     SparseVoxelTreeNode SparseVoxelTree::generateTree(const Ref<VoxelMap> data, int32 scale, IVector3 pos)

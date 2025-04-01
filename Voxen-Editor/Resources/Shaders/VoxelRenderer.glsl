@@ -79,7 +79,7 @@ struct SparseVoxelTree
     uint LeafDataPtr;
     uint PaletteDataPtr;
     int EntityID;
-    uint _padding;
+    int InitialScale;
     AABB Bounds;
     mat4 Transform;
 };
@@ -306,7 +306,7 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
     vec3 rayPos = localRay.Origin + t * localRay.Direction;
 
     // --- Set up initial tree traversal parameters ---
-    int currentScale = 6;
+    int currentScale = tree.InitialScale;
     ivec3 nodeOrigin = ivec3(boundsMin);
     Node node = tree.Root;
 
@@ -320,7 +320,7 @@ HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
         if (any(lessThan(ipos, nodeOrigin)) || any(greaterThanEqual(ipos, nodeOrigin + ivec3(nodeSize))))
         {
             node = tree.Root;
-            currentScale = 6;
+            currentScale = tree.InitialScale;
             nodeOrigin = ivec3(boundsMin);
         }
 

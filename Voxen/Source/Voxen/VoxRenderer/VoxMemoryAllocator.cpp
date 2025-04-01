@@ -368,7 +368,6 @@ namespace Voxen
 
 		// Set palette
 		gpuTree.PaletteDataPtr = s_Data.paletteData.size();
-
 		for (int i = 0; i < 256; i++)
 		{
 			const auto& color = tree.voxelMap->palette[i];
@@ -383,6 +382,9 @@ namespace Voxen
 
 		// Set Entity ID
 		gpuTree.EntityID = (uint32)entity;
+
+		// Set Initial Scale
+		gpuTree.InitialScale = tree.initialScale;
 
 		// Append to GPU Trees
 		s_Data.treeData.push_back(gpuTree);
