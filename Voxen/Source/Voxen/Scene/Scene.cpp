@@ -360,6 +360,8 @@ namespace Voxen
     template<>
     void Scene::OnComponentAdded<VoxelRendererComponent>(Entity entity, VoxelRendererComponent& component)
     {
+		Matrix4 transform = entity.GetComponent<TransformComponent>().GetTransform();
+		entity.GetComponent<TransformComponent>().SetTransform(glm::rotate(transform, glm::radians(270.0f), Vector3(1, 0, 0)));
         VoxMemoryAllocator::Allocate(entity);
     }
 
