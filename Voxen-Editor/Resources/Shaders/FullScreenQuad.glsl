@@ -7,6 +7,7 @@
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec2 a_TexCoords;
 layout(location = 2) in int a_EntityID;
+layout(location = 3) in vec4 a_AOEnabled;
 
 layout(location = 0) out vec2 v_TexCoords;
 
@@ -34,12 +35,13 @@ layout(binding = 2) uniform sampler2D u_NormalTexture;
 layout(binding = 3) uniform sampler2D u_DepthTexture;
 layout(binding = 4) uniform sampler2D u_AOTexture;
 
+uniform int u_AOEnabled;
+
 void main()
 {
 	vec4 color = texture(u_ColorTexture, v_TexCoords);
-	float ao = texture(u_AOTexture, v_TexCoords).r;
+	float ao = (u_AOEnabled != 0) ? texture(u_AOTexture, v_TexCoords).r : 1.0;
 
-	// Apply Ambient Occlusion
 	vec3 ambient = color.rgb * 0.1;
 	vec3 litColor = ambient * ao + color.rgb * 0.9;
 

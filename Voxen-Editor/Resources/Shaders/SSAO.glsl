@@ -11,6 +11,7 @@ uniform mat4 u_InverseViewProjectionMatrix;
 uniform vec2 u_ScreenSize;
 uniform float u_Radius = 0.5;
 uniform float u_Bias = 0.025;
+uniform float u_AOStrength;
 
 const vec3 samples[16] = vec3[](
     vec3(0.04977, 0.04235, 0.04996), vec3(0.01445, 0.07621, 0.02011),
@@ -23,7 +24,8 @@ const vec3 samples[16] = vec3[](
     vec3(-0.26342, 0.17966, 0.23320), vec3(-0.21603, 0.30869, 0.19086)
     );
 
-void main() {
+void main()
+{
     ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
     if (coord.x >= int(u_ScreenSize.x) || coord.y >= int(u_ScreenSize.y)) return;
 
@@ -50,7 +52,8 @@ void main() {
 
     // Calculate occlusion
     float occlusion = 0.0;
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 8; i++)
+    {
         vec3 samplePos = TBN * samples[i];
         samplePos = worldPos.xyz + samplePos * u_Radius;
 
@@ -67,5 +70,6 @@ void main() {
     }
 
     occlusion = 1.0 - occlusion / 16.0;
-    imageStore(u_AOTexture, coord, vec4(occlusion, 0.0, 0.0, 1.0));
+    float finalAO = mix(1.0, occlusion, u_AOStrength);
+    imageStore(u_AOTexture, coord, vec4(finalAO, 0.0, 0.0, 1.0));
 }

@@ -211,6 +211,21 @@ namespace Voxen
 		//ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 		//ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
 
+		bool aoEnabled = Voxen::VoxRenderer::IsAOEnabled();
+		if (ImGui::Checkbox("Ambient Occlusion Enabled", &aoEnabled))
+		{
+			Voxen::VoxRenderer::SetAOEnabled(aoEnabled);
+		}
+
+		static float aoStrength = VoxRenderer::GetAOStrength();
+		ImGui::BeginDisabled(!aoEnabled);
+		if (ImGui::SliderFloat("Ambient Occlusion Strength", &aoStrength, 0.0f, 3.0f))
+		{
+			// Update the AO strength value in your renderer
+			VoxRenderer::SetAOStrength(aoStrength);
+		}
+		ImGui::EndDisabled();
+
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });

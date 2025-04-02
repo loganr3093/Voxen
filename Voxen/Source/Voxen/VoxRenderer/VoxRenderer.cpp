@@ -39,6 +39,9 @@ namespace Voxen
         Ref<ShaderStorageBuffer> NodeBuffer;
         Ref<ShaderStorageBuffer> LeafBuffer;
         Ref<ShaderStorageBuffer> PaletteBuffer;
+
+		bool AOEnabled;
+		float AOStrength;
     };
 
     static VoxRendererData s_Data;
@@ -73,6 +76,9 @@ namespace Voxen
         s_Data.NodeBuffer = ShaderStorageBuffer::Create(nodeData.data(), nodeData.size() * sizeof(GPUSparseVoxelTreeNode));
         s_Data.LeafBuffer = ShaderStorageBuffer::Create(leafData.data(), leafData.size() * sizeof(uint32));
         s_Data.PaletteBuffer = ShaderStorageBuffer::Create(paletteData.data(), paletteData.size() * sizeof(Vector4));
+
+		s_Data.AOEnabled = true;
+		s_Data.AOStrength = 1.0f;
     }
 
     void VoxRenderer::Shutdown()
@@ -120,10 +126,31 @@ namespace Voxen
         RunVoxelShader();
 
 		// Run Ambient Occlusion shader
-		RunAOShader();
+        if (s_Data.AOEnabled)
+            RunAOShader();
 
         // Render quad
         RenderQuad();
+    }
+
+    void VoxRenderer::SetAOEnabled(bool enabled)
+    {
+        s_Data.AOEnabled = enabled;
+    }
+
+    bool VoxRenderer::IsAOEnabled()
+    {
+        return s_Data.AOEnabled;
+    }
+
+    void VoxRenderer::SetAOStrength(float strength)
+    {
+		s_Data.AOStrength = strength;
+    }
+
+    float VoxRenderer::GetAOStrength()
+    {
+        return s_Data.AOStrength;
     }
 
     void VoxRenderer::SetupQuad()
@@ -212,6 +239,7 @@ namespace Voxen
 
         s_Data.SSAOShader->SetFloat("u_Radius", 0.5f);
         s_Data.SSAOShader->SetFloat("u_Bias", 0.025f);
+        s_Data.SSAOShader->SetFloat("u_AOStrength", s_Data.AOStrength);
 
         s_Data.DepthRWTexture->Bind(0);
         s_Data.NormalRWTexture->Bind(1);
@@ -229,6 +257,7 @@ namespace Voxen
         s_Data.QuadShader->Bind();
         s_Data.QuadShader->SetInt("u_ColorTexture", 0);
         s_Data.QuadShader->SetInt("u_EntityTexture", 1);
+        s_Data.QuadShader->SetInt("u_AOEnabled", s_Data.AOEnabled ? 1 : 0);
 
         // Bind the read-write texture as the screen texture
         s_Data.ColorRWTexture->Bind(0);

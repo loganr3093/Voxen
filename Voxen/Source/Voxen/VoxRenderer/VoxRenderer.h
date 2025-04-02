@@ -25,6 +25,12 @@ namespace Voxen
 
         static void RenderScene(Ref<Scene> scene);
 
+        static void SetAOEnabled(bool enabled);
+        static bool IsAOEnabled();
+
+		static void SetAOStrength(float strength);
+        static float GetAOStrength();
+
     private:
         static void SetupQuad();
         static void RenderQuad();
