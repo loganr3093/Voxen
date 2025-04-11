@@ -28,8 +28,38 @@ namespace Voxen
         static void SetAOEnabled(bool enabled);
         static bool IsAOEnabled();
 
+        static void SetLightingEnabled(bool enabled);
+        static bool IsLightingEnabled();
+
+        static void SetShowNormalsEnabled(bool enabled);
+        static bool IsShowNormalsEnabled();
+
 		static void SetAOStrength(float strength);
         static float GetAOStrength();
+
+        static void SetLightDirection(const glm::vec3& direction);
+        static const glm::vec3& GetLightDirection();
+
+        static void SetAmbientStrength(float strength);
+        static float GetAmbientStrength();
+
+        static void SetDiffuseStrength(float strength);
+        static float GetDiffuseStrength();
+
+        static void SetSpecularStrength(float strength);
+        static float GetSpecularStrength();
+
+        static void SetLightColor(const glm::vec3& color);
+        static const glm::vec3& GetLightColor();
+
+        struct Statistics
+        {
+            uint32 DrawCalls = 0;
+            uint32 QuadCount = 0;
+
+            uint32 GetTotalVertexCount() const { return QuadCount * 4; }
+            uint32 GetTotalIndexCount() const { return QuadCount * 6; }
+        };
 
     private:
         static void SetupQuad();

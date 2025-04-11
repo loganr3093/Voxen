@@ -110,5 +110,13 @@ namespace Voxen
 		// Panels
 		SceneHierarchyPanel m_SceneHierarchyPanel;
 		Scope<ContentBrowserPanel> m_ContentBrowserPanel;
+
+		// Statistics
+		float m_AverageFPS = 0.0f;
+		int m_FrameDropsLastSecond = 0;
+		float m_TimeAccumulator = 0.0f;
+		int m_FrameCounter = 0;
+		int m_FrameDropsCurrent = 0;
+		const float m_FrameDropThreshold = 1.0f / 30.0f;
 	};
 }

@@ -194,7 +194,7 @@ namespace Voxen
 		m_SceneHierarchyPanel.OnImGuiRender();
 		m_ContentBrowserPanel->OnImGuiRender();
 
-		ImGui::Begin("Render Stats");
+		ImGui::Begin("Voxen Stats");
 		if (timestep.GetMilliseconds() != 0)
 		ImGui::Text("FPS: %f", 1000 / timestep.GetMilliseconds());
 
@@ -204,12 +204,21 @@ namespace Voxen
 		ImGui::Text("Hovered  Entity: %s", name.c_str());
 
 		// TODO: Add Renderer::GetStats
-		//auto stats = Renderer2D::GetStats();
+		auto stats = Renderer2D::GetStats();
+
+		ImGui::Text("Voxel Renderer Stats:");
+		// fps
+
+
 		//ImGui::Text("Renderer2D Stats:");
 		//ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 		//ImGui::Text("Quads: %d", stats.QuadCount);
 		//ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 		//ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+
+		ImGui::End();
+
+		ImGui::Begin("Render Settings");
 
 		bool aoEnabled = Voxen::VoxRenderer::IsAOEnabled();
 		if (ImGui::Checkbox("Ambient Occlusion Enabled", &aoEnabled))
@@ -217,14 +226,42 @@ namespace Voxen
 			Voxen::VoxRenderer::SetAOEnabled(aoEnabled);
 		}
 
-		static float aoStrength = VoxRenderer::GetAOStrength();
 		ImGui::BeginDisabled(!aoEnabled);
-		if (ImGui::SliderFloat("Ambient Occlusion Strength", &aoStrength, 0.0f, 3.0f))
+		static float aoStrength = VoxRenderer::GetAOStrength();
+		if (ImGui::SliderFloat("AO Strength", &aoStrength, 0.0f, 3.0f))
 		{
-			// Update the AO strength value in your renderer
+			// Update the AO strength
 			VoxRenderer::SetAOStrength(aoStrength);
 		}
 		ImGui::EndDisabled();
+
+		bool lightingEnabled = Voxen::VoxRenderer::IsLightingEnabled();
+		if (ImGui::Checkbox("Lighting Enabled", &lightingEnabled))
+		{
+			Voxen::VoxRenderer::SetLightingEnabled(lightingEnabled);
+		}
+
+		ImGui::BeginDisabled(!lightingEnabled);
+		float diffuseStrength = VoxRenderer::GetDiffuseStrength();
+		if (ImGui::SliderFloat("Diffuse Strength", &diffuseStrength, 0.0f, 3.0f))
+		{
+			// Update the diffuse strength
+			VoxRenderer::SetDiffuseStrength(diffuseStrength);
+		}
+
+		glm::vec3 lightColor = VoxRenderer::GetLightColor();
+		if (ImGui::ColorEdit3("Light Color", glm::value_ptr(lightColor)))
+		{
+			// Update the light color
+			VoxRenderer::SetLightColor(lightColor);
+		}
+		ImGui::EndDisabled();
+
+		bool showNormalsEnabled = Voxen::VoxRenderer::IsShowNormalsEnabled();
+		if (ImGui::Checkbox("Show Normals Enabled", &showNormalsEnabled))
+		{
+			Voxen::VoxRenderer::SetShowNormalsEnabled(showNormalsEnabled);
+		}
 
 		ImGui::End();
 

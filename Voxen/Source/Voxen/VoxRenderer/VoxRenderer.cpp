@@ -40,10 +40,17 @@ namespace Voxen
         Ref<ShaderStorageBuffer> LeafBuffer;
         Ref<ShaderStorageBuffer> PaletteBuffer;
 
-		bool AOEnabled;
-		float AOStrength;
-    };
+        bool AOEnabled;
+        float AOStrength;
 
+        bool LightingEnabled;
+        float DiffuseStrength;
+        float AmbientStrength;
+        Vector3 LightDirection;
+        Vector3 LightColor;
+
+		bool ShowNormalsEnabled = false;
+    };
     static VoxRendererData s_Data;
 
     void VoxRenderer::Init()
@@ -77,8 +84,14 @@ namespace Voxen
         s_Data.LeafBuffer = ShaderStorageBuffer::Create(leafData.data(), leafData.size() * sizeof(uint32));
         s_Data.PaletteBuffer = ShaderStorageBuffer::Create(paletteData.data(), paletteData.size() * sizeof(Vector4));
 
-		s_Data.AOEnabled = true;
+        s_Data.AOEnabled = true;
 		s_Data.AOStrength = 1.0f;
+
+		s_Data.LightingEnabled = true;
+		s_Data.DiffuseStrength = 1.0f;
+		s_Data.AmbientStrength = 0.5f;
+		s_Data.LightDirection = Vector3(0.2f, 0.65f, 0.4f);
+		s_Data.LightColor = Vector3(1);
     }
 
     void VoxRenderer::Shutdown()
@@ -110,6 +123,10 @@ namespace Voxen
         s_Data.SSAOShader->SetMat4("u_ViewProjectionMatrix", camera.GetViewProjection());
         s_Data.SSAOShader->SetMat4("u_InverseViewProjectionMatrix", glm::inverse(camera.GetViewProjection()));
 
+        s_Data.QuadShader->Bind();
+        s_Data.QuadShader->SetMat4("u_InverseViewProjectionMatrix", glm::inverse(camera.GetViewProjection()));
+        s_Data.QuadShader->SetVector3("u_CameraPosition", camera.GetPosition());
+
         glm::vec3 pos = camera.GetPosition();
     }
 
@@ -131,26 +148,6 @@ namespace Voxen
 
         // Render quad
         RenderQuad();
-    }
-
-    void VoxRenderer::SetAOEnabled(bool enabled)
-    {
-        s_Data.AOEnabled = enabled;
-    }
-
-    bool VoxRenderer::IsAOEnabled()
-    {
-        return s_Data.AOEnabled;
-    }
-
-    void VoxRenderer::SetAOStrength(float strength)
-    {
-		s_Data.AOStrength = strength;
-    }
-
-    float VoxRenderer::GetAOStrength()
-    {
-        return s_Data.AOStrength;
     }
 
     void VoxRenderer::SetupQuad()
@@ -237,8 +234,8 @@ namespace Voxen
 
         s_Data.SSAOShader->SetVector2("u_ScreenSize", { s_Data.ColorRWTexture->GetWidth(), s_Data.ColorRWTexture->GetHeight() });
 
-        s_Data.SSAOShader->SetFloat("u_Radius", 0.5f);
-        s_Data.SSAOShader->SetFloat("u_Bias", 0.025f);
+        s_Data.SSAOShader->SetFloat("u_Radius", 1.5f);
+        s_Data.SSAOShader->SetFloat("u_Bias", 0.01f);
         s_Data.SSAOShader->SetFloat("u_AOStrength", s_Data.AOStrength);
 
         s_Data.DepthRWTexture->Bind(0);
@@ -257,7 +254,15 @@ namespace Voxen
         s_Data.QuadShader->Bind();
         s_Data.QuadShader->SetInt("u_ColorTexture", 0);
         s_Data.QuadShader->SetInt("u_EntityTexture", 1);
+
         s_Data.QuadShader->SetInt("u_AOEnabled", s_Data.AOEnabled ? 1 : 0);
+        s_Data.QuadShader->SetInt("u_LightingEnabled", s_Data.LightingEnabled ? 1 : 0);
+		s_Data.QuadShader->SetInt("u_ShowNormalsEnabled", s_Data.ShowNormalsEnabled ? 1 : 0);
+
+        s_Data.QuadShader->SetVector3("u_LightDirection", s_Data.LightDirection);
+        s_Data.QuadShader->SetFloat("u_AmbientStrength", s_Data.AmbientStrength);
+        s_Data.QuadShader->SetFloat("u_DiffuseStrength", s_Data.DiffuseStrength);
+        s_Data.QuadShader->SetVector3("u_LightColor", s_Data.LightColor);
 
         // Bind the read-write texture as the screen texture
         s_Data.ColorRWTexture->Bind(0);
@@ -277,4 +282,84 @@ namespace Voxen
         s_Data.ColorRWTexture->Unbind();
         s_Data.EntityRWTexture->Unbind();
     }
+
+    void VoxRenderer::SetAOEnabled(bool enabled)
+    {
+        s_Data.AOEnabled = enabled;
+    }
+
+    bool VoxRenderer::IsAOEnabled()
+    {
+        return s_Data.AOEnabled;
+    }
+
+    void VoxRenderer::SetAOStrength(float strength)
+    {
+        s_Data.AOStrength = strength;
+    }
+
+    float VoxRenderer::GetAOStrength()
+    {
+        return s_Data.AOStrength;
+    }
+
+    void VoxRenderer::SetLightDirection(const glm::vec3& direction)
+    {
+        s_Data.LightDirection = glm::normalize(direction);
+    }
+
+    const glm::vec3& VoxRenderer::GetLightDirection()
+    {
+        return s_Data.LightDirection;
+    }
+
+    void VoxRenderer::SetAmbientStrength(float strength)
+    {
+        s_Data.AmbientStrength = strength;
+    }
+
+    float VoxRenderer::GetAmbientStrength()
+    {
+        return s_Data.AmbientStrength;
+    }
+
+	void VoxRenderer::SetDiffuseStrength(float strength)
+	{
+		s_Data.DiffuseStrength = strength;
+	}
+
+	float VoxRenderer::GetDiffuseStrength()
+	{
+		return s_Data.DiffuseStrength;
+	}
+
+	void VoxRenderer::SetLightingEnabled(bool enabled)
+	{
+		s_Data.LightingEnabled = enabled;
+	}
+
+	bool VoxRenderer::IsLightingEnabled()
+	{
+		return s_Data.LightingEnabled;
+	}
+
+	void VoxRenderer::SetShowNormalsEnabled(bool enabled)
+	{
+		s_Data.ShowNormalsEnabled = enabled;
+	}
+
+	bool VoxRenderer::IsShowNormalsEnabled()
+	{
+		return s_Data.ShowNormalsEnabled;
+	}
+
+	void VoxRenderer::SetLightColor(const glm::vec3& color)
+	{
+		s_Data.LightColor = color;
+	}
+
+	const glm::vec3& VoxRenderer::GetLightColor()
+	{
+		return s_Data.LightColor;
+	}
 }

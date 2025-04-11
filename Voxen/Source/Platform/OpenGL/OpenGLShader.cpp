@@ -216,6 +216,13 @@ namespace Voxen
 		UploadUniformIntArray(name, values, count);
 	}
 
+	void OpenGLShader::SetFloat(const std::string& name, float value)
+	{
+		VOX_PROFILE_FUNCTION();
+
+		UploadUniformFloat(name, value);
+	}
+
 	void OpenGLShader::SetVector3(const std::string& name, const Vector3& value)
 	{
 		VOX_PROFILE_FUNCTION();

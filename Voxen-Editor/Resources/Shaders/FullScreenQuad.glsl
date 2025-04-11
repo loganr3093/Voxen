@@ -36,17 +36,51 @@ layout(binding = 3) uniform sampler2D u_DepthTexture;
 layout(binding = 4) uniform sampler2D u_AOTexture;
 
 uniform int u_AOEnabled;
+uniform int u_LightingEnabled;
+uniform int u_ShowNormalsEnabled;
+
+uniform vec3 u_LightDirection = vec3(0.2, 0.65, 0.4);
+uniform mat4 u_InverseViewProjectionMatrix;
+uniform float u_AmbientStrength = 0.2;
+uniform float u_DiffuseStrength = 0.8;
+uniform vec3 u_LightColor = vec3(1.0);
 
 void main()
 {
-	vec4 color = texture(u_ColorTexture, v_TexCoords);
-	float ao = (u_AOEnabled != 0) ? texture(u_AOTexture, v_TexCoords).r : 1.0;
+	// Reads
+    vec4 color = texture(u_ColorTexture, v_TexCoords);
+    int entityID = texture(u_EntityTexture, v_TexCoords).r;
+    vec3 normal = texture(u_NormalTexture, v_TexCoords).rgb;
+    float depth = texture(u_DepthTexture, v_TexCoords).r;
+    float ao = u_AOEnabled != 0 ? texture(u_AOTexture, v_TexCoords).r : 1.0;
 
-	vec3 ambient = color.rgb * 0.1;
-	vec3 litColor = ambient * ao + color.rgb * 0.9;
+	// Don't light the skybox
+    if (entityID != -1 && u_LightingEnabled != 0)
+    {
+        // World position from depth
+        vec4 clipPos = vec4(v_TexCoords * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+        vec4 worldPos = u_InverseViewProjectionMatrix * clipPos;
+        worldPos /= worldPos.w;
 
-	o_Color = vec4(litColor, color.a);
-	o_EntityID = texture(u_EntityTexture, v_TexCoords).r;
-	o_Normal = texture(u_NormalTexture, v_TexCoords);
-	o_Depth = texture(u_DepthTexture, v_TexCoords).r;
+        // Lighting stuff
+        vec3 lightDir = normalize(u_LightDirection);
+        vec3 normalizedNormal = normalize(normal);
+
+        // Diffuse lighting
+        float diffuseFactor = max(dot(normalizedNormal, lightDir), 0.0);
+        vec3 diffuse = color.rgb * u_DiffuseStrength * diffuseFactor * u_LightColor;
+
+        // Ambient lighting
+        vec3 ambient = color.rgb * u_AmbientStrength * u_LightColor;
+
+        // Combine with AO
+        vec3 litColor = (ambient + diffuse) * ao;
+        color.rgb = litColor;
+    }
+
+    // Outputs
+    o_Color = u_ShowNormalsEnabled == 1 ? vec4(normal, 1.0) : color;
+    o_EntityID = entityID;
+    o_Normal = vec4(normal, 1.0);
+    o_Depth = depth;
 }

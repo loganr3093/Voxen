@@ -21,6 +21,7 @@ namespace Voxen
 
 		virtual void SetInt(const std::string& name, int value) override;
 		virtual void SetIntArray(const std::string& name, int* values, uint32 count) override;
+		virtual void SetFloat(const std::string& name, float value) override;
 		virtual void SetVector3(const std::string& name, const Vector3& value) override;
 		virtual void SetVector4(const std::string& name, const Vector4& value) override;
 		virtual void SetMat4(const std::string& name, const Matrix4& value) override;
