@@ -38,6 +38,11 @@ Follow these instructions to get a copy of Voxen up and running on your local ma
    ```sh
    git submodule update --init
    ```
+
+   Or, for an all in one command:
+   ```sh
+   git clone --recurse-submodules -b VoxRenderer https://github.com/loganr3093/Voxen.git
+   ```
 3. **Run Premake5**
 
    Navigate Voxen/Scripts and run Setup-Windows.bat, this will generate Voxen.sln
