@@ -25,6 +25,13 @@ namespace Voxen
 
     Scene::~Scene()
     {
+        auto view = m_Registry.view<IDComponent>();
+        for (auto entity : view)
+        {
+            Entity e = { entity, this };
+            DestroyEntity(e);
+        }
+
         m_Registry.clear();
     }
 

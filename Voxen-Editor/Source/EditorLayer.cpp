@@ -1000,7 +1000,6 @@ namespace Voxen
 		if (m_SceneState == SceneState::Play)
 			OnSceneStop();
 
-		VoxMemoryAllocator::Clear();
 	}
 
 	// UI Panels
