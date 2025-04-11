@@ -194,7 +194,7 @@ namespace Voxen
 		m_SceneHierarchyPanel.OnImGuiRender();
 		m_ContentBrowserPanel->OnImGuiRender();
 
-		ImGui::Begin("Voxen Stats");
+		ImGui::Begin("Stats");
 		if (timestep.GetMilliseconds() != 0)
 		ImGui::Text("FPS: %f", 1000 / timestep.GetMilliseconds());
 
@@ -207,8 +207,6 @@ namespace Voxen
 		auto stats = Renderer2D::GetStats();
 
 		ImGui::Text("Voxel Renderer Stats:");
-		// fps
-
 
 		//ImGui::Text("Renderer2D Stats:");
 		//ImGui::Text("Draw Calls: %d", stats.DrawCalls);
