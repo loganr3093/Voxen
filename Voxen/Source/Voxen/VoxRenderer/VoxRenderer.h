@@ -7,6 +7,8 @@
 
 #include "Voxen/Scene/Scene.h"
 
+#include "Voxen/VoxRenderer/SparseVoxelTree.h"
+
 #include <glm/glm.hpp>
 
 namespace Voxen
@@ -28,6 +30,9 @@ namespace Voxen
         static void SetAOEnabled(bool enabled);
         static bool IsAOEnabled();
 
+		static void SetAOBlurEnabled(bool enabled);
+		static bool IsAOBlurEnabled();
+
         static void SetLightingEnabled(bool enabled);
         static bool IsLightingEnabled();
 
@@ -46,25 +51,48 @@ namespace Voxen
         static void SetDiffuseStrength(float strength);
         static float GetDiffuseStrength();
 
-        static void SetSpecularStrength(float strength);
-        static float GetSpecularStrength();
-
         static void SetLightColor(const glm::vec3& color);
         static const glm::vec3& GetLightColor();
 
         struct Statistics
         {
-            uint32 DrawCalls = 0;
-            uint32 QuadCount = 0;
+			float VoxelShaderTime = 0.0f;
+			float AOShaderTime = 0.0f;
+			float BlurAOShaderTime = 0.0f;
+			float RenderQuadTime = 0.0f;
 
-            uint32 GetTotalVertexCount() const { return QuadCount * 4; }
-            uint32 GetTotalIndexCount() const { return QuadCount * 6; }
+			uint32 treeCount = 0;
+			uint32 nodeCount = 0;
+			uint32 leafCount = 0;
+
+            uint32 TreeSize()
+            {
+				return sizeof(GPUSparseVoxelTree) * treeCount;
+            }
+
+            uint32 NodeSize()
+            {
+                return sizeof(GPUSparseVoxelTreeNode) * nodeCount;
+            }
+
+			uint32 LeafSize()
+			{
+				return sizeof(uint32) * leafCount;
+			}
+
+			uint32 TotalMemoryUsage()
+			{
+				return TreeSize() + NodeSize() + LeafSize();
+			}
         };
+
+        static Statistics GetStats();
 
     private:
         static void SetupQuad();
         static void RenderQuad();
         static void RunVoxelShader();
         static void RunAOShader();
+		static void RunBlurAOShader();
     };
 }

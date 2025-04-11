@@ -10,6 +10,8 @@
 #include "Voxen/Renderer/RenderCommand.h"
 #include "Voxen/Renderer/ShaderStorageBuffer.h"
 
+#include "Voxen/Core/Timer.h"
+
 #include "Voxen/Editor/EditorResources.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -26,12 +28,14 @@ namespace Voxen
 
         Ref<ComputeShader> VoxelShader;
 		Ref<ComputeShader> SSAOShader;
+        Ref<ComputeShader> BlurAOShader;
 
         Ref<TextureRW> ColorRWTexture;
         Ref<TextureRW> EntityRWTexture;
         Ref<TextureRW> NormalRWTexture;
         Ref<TextureRW> DepthRWTexture;
         Ref<TextureRW> AORWTexture;
+        Ref<TextureRW> BlurredAORWTexture;
 
         Ref<Shader> QuadShader;
 
@@ -41,6 +45,7 @@ namespace Voxen
         Ref<ShaderStorageBuffer> PaletteBuffer;
 
         bool AOEnabled;
+		bool AOBlurEnabled;
         float AOStrength;
 
         bool LightingEnabled;
@@ -49,9 +54,22 @@ namespace Voxen
         Vector3 LightDirection;
         Vector3 LightColor;
 
-		bool ShowNormalsEnabled = false;
+		bool ShowNormalsEnabled;
+
+        VoxRenderer::Statistics Stats;
     };
     static VoxRendererData s_Data;
+
+    VoxRenderer::Statistics VoxRenderer::GetStats()
+    {
+        VOX_PROFILE_FUNCTION();
+
+        s_Data.Stats.treeCount = VoxMemoryAllocator::Count();
+        s_Data.Stats.nodeCount = VoxMemoryAllocator::GetNodeData().size();
+        s_Data.Stats.leafCount = VoxMemoryAllocator::GetLeafData().size();
+
+        return s_Data.Stats;
+    }
 
     void VoxRenderer::Init()
     {
@@ -66,9 +84,11 @@ namespace Voxen
         s_Data.NormalRWTexture = TextureRW::Create(1600, 900, TextureFormat::RGBA16F);
         s_Data.DepthRWTexture = TextureRW::Create(1600, 900, TextureFormat::R32F);
 		s_Data.AORWTexture = TextureRW::Create(1600, 900, TextureFormat::R32F);
+        s_Data.BlurredAORWTexture = TextureRW::Create(1600, 900, TextureFormat::R32F);
 
         s_Data.VoxelShader = ComputeShader::Create(EditorResources::VoxelRendererShader);
         s_Data.SSAOShader = ComputeShader::Create(EditorResources::SSAOShader);
+        s_Data.BlurAOShader = ComputeShader::Create(EditorResources::BlurAOShader);
 
         // Fullscreen quad shader (for rendering the texture)
         s_Data.QuadShader = Shader::Create(EditorResources::FullScreenQuadShader);
@@ -85,6 +105,7 @@ namespace Voxen
         s_Data.PaletteBuffer = ShaderStorageBuffer::Create(paletteData.data(), paletteData.size() * sizeof(Vector4));
 
         s_Data.AOEnabled = true;
+        s_Data.AOBlurEnabled = true;
 		s_Data.AOStrength = 1.0f;
 
 		s_Data.LightingEnabled = true;
@@ -92,6 +113,8 @@ namespace Voxen
 		s_Data.AmbientStrength = 0.5f;
 		s_Data.LightDirection = Vector3(0.2f, 0.65f, 0.4f);
 		s_Data.LightColor = Vector3(1);
+
+        s_Data.ShowNormalsEnabled = false;
     }
 
     void VoxRenderer::Shutdown()
@@ -106,6 +129,7 @@ namespace Voxen
         s_Data.NormalRWTexture = TextureRW::Create(width, height, TextureFormat::RGBA16F);
         s_Data.DepthRWTexture = TextureRW::Create(width, height, TextureFormat::R32F);
 		s_Data.AORWTexture = TextureRW::Create(width, height, TextureFormat::R32F);
+        s_Data.BlurredAORWTexture = TextureRW::Create(width, height, TextureFormat::R32F);
     }
 
     void VoxRenderer::BeginScene(const Camera& camera, const Matrix4& cameraTransform)
@@ -140,14 +164,33 @@ namespace Voxen
         VOX_PROFILE_FUNCTION();
 
         // Run voxel shader for the first pass
+		Timer timer;
+		timer.Reset();
         RunVoxelShader();
+		s_Data.Stats.VoxelShaderTime = timer.Elapsed();
 
 		// Run Ambient Occlusion shader
         if (s_Data.AOEnabled)
+        {
+            timer.Reset();
             RunAOShader();
+            s_Data.Stats.AOShaderTime = timer.Elapsed();
+        }
+        else
+        {
+			s_Data.Stats.AOShaderTime = 0.0f;
+        }
+        if (s_Data.AOBlurEnabled)
+        {
+            timer.Reset();
+            RunBlurAOShader();
+            s_Data.Stats.BlurAOShaderTime = timer.Elapsed();
+        }
 
         // Render quad
+		timer.Reset();
         RenderQuad();
+		s_Data.Stats.RenderQuadTime = timer.Elapsed();
     }
 
     void VoxRenderer::SetupQuad()
@@ -247,6 +290,36 @@ namespace Voxen
         s_Data.SSAOShader->Dispatch(dispatchX, dispatchY, 1);
     }
 
+    void VoxRenderer::RunBlurAOShader()
+    {
+        VOX_PROFILE_FUNCTION();
+
+        // Horizontal Pass
+        s_Data.BlurAOShader->Bind();
+        s_Data.BlurAOShader->SetInt("u_Direction", 0);
+        s_Data.BlurAOShader->SetVector2("u_ScreenSize", { s_Data.AORWTexture->GetWidth(), s_Data.AORWTexture->GetHeight() });
+
+        s_Data.AORWTexture->Bind(0); // Read from original AO
+        s_Data.BlurredAORWTexture->BindImage(0); // Write to blurred AO
+
+        int dispatchX = static_cast<int>((s_Data.AORWTexture->GetWidth() + 15) / 16);
+        int dispatchY = static_cast<int>((s_Data.AORWTexture->GetHeight() + 15) / 16);
+        s_Data.BlurAOShader->Dispatch(dispatchX, dispatchY, 1);
+
+		RenderCommand::MemBarrier(MemoryBarrierBit::ShaderImageAccess);
+
+        // Vertical Pass
+        s_Data.BlurAOShader->Bind();
+        s_Data.BlurAOShader->SetInt("u_Direction", 1);
+
+        s_Data.BlurredAORWTexture->Bind(0); // Read from blurred AO
+        s_Data.AORWTexture->BindImage(0); // Write back to original AO
+
+        s_Data.BlurAOShader->Dispatch(dispatchX, dispatchY, 1);
+
+        RenderCommand::MemBarrier(MemoryBarrierBit::ShaderImageAccess);
+    }
+
     void VoxRenderer::RenderQuad()
     {
         VOX_PROFILE_FUNCTION();
@@ -292,6 +365,16 @@ namespace Voxen
     {
         return s_Data.AOEnabled;
     }
+
+	void VoxRenderer::SetAOBlurEnabled(bool enabled)
+	{
+		s_Data.AOBlurEnabled = enabled;
+	}
+
+	bool VoxRenderer::IsAOBlurEnabled()
+	{
+		return s_Data.AOBlurEnabled;
+	}
 
     void VoxRenderer::SetAOStrength(float strength)
     {
