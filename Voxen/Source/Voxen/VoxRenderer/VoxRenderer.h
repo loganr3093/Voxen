@@ -5,6 +5,7 @@
 #include "Voxen/Renderer/Texture.h"
 #include "Voxen/Renderer/EditorCamera.h"
 
+#include "Voxen/Scene/Entity.h"
 #include "Voxen/Scene/Scene.h"
 
 #include "Voxen/VoxRenderer/SparseVoxelTree.h"
@@ -53,6 +54,10 @@ namespace Voxen
 
         static void SetLightColor(const glm::vec3& color);
         static const glm::vec3& GetLightColor();
+
+        static void AddPointLight(Entity entity, const PointLightComponent& component);
+        static void RemovePointLight(Entity entity);
+        static void UpdatePointLight(Entity entity, const glm::vec3& position, const glm::vec3& color, float intensity, float radius);
 
         struct Statistics
         {

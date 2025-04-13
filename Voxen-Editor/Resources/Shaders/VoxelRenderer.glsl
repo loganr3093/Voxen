@@ -232,7 +232,7 @@ void main()
         // No hit, set to far plane depth (1.0)
         depth = 1.0;
     }
-    imageStore(u_OutputDepth, pixelCoords, vec4(depth / 2, 0.0, 0.0, 0.0));
+    imageStore(u_OutputDepth, pixelCoords, vec4(depth, 0.0, 0.0, 0.0));
 }
 
 //*****************************************************************************

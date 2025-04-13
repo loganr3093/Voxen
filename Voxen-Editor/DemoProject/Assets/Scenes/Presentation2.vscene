@@ -1,0 +1,11 @@
+Scene: Presentation2
+Entities:
+  - Entity: 13842260246308600153
+    TagComponent:
+      Tag: dragon
+    TransformComponent:
+      Translation: [-66.3354416, -48.0012741, -175.921936]
+      Rotation: [-1.57080305, 0.0415576063, -1.92018234e-07]
+      Scale: [0.999999762, 0.999988258, 1]
+    VoxelRendererComponent:
+      ModelPath: C:\Users\logan\OneDrive\Desktop\Voxen\Voxen-Editor\DemoProject\Assets\Models\dragon.vox

@@ -3,6 +3,7 @@
 
 #include "Voxen/Renderer/Renderer.h"
 #include "Voxen/VoxRenderer/VoxMemoryAllocator.h"
+#include "Voxen/VoxRenderer/VoxRenderer.h"
 
 #include "Voxen/Scene/Entity.h"
 #include "Voxen/Scene/Components.h"
@@ -129,6 +130,11 @@ namespace Voxen
         if (entity.HasComponent<VoxelRendererComponent>())
         {
             entity.RemoveComponent<VoxelRendererComponent>();
+        }
+
+        if (entity.HasComponent<PointLightComponent>())
+        {
+            entity.RemoveComponent<PointLightComponent>();
         }
 
         m_EntityMap.erase(entity.GetUUID());
@@ -260,6 +266,15 @@ namespace Voxen
             }
         }
 
+        auto lightView = m_Registry.view<TransformComponent, PointLightComponent>();
+        for (auto entityID : lightView)
+        {
+            Entity entity = { entityID, this };
+			auto& transform = entity.GetComponent<TransformComponent>();
+			auto& light = entity.GetComponent<PointLightComponent>();
+            VoxRenderer::UpdatePointLight(entity, transform.Translation, light.Color, light.Intensity, light.Radius);
+        }
+
         RenderScene(camera);
     }
 
@@ -372,6 +387,12 @@ namespace Voxen
         VoxMemoryAllocator::Allocate(entity);
     }
 
+    template<>
+    void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component)
+    {
+        VoxRenderer::AddPointLight(entity, component);
+    }
+
     // ***********************************
     // Component Removed
     // ***********************************
@@ -421,5 +442,11 @@ namespace Voxen
     void Scene::OnComponentRemoved<VoxelRendererComponent>(Entity entity, VoxelRendererComponent& component)
     {
         VoxMemoryAllocator::Deallocate(entity);
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<PointLightComponent>(Entity entity, PointLightComponent& component)
+    {
+        VoxRenderer::RemovePointLight(entity);
     }
 }

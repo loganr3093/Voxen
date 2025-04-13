@@ -35,15 +35,39 @@ layout(binding = 2) uniform sampler2D u_NormalTexture;
 layout(binding = 3) uniform sampler2D u_DepthTexture;
 layout(binding = 4) uniform sampler2D u_AOTexture;
 
+struct PointLight
+{
+    vec3 position;
+    float intensity;
+    vec3 color;
+    float radius;
+};
+layout(std430, binding = 4) buffer LightBuffer
+{
+    PointLight u_PointLights[];
+};
+uniform int u_NumPointLights;
+
 uniform int u_AOEnabled;
 uniform int u_LightingEnabled;
 uniform int u_ShowNormalsEnabled;
 
-uniform vec3 u_LightDirection = vec3(0.2, 0.65, 0.4);
+uniform vec3 u_SunLightDirection = vec3(0.2, 0.65, 0.4);
 uniform mat4 u_InverseViewProjectionMatrix;
 uniform float u_AmbientStrength = 0.2;
 uniform float u_DiffuseStrength = 0.8;
-uniform vec3 u_LightColor = vec3(1.0);
+uniform vec3 u_SunLightColor = vec3(1.0);
+
+float CalculateAttenuation(float distance, float radius)
+{
+    float d = clamp(distance / radius, 0.0, 1.0);
+    float attenuation = 1.0 - d * d;  // Quadratic falloff
+    attenuation *= attenuation;
+
+    // Add inverse square falloff
+    float invsq = 1.0 / (1.0 + 15.0 * distance * distance);
+    return (attenuation * invsq) * 4.0;
+}
 
 void main()
 {
@@ -54,7 +78,6 @@ void main()
     float depth = texture(u_DepthTexture, v_TexCoords).r;
     float ao = u_AOEnabled != 0 ? texture(u_AOTexture, v_TexCoords).r : 1.0;
 
-	// Don't light the skybox
     if (entityID != -1 && u_LightingEnabled != 0)
     {
         // World position from depth
@@ -62,21 +85,37 @@ void main()
         vec4 worldPos = u_InverseViewProjectionMatrix * clipPos;
         worldPos /= worldPos.w;
 
-        // Lighting stuff
-        vec3 lightDir = normalize(u_LightDirection);
         vec3 normalizedNormal = normalize(normal);
 
-        // Diffuse lighting
-        float diffuseFactor = max(dot(normalizedNormal, lightDir), 0.0);
-        vec3 diffuse = color.rgb * u_DiffuseStrength * diffuseFactor * u_LightColor;
+        // Sun lighting
+        vec3 lightDir = normalize(u_SunLightDirection);
+        float sunDiffuseFactor = max(dot(normalizedNormal, lightDir), 0.0);
+        vec3 sunDiffuse = color.rgb * u_DiffuseStrength * sunDiffuseFactor * u_SunLightColor;
+        vec3 ambient = color.rgb * u_AmbientStrength * u_SunLightColor;
 
-        // Ambient lighting
-        vec3 ambient = color.rgb * u_AmbientStrength * u_LightColor;
+        // Point lights
+        vec3 pointDiffuse = vec3(0.0);
+        for (int i = 0; i < u_NumPointLights; ++i)
+        {
+            PointLight light = u_PointLights[i];
+            vec3 toLight = light.position - worldPos.xyz;
+            float distance = length(toLight);
 
-        // Combine with AO
-        vec3 litColor = (ambient + diffuse) * ao;
+            // Calculate attenuation based on modified function
+            float attenuation = CalculateAttenuation(distance, light.radius);
+            attenuation *= light.intensity;
+
+            vec3 lightDir = normalize(toLight);
+            float diffuseFactor = max(dot(normalizedNormal, lightDir), 0.0);
+            pointDiffuse += color.rgb * diffuseFactor * light.color * attenuation;
+        }
+
+        // Combine all lighting and apply AO
+        vec3 totalDiffuse = sunDiffuse + pointDiffuse;
+        vec3 litColor = (ambient + totalDiffuse) * ao;
         color.rgb = litColor;
     }
+
 
     // Outputs
     o_Color = u_ShowNormalsEnabled == 1 ? vec4(normal, 1.0) : color;

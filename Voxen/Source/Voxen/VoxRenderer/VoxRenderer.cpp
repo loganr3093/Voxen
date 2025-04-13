@@ -19,6 +19,18 @@
 
 namespace Voxen
 {
+	struct GPUPointLight
+	{
+		glm::vec3 Position;
+		float Intensity;
+		glm::vec3 Color;
+		float Radius;
+	};
+    struct PointLight
+    {
+		GPUPointLight Light;
+        UUID EntityID;
+    };
     struct VoxRendererData
     {
         // Fullscreen quad setup
@@ -43,6 +55,7 @@ namespace Voxen
         Ref<ShaderStorageBuffer> NodeBuffer;
         Ref<ShaderStorageBuffer> LeafBuffer;
         Ref<ShaderStorageBuffer> PaletteBuffer;
+        Ref<ShaderStorageBuffer> LightBuffer;
 
         bool AOEnabled;
 		bool AOBlurEnabled;
@@ -55,6 +68,8 @@ namespace Voxen
         Vector3 LightColor;
 
 		bool ShowNormalsEnabled;
+
+        std::vector<PointLight> PointLights;
 
         VoxRenderer::Statistics Stats;
     };
@@ -103,6 +118,8 @@ namespace Voxen
         s_Data.NodeBuffer = ShaderStorageBuffer::Create(nodeData.data(), nodeData.size() * sizeof(GPUSparseVoxelTreeNode));
         s_Data.LeafBuffer = ShaderStorageBuffer::Create(leafData.data(), leafData.size() * sizeof(uint32));
         s_Data.PaletteBuffer = ShaderStorageBuffer::Create(paletteData.data(), paletteData.size() * sizeof(Vector4));
+
+        s_Data.LightBuffer = ShaderStorageBuffer::Create(s_Data.PointLights.data(), s_Data.PointLights.size() * sizeof(PointLight));
 
         s_Data.AOEnabled = true;
         s_Data.AOBlurEnabled = true;
@@ -332,10 +349,19 @@ namespace Voxen
         s_Data.QuadShader->SetInt("u_LightingEnabled", s_Data.LightingEnabled ? 1 : 0);
 		s_Data.QuadShader->SetInt("u_ShowNormalsEnabled", s_Data.ShowNormalsEnabled ? 1 : 0);
 
-        s_Data.QuadShader->SetVector3("u_LightDirection", s_Data.LightDirection);
+        s_Data.QuadShader->SetVector3("u_SunLightDirection", s_Data.LightDirection);
+        s_Data.QuadShader->SetVector3("u_SunLightColor", s_Data.LightColor);
         s_Data.QuadShader->SetFloat("u_AmbientStrength", s_Data.AmbientStrength);
         s_Data.QuadShader->SetFloat("u_DiffuseStrength", s_Data.DiffuseStrength);
-        s_Data.QuadShader->SetVector3("u_LightColor", s_Data.LightColor);
+
+        s_Data.LightBuffer->Bind(4); // Use binding point 4
+		std::vector<GPUPointLight> pointLights(s_Data.PointLights.size());
+        for (PointLight var : s_Data.PointLights)
+        {
+			pointLights.push_back(var.Light);
+        }
+        s_Data.LightBuffer->UpdateData(pointLights.data(), pointLights.size() * sizeof(GPUPointLight));
+		s_Data.QuadShader->SetInt("u_NumPointLights", pointLights.size());
 
         // Bind the read-write texture as the screen texture
         s_Data.ColorRWTexture->Bind(0);
@@ -445,4 +471,53 @@ namespace Voxen
 	{
 		return s_Data.LightColor;
 	}
+
+    void VoxRenderer::AddPointLight(Entity entity, const PointLightComponent& component)
+    {
+        auto uuid = entity.GetUUID();
+        // Check if the light already exists
+        auto it = std::find_if(s_Data.PointLights.begin(), s_Data.PointLights.end(), [&](const PointLight& light)
+        {
+            return light.EntityID == uuid;
+        });
+        if (it != s_Data.PointLights.end())
+        {
+            return;
+        }
+
+        PointLight pointLight;
+        pointLight.EntityID = uuid;
+        pointLight.Light.Position = entity.GetComponent<TransformComponent>().Translation;
+        pointLight.Light.Color = component.Color;
+        pointLight.Light.Intensity = component.Intensity;
+        pointLight.Light.Radius = component.Radius;
+
+        s_Data.PointLights.push_back(pointLight);
+    }
+
+    void VoxRenderer::RemovePointLight(Entity entity)
+    {
+        auto uuid = entity.GetUUID();
+        auto& lights = s_Data.PointLights;
+        lights.erase(std::remove_if(lights.begin(), lights.end(), [&](const PointLight& light)
+        {
+        return light.EntityID == uuid;
+        }), lights.end());
+    }
+
+    void VoxRenderer::UpdatePointLight(Entity entity, const glm::vec3& position, const glm::vec3& color, float intensity, float radius)
+    {
+        auto uuid = entity.GetUUID();
+        auto it = std::find_if(s_Data.PointLights.begin(), s_Data.PointLights.end(), [&](const PointLight& light)
+        {
+            return light.EntityID == uuid;
+        });
+        if (it != s_Data.PointLights.end())
+        {
+            it->Light.Position = position;
+            it->Light.Color = color;
+            it->Light.Intensity = intensity;
+            it->Light.Radius = radius;
+        }
+    }
 }

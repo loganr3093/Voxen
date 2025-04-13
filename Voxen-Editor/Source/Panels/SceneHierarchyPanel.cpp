@@ -284,6 +284,7 @@ namespace Voxen
 			DisplayAddComponentEntry<ScriptComponent>("Script");
 			DisplayAddComponentEntry<SpriteRendererComponent>("Sprite Renderer");
 			DisplayAddComponentEntry<CameraComponent>("Camera");
+			DisplayAddComponentEntry<PointLightComponent>("Point Light");
 
 			ImGui::EndPopup();
 		}
@@ -444,6 +445,13 @@ namespace Voxen
 					}
 				}
 			}
+		});
+
+		DrawComponent<PointLightComponent>("Point Light", entity, [](auto& component)
+		{
+			ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
+			ImGui::DragFloat("Intensity", &component.Intensity, 1.0f, 0.0f, 100000.0f);
+			ImGui::DragFloat("Radius", &component.Radius, 0.1f, 0.1f, 1000.0f);
 		});
 	}
 

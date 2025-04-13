@@ -32,7 +32,7 @@ void main()
     vec2 texCoord = vec2(coord) / u_ScreenSize;
 
     // Reconstruct world position
-    float depth = texture(u_DepthTexture, texCoord).r;
+    float depth = texture(u_DepthTexture, texCoord).r * 2.0;
     vec4 clipPos = vec4(texCoord * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
     vec4 worldPos = u_InverseViewProjectionMatrix * clipPos;
     worldPos /= worldPos.w;

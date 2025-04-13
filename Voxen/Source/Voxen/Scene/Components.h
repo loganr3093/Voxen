@@ -137,6 +137,16 @@ namespace Voxen
         }
     };
 
+    struct PointLightComponent
+    {
+		Vector3 Color = { 1.0f, 1.0f, 1.0f };
+		float Intensity = 100.0f;
+		float Radius = 10.0f;
+
+        PointLightComponent() = default;
+        PointLightComponent(const PointLightComponent&) = default;
+    };
+
     template<typename... Component>
     struct ComponentGroup
     {
@@ -144,5 +154,5 @@ namespace Voxen
 
     using AllComponents =
         ComponentGroup<TransformComponent, SpriteRendererComponent,
-        CameraComponent, ScriptComponent, NativeScriptComponent, VoxelRendererComponent>;
+        CameraComponent, ScriptComponent, NativeScriptComponent, VoxelRendererComponent, VoxelRendererComponent>;
 }
