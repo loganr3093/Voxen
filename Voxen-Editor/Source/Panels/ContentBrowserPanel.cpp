@@ -104,6 +104,10 @@ namespace Voxen
 				{
 					icon = EditorResources::BatFileIcon;
 				}
+				else if (fileExtension == ".vox")
+				{
+					icon = EditorResources::VoxFileIcon;
+				}
 			}
 
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));

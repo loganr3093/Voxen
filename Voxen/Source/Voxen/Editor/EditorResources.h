@@ -27,6 +27,7 @@ namespace Voxen
 		inline static Ref<Texture2D> VSCFileIcon = nullptr;
 		inline static Ref<Texture2D> LuaFileIcon = nullptr;
 		inline static Ref<Texture2D> BatFileIcon = nullptr;
+		inline static Ref<Texture2D> VoxFileIcon = nullptr;
 
 		static void Init()
 		{
@@ -40,6 +41,7 @@ namespace Voxen
 			VSCFileIcon		= Texture2D::Create("Resources/Icons/ContentBrowser/VSCFileIcon.png");
 			LuaFileIcon		= Texture2D::Create("Resources/Icons/ContentBrowser/LuaFileIcon.png");
 			BatFileIcon		= Texture2D::Create("Resources/Icons/ContentBrowser/BatFileIcon.png");
+			VoxFileIcon		= Texture2D::Create("Resources/Icons/ContentBrowser/VoxFileIcon.png");
 		}
 
 		static void Shutdown()
@@ -56,6 +58,7 @@ namespace Voxen
 			VSCFileIcon.reset();
 			LuaFileIcon.reset();
 			BatFileIcon.reset();
+			VoxFileIcon.reset();
 		}
 	};
 }
