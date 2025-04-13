@@ -154,6 +154,19 @@ namespace Voxen
 			out << YAML::EndMap; // VoxelRendererComponent
 		}
 
+		if (entity.HasComponent<PointLightComponent>())
+		{
+			out << YAML::Key << "PointLightComponent";
+			out << YAML::BeginMap; // PointLightComponent
+
+			auto& plComponent = entity.GetComponent<PointLightComponent>();
+			out << YAML::Key << "Color" << YAML::Value << plComponent.Color;
+			out << YAML::Key << "Intensity" << YAML::Value << plComponent.Intensity;
+			out << YAML::Key << "Radius" << YAML::Value << plComponent.Radius;
+
+			out << YAML::EndMap; // PointLightComponent
+		}
+
 		out << YAML::EndMap; // Entity
 	}
 
@@ -326,6 +339,15 @@ namespace Voxen
 
 				Matrix4 transform = transformComponent.GetTransform();
 				transformComponent.SetTransform(glm::rotate(transform, glm::radians(-270.0f), Vector3(1, 0, 0)));
+			}
+
+			auto pointLightComponent = entity["PointLightComponent"];
+			if (pointLightComponent)
+			{
+				auto& plc = deserializedEntity.AddComponent<PointLightComponent>();
+				plc.Color = pointLightComponent["Color"].as<Vector3>();
+				plc.Intensity = pointLightComponent["Intensity"].as<float>();
+				plc.Radius = pointLightComponent["Radius"].as<float>();
 			}
 		}
 

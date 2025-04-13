@@ -60,6 +60,11 @@ namespace Voxen
 					auto& cc = camera.AddComponent<CameraComponent>();
 					cc.Primary = primaryExists ? false : true;
 				}
+				if (ImGui::MenuItem("Create Point Light"))
+				{
+					Entity camera = m_Context->CreateEntity("Point Light");
+					auto& plc = camera.AddComponent<PointLightComponent>();
+				}
 
 				ImGui::EndPopup();
 			}
