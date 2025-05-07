@@ -1,38 +1,18 @@
 Scene: Presentation
 Entities:
-  - Entity: 13842260246308600153
+  - Entity: 1231734530841194392
     TagComponent:
-      Tag: dragon
+      Tag: CameraTarget
     TransformComponent:
-      Translation: [-76.1120148, -49.6146431, -276.149567]
-      Rotation: [-1.57079816, -0.777867198, 7.52993913e-07]
-      Scale: [0.99999994, 0.999999821, 0.999999285]
-    VoxelRendererComponent:
-      ModelPath: C:\Users\logan\OneDrive\Desktop\Voxen\Voxen-Editor\DemoProject\Assets\Models\dragon.vox
-  - Entity: 11771562084540994885
-    TagComponent:
-      Tag: horse
-    TransformComponent:
-      Translation: [-19.3097248, -21.9524918, -66.0064392]
-      Rotation: [1.57079899, 0.48755908, 3.14158964]
-      Scale: [1.00001562, 0.999999762, 1.00002158]
-    VoxelRendererComponent:
-      ModelPath: C:\Users\logan\OneDrive\Desktop\Voxen\Voxen-Editor\DemoProject\Assets\Models\horse.vox
-  - Entity: 12605444745813126299
-    TagComponent:
-      Tag: Deer
-    TransformComponent:
-      Translation: [20.6523571, -24.0192451, -60.8269958]
-      Rotation: [-1.57079601, 0.522682011, 2.75156538e-07]
-      Scale: [1, 1.00001073, 1.00001013]
+      Translation: [30.048111, -12.3167305, -71.602684]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
     ScriptComponent:
       ClassName: Demo.Player
       ScriptFields:
         - Name: speed
           Type: Float
           Data: 10
-    VoxelRendererComponent:
-      ModelPath: C:\Users\logan\OneDrive\Desktop\Voxen\Voxen-Editor\DemoProject\Assets\Models\deer.vox
   - Entity: 11916724004798140190
     TagComponent:
       Tag: Camera
@@ -57,16 +37,36 @@ Entities:
         - Name: speed
           Type: Float
           Data: 8
-  - Entity: 1231734530841194392
+  - Entity: 12605444745813126299
     TagComponent:
-      Tag: CameraTarget
+      Tag: Deer
     TransformComponent:
-      Translation: [30.048111, -12.3167305, -71.602684]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Translation: [20.6523571, -24.0192451, -60.8269958]
+      Rotation: [-1.57079601, 0.522682011, 2.40761977e-07]
+      Scale: [1, 1.00001073, 1.00001013]
     ScriptComponent:
       ClassName: Demo.Player
       ScriptFields:
         - Name: speed
           Type: Float
           Data: 10
+    VoxelRendererComponent:
+      ModelPath: Models\deer.vox
+  - Entity: 11771562084540994885
+    TagComponent:
+      Tag: horse
+    TransformComponent:
+      Translation: [-19.3097248, -21.9524918, -66.0064392]
+      Rotation: [1.57079899, 0.48755908, 3.14158964]
+      Scale: [1.00001562, 0.999999762, 1.0000217]
+    VoxelRendererComponent:
+      ModelPath: Models\horse.vox
+  - Entity: 13842260246308600153
+    TagComponent:
+      Tag: dragon
+    TransformComponent:
+      Translation: [-76.1120148, -49.6146431, -276.149567]
+      Rotation: [-1.57079792, -0.777867198, 6.27494899e-07]
+      Scale: [0.999999881, 0.999999523, 0.999999046]
+    VoxelRendererComponent:
+      ModelPath: Models\dragon.vox

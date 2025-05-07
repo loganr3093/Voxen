@@ -5,6 +5,7 @@
 
 #include "Voxen/Scene/Entity.h"
 #include "Voxen/Scene/Components.h"
+#include "Voxen/Project/Project.h"
 
 #include "Voxen/Scripting/ScriptEngine.h"
 
@@ -148,8 +149,10 @@ namespace Voxen
 			out << YAML::Key << "VoxelRendererComponent";
 			out << YAML::BeginMap; // VoxelRendererComponent
 
-			auto& voxelRendererComponent = entity.GetComponent<VoxelRendererComponent>();
-			out << YAML::Key << "ModelPath" << YAML::Value << voxelRendererComponent.ModelPath.string();
+			auto& vrc = entity.GetComponent<VoxelRendererComponent>();
+			std::filesystem::path assetDir = Project::GetAssetDirectory();
+			std::filesystem::path relPath = std::filesystem::relative(vrc.ModelPath, assetDir);
+			out << YAML::Key << "ModelPath" << YAML::Value << relPath.string();
 
 			out << YAML::EndMap; // VoxelRendererComponent
 		}
@@ -333,10 +336,14 @@ namespace Voxen
 			auto voxelRendererComponent = entity["VoxelRendererComponent"];
 			if (voxelRendererComponent)
 			{
-				auto& vrc = deserializedEntity.AddComponent<VoxelRendererComponent>(voxelRendererComponent["ModelPath"].as<std::string>());
+				std::string relPathStr = voxelRendererComponent["ModelPath"].as<std::string>();
+				std::filesystem::path relPath(relPathStr);
+
+				std::filesystem::path fullPath = Project::GetAssetFileSystemPath(relPath);
+
+				auto& vrc = deserializedEntity.AddComponent<VoxelRendererComponent>(fullPath.string());
 
 				auto& transformComponent = deserializedEntity.GetComponent<TransformComponent>();
-
 				Matrix4 transform = transformComponent.GetTransform();
 				transformComponent.SetTransform(glm::rotate(transform, glm::radians(-270.0f), Vector3(1, 0, 0)));
 			}
