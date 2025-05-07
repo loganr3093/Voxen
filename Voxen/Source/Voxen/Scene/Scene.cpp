@@ -220,7 +220,31 @@ namespace Voxen
             });
         }
 
-        // Render 2D
+        auto voxelView = m_Registry.view<TransformComponent, VoxelRendererComponent>();
+        for (auto entityID : voxelView)
+        {
+            Entity entity = { entityID, this };
+            auto& transform = entity.GetComponent<TransformComponent>();
+
+            // Check if transform changed
+            const glm::mat4 currentTransform = transform.GetTransform();
+            if (VoxMemoryAllocator::HasTransformChanged(entity, currentTransform))
+            {
+                VoxMemoryAllocator::MarkDirty(entity);
+            }
+        }
+
+        // Update Point Lights
+        auto lightView = m_Registry.view<TransformComponent, PointLightComponent>();
+        for (auto entityID : lightView)
+        {
+            Entity entity = { entityID, this };
+            auto& transform = entity.GetComponent<TransformComponent>();
+            auto& light = entity.GetComponent<PointLightComponent>();
+            VoxRenderer::UpdatePointLight(entity, transform.Translation, light.Color, light.Intensity, light.Radius);
+        }
+
+        // Renderer
         Camera* mainCamera = nullptr;
         Matrix4 cameraTransform;
         {
@@ -228,7 +252,6 @@ namespace Voxen
             for (auto entity : view)
             {
                 auto [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
-
                 if (camera.Primary)
                 {
                     mainCamera = &camera.Camera;

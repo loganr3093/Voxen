@@ -151,6 +151,21 @@ namespace Voxen
 
     void VoxRenderer::BeginScene(const Camera& camera, const Matrix4& cameraTransform)
     {
+        VOX_PROFILE_FUNCTION();
+
+        s_Data.VoxelShader->Bind();
+        Matrix4 viewMatrix = glm::inverse(cameraTransform);
+        Matrix4 viewProj = camera.GetProjection() * viewMatrix;
+        s_Data.VoxelShader->SetMat4("u_ViewProjectionMatrix", viewProj);
+        s_Data.VoxelShader->SetVector3("u_CameraPosition", glm::vec3(cameraTransform[3]));
+
+        s_Data.SSAOShader->Bind();
+        s_Data.SSAOShader->SetMat4("u_ViewProjectionMatrix", viewProj);
+        s_Data.SSAOShader->SetMat4("u_InverseViewProjectionMatrix", glm::inverse(viewProj));
+
+        s_Data.QuadShader->Bind();
+        s_Data.QuadShader->SetMat4("u_InverseViewProjectionMatrix", glm::inverse(viewProj));
+        s_Data.QuadShader->SetVector3("u_CameraPosition", glm::vec3(cameraTransform[3]));
     }
 
     void VoxRenderer::BeginEditorScene(const EditorCamera& camera)

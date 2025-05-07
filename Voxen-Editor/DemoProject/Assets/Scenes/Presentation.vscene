@@ -5,8 +5,8 @@ Entities:
       Tag: dragon
     TransformComponent:
       Translation: [-76.1120148, -49.6146431, -276.149567]
-      Rotation: [-1.57079864, -0.777867198, 7.11160965e-07]
-      Scale: [1, 1.00000012, 0.999999464]
+      Rotation: [-1.57079816, -0.777867198, 7.52993913e-07]
+      Scale: [0.99999994, 0.999999821, 0.999999285]
     VoxelRendererComponent:
       ModelPath: C:\Users\logan\OneDrive\Desktop\Voxen\Voxen-Editor\DemoProject\Assets\Models\dragon.vox
   - Entity: 11771562084540994885
@@ -14,16 +14,59 @@ Entities:
       Tag: horse
     TransformComponent:
       Translation: [-19.3097248, -21.9524918, -66.0064392]
-      Rotation: [1.57079899, 0.48755911, 3.14158964]
-      Scale: [1.00001562, 0.999999762, 1.00002134]
+      Rotation: [1.57079899, 0.48755908, 3.14158964]
+      Scale: [1.00001562, 0.999999762, 1.00002158]
     VoxelRendererComponent:
       ModelPath: C:\Users\logan\OneDrive\Desktop\Voxen\Voxen-Editor\DemoProject\Assets\Models\horse.vox
   - Entity: 12605444745813126299
     TagComponent:
-      Tag: deer
+      Tag: Deer
     TransformComponent:
       Translation: [20.6523571, -24.0192451, -60.8269958]
-      Rotation: [-1.57079589, 0.522682011, 3.43945658e-07]
-      Scale: [1, 1.00001061, 1.00001001]
+      Rotation: [-1.57079601, 0.522682011, 2.75156538e-07]
+      Scale: [1, 1.00001073, 1.00001013]
+    ScriptComponent:
+      ClassName: Demo.Player
+      ScriptFields:
+        - Name: speed
+          Type: Float
+          Data: 10
     VoxelRendererComponent:
       ModelPath: C:\Users\logan\OneDrive\Desktop\Voxen\Voxen-Editor\DemoProject\Assets\Models\deer.vox
+  - Entity: 11916724004798140190
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 0.785398185
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
+      Primary: true
+      FixedAspectRatio: false
+    ScriptComponent:
+      ClassName: Demo.Camera
+      ScriptFields:
+        - Name: speed
+          Type: Float
+          Data: 8
+  - Entity: 1231734530841194392
+    TagComponent:
+      Tag: CameraTarget
+    TransformComponent:
+      Translation: [30.048111, -12.3167305, -71.602684]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      ClassName: Demo.Player
+      ScriptFields:
+        - Name: speed
+          Type: Float
+          Data: 10

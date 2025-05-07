@@ -20,7 +20,7 @@ namespace Demo
 
         void OnCreate()
         {
-            target = FindEntityByName("Player");
+            target = FindEntityByName("CameraTarget");
         }
 
         void OnUpdate(float ts)

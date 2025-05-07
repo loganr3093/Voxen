@@ -586,18 +586,18 @@ namespace Voxen
 
 		switch (m_SceneState)
 		{
-		case SceneState::Edit:
-		{
-			m_EditorCamera.OnUpdate(ts);
+			case SceneState::Edit:
+			{
+				m_EditorCamera.OnUpdate(ts);
 
-			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
-			break;
-		}
-		case SceneState::Play:
-		{
-			m_ActiveScene->OnUpdateRuntime(ts);
-			break;
-		}
+				m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+				break;
+			}
+			case SceneState::Play:
+			{
+				m_ActiveScene->OnUpdateRuntime(ts);
+				break;
+			}
 		}
 
 		auto [mx, my] = ImGui::GetMousePos();
