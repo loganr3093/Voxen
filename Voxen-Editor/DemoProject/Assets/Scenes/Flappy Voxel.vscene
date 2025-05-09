@@ -1,0 +1,47 @@
+Scene: Flappy Voxel
+Entities:
+  - Entity: 17924168864502787281
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [0, 0, 150]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 1.57079637
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
+      Primary: true
+      FixedAspectRatio: false
+  - Entity: 13431338089334659578
+    TagComponent:
+      Tag: bird
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [-1.57079637, 0, 0]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      ClassName: Demo.Bird
+      ScriptFields:
+        - Name: gravity
+          Type: Float
+          Data: -50
+        - Name: jumpForce
+          Type: Float
+          Data: 50
+        - Name: maxRotation
+          Type: Float
+          Data: 45
+        - Name: minRotation
+          Type: Float
+          Data: -75
+        - Name: rotationSpeed
+          Type: Float
+          Data: 10
+    VoxelRendererComponent:
+      ModelPath: Models\bird.vox

@@ -613,6 +613,19 @@ namespace Voxen
 			int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
 			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.get());
 			// VOX_CORE_TRACE("Hovered Entity ID: {0}", pixelData);
+
+			if (pixelData >= 0)
+			{
+				auto candidate = Entity((entt::entity)pixelData, m_ActiveScene.get());
+				if (candidate)
+					m_HoveredEntity = candidate;
+				else
+					m_HoveredEntity = {};
+			}
+			else
+			{
+				m_HoveredEntity = {};
+			}
 		}
 
 		m_Framebuffer->Unbind();

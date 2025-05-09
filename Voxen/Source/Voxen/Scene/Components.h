@@ -154,5 +154,5 @@ namespace Voxen
 
     using AllComponents =
         ComponentGroup<TransformComponent, SpriteRendererComponent,
-        CameraComponent, ScriptComponent, NativeScriptComponent, VoxelRendererComponent, VoxelRendererComponent>;
+        CameraComponent, ScriptComponent, NativeScriptComponent, VoxelRendererComponent, TagComponent, PointLightComponent>;
 }
