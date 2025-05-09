@@ -1,81 +1,124 @@
-# Voxen Game Engine
+# Voxen Engine
 
-Voxen is a cutting-edge game engine designed for flexibility and performance. While fully supported on Windows, Voxen can also run on most other platforms, making it a versatile choice for game developers.
+**Voxen** is a performant, voxel-based game engine with fast ray tracing and scene management. Voxen features an integrated editor, C# scripting, and a custom voxel-based rendering pipeline. Voxen was inspired by [The Hazel Engine](https://hazelengine.com) and [Unity](https://unity.com).
+
+---
 
 ## Features
 
-- **Modular Architecture**: Customize and extend the engine with ease.
-- **Cross-Platform Support**: Runs on various platforms with full support for Windows.
-- **Advanced Rendering**: Utilizes modern rendering techniques for high-quality graphics.
-- **Scene Management**: Efficiently manage game objects and properties.
-- **Integrated Editor**: User-friendly interface for creating and managing assets and scenes.
+### Voxels
+
+* **Sparse Voxel Tree (SVT)**: Voxen uses sparse voxel 64-trees as its internal data structure for voxel data, with an architecture based on this article [A guide to fast voxel ray tracing using sparse 64-trees](https://dubiousconst282.github.io/2024/10/03/voxel-ray-tracing/).
+* **Memory Allocators**: The VoxMemoryAllocator manages all the SVTs in a scene, and prepares the buffers for their data.
+* **Vox File Parsing**: Voxen currently only accepts models of the `.vox` file type from [MagicaVoxel](https://ephtracy.github.io).
+
+### Rendering & Lighting
+
+* **VoxRenderer**: Renderer that handles data transfer to and from the GPU.
+* **Compute Shader Ray Tracing**: Uses an [OpenGL 4.6](https://www.khronos.org/opengl/) compute shader for ray tracing that traverses the SVT structures.
+* **Deferred Lighting**: Uses a G-Buffer with multiple render targets for defferred lighting and post-processing.
+* **Global Illumination**: Full‑scene indirect lighting.
+* **Screen‑Space Ambient Occlusion**: SSAO with adjustable blur and strength.
+* **Profiling Tools**: VOX_PROFILER profiles all of the functions ran during Voxen's lifetime. The editor also has statistics for the current scene and shaders.
+
+### Editor
+
+* **Content Browser**: Drag‑and‑drop asset management with file icons.
+* **Viewport**: Mouse picking, transform handles, and an editor camera with Maya based controls.
+* **Properties Panel**: Inspect and edit components.
+* **ImGui Docking & Gizmos**: Dockable windows using ImGui.
+
+### Entity Component System & Scripting
+
+* **Entity Component System (ECS)**: ECS with useful prebuilt components such as Camera, PointLight, VoxRenderer, etc.
+* **C# Scripting**: Native/C# interop, hot‑reload on build, and field serialization.
+
+---
 
 ## Getting Started
 
-Follow these instructions to get a copy of Voxen up and running on your local machine.
-
 ### Prerequisites
 
-- Visual Studio 2022 or similar [*Untested on earlier versions of Visual studio*]
-- Git
+* **Windows** (officially supported)
+* **Visual Studio 2022** (C++ IDE)
+* **Git**
+* **Premake5** (included in `Scripts/`)
 
-### Installation
+> *Note: Linux and macOS support are in development.*
 
-1. **Clone the Repository**
+### Clone & Initialize
 
-   Open a terminal and run the following command to clone the Voxen repository:
+```bash
+# Standard clone and submodule init
+git clone https://github.com/loganr3093/Voxen.git
+cd Voxen
+git submodule update --init --recursive
 
-   ```sh
-   git clone https://github.com/loganr3093/Voxen
+# OR clone with submodules:
+git clone --recurse-submodules https://github.com/loganr3093/Voxen.git
+cd Voxen
+```
+
+### Generate Project Files
+
+1. Open a Command Prompt.
+2. Navigate to the `Scripts/` folder:
+
+   ```bash
+   cd Scripts
    ```
-2. **Initialize and Update Submodules**
+3. Run the setup script:
 
-   Navigate into the cloned directory and initialize the submodules:
-
-   ```sh
-   cd Voxen
-   ```
-   ```sh
-   git submodule update --init
+   ```powershell
+   ./Setup-Windows.bat
    ```
 
-   Or, for an all in one command:
-   ```sh
-   git clone --recurse-submodules -b VoxRenderer https://github.com/loganr3093/Voxen.git
+   This generates `Voxen.sln` and project files.
+
+### Build & Run
+
+1. Open `Voxen.sln` in Visual Studio.
+2. Select **Voxen-Editor** as the startup project.
+3. Build (Ctrl+Shift+B) and run (F5).
+
+### Opening the Demo Project
+
+1. Upon running Voxen, you will be asked to open a .vproj file, a Demo can be found under `Voxen/Voxen-Editor/DemoProject`. Select the `Demo.vproj` to open the default scene for the demo project.
+2. From here, you can explore the Voxen Editor, and play with the project's scripts.
+3. If you get warnings or errors about the scripting engine, you may need to separately build the `Voxen-ScriptCore` project.
+
+---
+
+## Contribution Guidelines
+
+We welcome community contributions! If you want to be involved, please follow these steps:
+
+1. **Fork** the repository and create your feature branch:
+
+   ```bash
+   git checkout -b feature/YourFeatureName
    ```
-3. **Run Premake5**
+2. **Implement** your changes.
+3. **Add** your documentation.
+4. **Push** to your fork:
 
-   Navigate Voxen/Scripts and run Setup-Windows.bat, this will generate Voxen.sln
-5. **Open in Visual Studio**
+   ```bash
+   git push origin feature/YourFeatureName
+   ```
+5. **Open** a Pull Request with `main`.
 
-   Open the **Voxen** directory in Visual Studio. Ensure that you have all necessary components installed for C++ development.
-6. **Build and Run**
+Please follow the existing coding style.
 
-   In Visual Studio, run the Voxen-Editor project.
+---
 
-### Contributing
-We welcome contributions from the community! Please fork the repository and create a pull request for any enhancements, bug fixes, or new features.
-1. **Fork the Repository**
-2. **Create a Feature Branch**
-     ```sh
-     git checkout -b feature/your-feature-name
-     ```
-3. **Commit Your Changes**
-     ```sh
-     git add "path/to/new-files
-     ```
-     ```sh
-     git commit -m 'Add some feature'
-     ```
-4. **Create a Feature Branch**
-     ```sh
-     git push origin feature/your-feature-name
-     ```
-5. **Open a Pull Request**
+## License
 
-### License
-**Voxen** is released under the **Apache-2.0 License**. See **LICENSE** for more information.
+Voxen is released under the **Apache License 2.0**. See [LICENSE](LICENSE) for details.
 
-### Contributors
-- **Logan Rivera**: Project Lead
-- Your name could go here!
+---
+
+# Contributors
+
+* **Logan Rivera** – Project Lead
+
+---
