@@ -284,7 +284,7 @@ namespace Voxen
 		ImGui::Indent();
 
 		// TODO: Add Renderer::GetStats
-		auto stats = VoxRenderer::GetStats();
+		auto stats = VoxRenderer::GetStats(m_EditorScene);
 
 		ImGui::Columns(2, "##count_stats", false);
 		ImGui::SetColumnWidth(0, 150.0f);
@@ -612,6 +612,7 @@ namespace Voxen
 		{
 			int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
 			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.get());
+			// VOX_CORE_TRACE("Hovered Entity ID: {0}", pixelData);
 		}
 
 		m_Framebuffer->Unbind();

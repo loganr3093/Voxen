@@ -72,16 +72,19 @@ namespace Voxen
         std::vector<PointLight> PointLights;
 
         VoxRenderer::Statistics Stats;
+
+		Ref<Scene> CurrentScene;
     };
     static VoxRendererData s_Data;
 
-    VoxRenderer::Statistics VoxRenderer::GetStats()
+    VoxRenderer::Statistics VoxRenderer::GetStats(Ref<Scene> scene)
     {
         VOX_PROFILE_FUNCTION();
 
-        s_Data.Stats.treeCount = VoxMemoryAllocator::Count();
-        s_Data.Stats.nodeCount = VoxMemoryAllocator::GetNodeData().size();
-        s_Data.Stats.leafCount = VoxMemoryAllocator::GetLeafData().size();
+        auto alloc = scene->m_Allocator;
+        s_Data.Stats.treeCount = alloc->Count();
+        s_Data.Stats.nodeCount = static_cast<uint32_t>(alloc->GetNodeData().size());
+        s_Data.Stats.leafCount = static_cast<uint32_t>(alloc->GetLeafData().size());
 
         return s_Data.Stats;
     }
@@ -109,15 +112,10 @@ namespace Voxen
         s_Data.QuadShader = Shader::Create(EditorResources::FullScreenQuadShader);
 
         // Set up the buffers
-        std::vector<GPUSparseVoxelTree>		treeData = VoxMemoryAllocator::GetTreeData();
-        std::vector<GPUSparseVoxelTreeNode> nodeData = VoxMemoryAllocator::GetNodeData();
-        std::vector<uint32>					leafData = VoxMemoryAllocator::GetLeafData();
-        std::vector<Vector4>			    paletteData = VoxMemoryAllocator::GetPaletteData();
-
-        s_Data.TreeBuffer = ShaderStorageBuffer::Create(treeData.data(), treeData.size() * sizeof(GPUSparseVoxelTree));
-        s_Data.NodeBuffer = ShaderStorageBuffer::Create(nodeData.data(), nodeData.size() * sizeof(GPUSparseVoxelTreeNode));
-        s_Data.LeafBuffer = ShaderStorageBuffer::Create(leafData.data(), leafData.size() * sizeof(uint32));
-        s_Data.PaletteBuffer = ShaderStorageBuffer::Create(paletteData.data(), paletteData.size() * sizeof(Vector4));
+        s_Data.TreeBuffer = ShaderStorageBuffer::Create(nullptr, 0);
+        s_Data.NodeBuffer = ShaderStorageBuffer::Create(nullptr, 0);
+        s_Data.LeafBuffer = ShaderStorageBuffer::Create(nullptr, 0);
+        s_Data.PaletteBuffer = ShaderStorageBuffer::Create(nullptr, 0);
 
         s_Data.LightBuffer = ShaderStorageBuffer::Create(s_Data.PointLights.data(), s_Data.PointLights.size() * sizeof(PointLight));
 
@@ -195,10 +193,18 @@ namespace Voxen
     {
         VOX_PROFILE_FUNCTION();
 
+		if (s_Data.CurrentScene && s_Data.CurrentScene != scene)
+		{
+			s_Data.CurrentScene = scene;
+            s_Data.CurrentScene->m_Allocator->MarkStructureDirty();
+            s_Data.CurrentScene->m_Allocator->MarkDataDirty();
+		}
+        s_Data.CurrentScene = scene;
+
         // Run voxel shader for the first pass
 		Timer timer;
 		timer.Reset();
-        RunVoxelShader();
+        RunVoxelShader(scene);
 		s_Data.Stats.VoxelShaderTime = timer.Elapsed();
 
 		// Run Ambient Occlusion shader
@@ -256,32 +262,34 @@ namespace Voxen
         s_Data.QuadVertexArray->SetIndexBuffer(s_Data.QuadIndexBuffer);
     }
 
-    void VoxRenderer::RunVoxelShader()
+    void VoxRenderer::RunVoxelShader(Ref<Scene> scene)
     {
         VOX_PROFILE_FUNCTION();
 
         s_Data.VoxelShader->Bind();
 
-        if (VoxMemoryAllocator::IsStructureDirty())
+        auto alloc = scene->m_Allocator;
+
+        if (alloc->IsStructureDirty())
         {
-            auto treeData = VoxMemoryAllocator::GetTreeData();
-            auto nodeData = VoxMemoryAllocator::GetNodeData();
-            auto leafData = VoxMemoryAllocator::GetLeafData();
-            auto paletteData = VoxMemoryAllocator::GetPaletteData();
+            auto treeData = alloc->GetTreeData();
+            auto nodeData = alloc->GetNodeData();
+            auto leafData = alloc->GetLeafData();
+            auto paletteData = alloc->GetPaletteData();
 
             s_Data.TreeBuffer->UpdateData(treeData.data(), treeData.size() * sizeof(GPUSparseVoxelTree));
             s_Data.NodeBuffer->UpdateData(nodeData.data(), nodeData.size() * sizeof(GPUSparseVoxelTreeNode));
             s_Data.LeafBuffer->UpdateData(leafData.data(), leafData.size() * sizeof(uint32));
             s_Data.PaletteBuffer->UpdateData(paletteData.data(), paletteData.size() * sizeof(Vector4));
         }
-        else if (VoxMemoryAllocator::IsDataDirty())
+        else if (alloc->IsDataDirty())
         {
-            auto treeData = VoxMemoryAllocator::GetTreeData();
+            auto treeData = alloc->GetTreeData();
             s_Data.TreeBuffer->UpdateData(treeData.data(), treeData.size() * sizeof(GPUSparseVoxelTree));
         }
 
         s_Data.VoxelShader->SetVector2("u_ScreenSize", { s_Data.ColorRWTexture->GetWidth() , s_Data.ColorRWTexture->GetHeight() });
-        s_Data.VoxelShader->SetInt("u_NumShapes", VoxMemoryAllocator::Count());
+        s_Data.VoxelShader->SetInt("u_NumShapes", alloc->Count());
 
         s_Data.ColorRWTexture->BindImage(0);
         s_Data.EntityRWTexture->BindImage(1);

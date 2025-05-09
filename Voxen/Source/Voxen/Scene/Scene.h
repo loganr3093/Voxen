@@ -5,12 +5,15 @@
 
 #include "Voxen/Renderer/EditorCamera.h"
 
+#include "Voxen/VoxRenderer/VoxMemoryAllocator.h" 
+
 #include <entt.hpp>
 
 namespace Voxen
 {
 	class Entity;
 	class TransformComponent;
+	class VoxMemoryAllocator;
 
 	class Scene : public std::enable_shared_from_this<Scene>
 	{
@@ -52,6 +55,8 @@ namespace Voxen
 		{
 			return m_Registry.view<Components...>();
 		}
+
+		void InitAllocator();
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
@@ -68,6 +73,8 @@ namespace Voxen
 		bool m_IsRunning = false;
 
 		std::unordered_map<UUID, entt::entity> m_EntityMap;
+
+		Ref<VoxMemoryAllocator> m_Allocator;
 
 		friend class Entity;
 		friend class SceneSerializer;

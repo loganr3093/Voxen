@@ -91,12 +91,12 @@ namespace Voxen
 			}
         };
 
-        static Statistics GetStats();
+        static Statistics GetStats(Ref<Scene> scene);
 
     private:
         static void SetupQuad();
         static void RenderQuad();
-        static void RunVoxelShader();
+        static void RunVoxelShader(Ref<Scene> scene);
         static void RunAOShader();
 		static void RunBlurAOShader();
     };

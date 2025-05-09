@@ -7,6 +7,7 @@
 #include "Voxen/Scene/Entity.h"
 #include "Voxen/Scene/Components.h"
 #include <bitset>
+#include <algorithm>
 
 namespace Voxen
 {
@@ -83,327 +84,178 @@ namespace Voxen
 		}
 	}
 
-	VoxMemoryAllocator::MemoryAllocatorData VoxMemoryAllocator::s_Data;
-
 	void VoxMemoryAllocator::Allocate(Entity& entity)
 	{
-		s_Data.entities.push_back(entity);
-		s_Data.isStructureDirty = true;
-
-		// Store initial transform
-		const auto& transform = entity.GetComponent<TransformComponent>().GetTransform();
-		s_Data.lastTransforms[entity.GetUUID()] = transform;
+		m_entities.push_back(entity);
+		m_isStructureDirty = true;
+		m_lastTransforms[entity.GetUUID()] = entity.GetComponent<TransformComponent>().GetTransform();
 	}
 
 	void VoxMemoryAllocator::Deallocate(Entity& entity)
 	{
-		auto it = std::find(s_Data.entities.begin(), s_Data.entities.end(), entity);
-		if (it != s_Data.entities.end()) {
-			// Cleanup tracking data
-			const UUID uuid = entity.GetUUID();
-			s_Data.lastTransforms.erase(uuid);
-			s_Data.dirtyEntities.erase(uuid);
-
-			std::swap(*it, s_Data.entities.back());
-			s_Data.entities.pop_back();
-			s_Data.isStructureDirty = true;
-		}
+		auto it = std::find(m_entities.begin(), m_entities.end(), entity);
+		if (it == m_entities.end()) return;
+		UUID id = entity.GetUUID();
+		m_lastTransforms.erase(id);
+		m_dirtyEntities.erase(id);
+		std::swap(*it, m_entities.back());
+		m_entities.pop_back();
+		m_isStructureDirty = true;
 	}
 
-	bool VoxMemoryAllocator::HasTransformChanged(Entity& entity, const glm::mat4& currentTransform)
+	size_t VoxMemoryAllocator::Count() const
 	{
-		const UUID uuid = entity.GetUUID();
-		auto& transforms = s_Data.lastTransforms;
-
-		if (transforms.find(uuid) == transforms.end())
-			return false; // Should never happen for valid entities
-
-		return transforms[uuid] != currentTransform;
-	}
-
-	void VoxMemoryAllocator::MarkDirty(Entity& entity)
-	{
-		s_Data.dirtyEntities.insert(entity.GetUUID());
-		s_Data.isDataDirty = true;
-	}
-
-	void VoxMemoryAllocator::UpdateStoredTransform(Entity& entity, const glm::mat4& transform)
-	{
-		s_Data.lastTransforms[entity.GetUUID()] = transform;
-	}
-
-	// Dirty state management
-	bool VoxMemoryAllocator::IsStructureDirty() { return s_Data.isStructureDirty; }
-	bool VoxMemoryAllocator::IsDataDirty() { return s_Data.isDataDirty; }
-
-	size_t VoxMemoryAllocator::Count()
-	{
-		return s_Data.entities.size();
+		return m_entities.size();
 	}
 
 	void VoxMemoryAllocator::Clear()
 	{
-		s_Data.entities.clear();
-		s_Data.isStructureDirty = true;
-		s_Data.isDataDirty = true;
-
-		// Transform tracking
-		s_Data.lastTransforms.clear();
-		s_Data.dirtyEntities.clear();
-
-		// GPU data
-		s_Data.treeData.clear();
-		s_Data.nodeData.clear();
-		s_Data.leafData.clear();
-		s_Data.paletteData.clear();
-
-		s_Data.nodeOffset = 0;
-		s_Data.leafOffset = 0;
+		m_entities.clear();
+		m_isStructureDirty = true;
+		m_isDataDirty = true;
+		m_lastTransforms.clear();
+		m_dirtyEntities.clear();
+		m_treeData.clear();
+		m_nodeData.clear();
+		m_leafData.clear();
+		m_paletteData.clear();
+		m_nodeOffset = 0;
+		m_leafOffset = 0;
 	}
 
+	bool VoxMemoryAllocator::HasTransformChanged(Entity& entity, const glm::mat4& currentTransform) const {
+		auto it = m_lastTransforms.find(entity.GetUUID());
+		return it != m_lastTransforms.end() && it->second != currentTransform;
+	}
 
-	const std::vector<GPUSparseVoxelTree> VoxMemoryAllocator::GetTreeData()
-	{
+	void VoxMemoryAllocator::MarkDirty(Entity& entity) {
+		m_dirtyEntities.insert(entity.GetUUID());
+		m_isDataDirty = true;
+	}
+
+	void VoxMemoryAllocator::UpdateStoredTransform(Entity& entity, const glm::mat4& transform) {
+		m_lastTransforms[entity.GetUUID()] = transform;
+	}
+
+	bool VoxMemoryAllocator::IsStructureDirty() const { return m_isStructureDirty; }
+	bool VoxMemoryAllocator::IsDataDirty() const { return m_isDataDirty; }
+
+	const std::vector<GPUSparseVoxelTree>& VoxMemoryAllocator::GetTreeData() {
 		Flush();
-
-		return s_Data.treeData;
+		return m_treeData;
 	}
 
-	const std::vector<GPUSparseVoxelTreeNode> VoxMemoryAllocator::GetNodeData()
-	{
+	const std::vector<GPUSparseVoxelTreeNode>& VoxMemoryAllocator::GetNodeData() {
 		Flush();
-
-		return s_Data.nodeData;
+		return m_nodeData;
 	}
 
-	const std::vector<uint32> VoxMemoryAllocator::GetLeafData()
-	{
+	const std::vector<uint32>& VoxMemoryAllocator::GetLeafData() {
 		Flush();
-
-		return s_Data.leafData;
+		return m_leafData;
 	}
 
-	const std::vector<Vector4> VoxMemoryAllocator::GetPaletteData()
-	{
+	const std::vector<Vector4>& VoxMemoryAllocator::GetPaletteData() {
 		Flush();
-
-		return s_Data.paletteData;
+		return m_paletteData;
 	}
 
-	void VoxMemoryAllocator::PrintStats()
-	{
-		Refresh();
-
-		size_t treeMem = s_Data.treeData.size() * sizeof(GPUSparseVoxelTree);
-		size_t nodeMem = s_Data.nodeData.size() * sizeof(GPUSparseVoxelTreeNode);
-		size_t leafMem = s_Data.leafData.size() * sizeof(uint32);
-		size_t paletteMem = s_Data.paletteData.size() * sizeof(Vector4);
-
-		std::cout << "===== Voxel Tree Stats =====" << std::endl;
-		std::cout << "Sparse Voxel Trees: " <<	s_Data.treeData.size() << " entries, " << treeMem << " bytes" << std::endl;
-		std::cout << "Node Data: " <<			s_Data.nodeData.size() << " entries, " << nodeMem << " bytes" << std::endl;
-		std::cout << "Leaf Data: " <<			s_Data.leafData.size() << " entries, " << leafMem << " bytes" << std::endl;
-		std::cout << "Palette Data: " <<		s_Data.paletteData.size() << " entries, " << paletteMem << " bytes" << std::endl;
-		std::cout << "Total Memory Usage: " 
-			<< (treeMem + nodeMem + leafMem + paletteMem) / (1024.0) << " KB, "
-			<< (treeMem + nodeMem + leafMem + paletteMem) / (1024.0 * 1024.0) << " MB"
-			<< std::endl;
+	uint8 VoxMemoryAllocator::GetCurrentPaletteSize() const {
+		return static_cast<uint8>(m_paletteData.size());
 	}
 
-	void VoxMemoryAllocator::PrintMemory()
-	{
-		Refresh();
-		
-		std::cout << "===== Voxel Tree Memory Allocation =====" << std::endl;
-
-		std::cout << "\nGPU Sparse Voxel Trees (" << s_Data.treeData.size() << " entries):" << std::endl;
-		for (size_t i = 0; i < s_Data.treeData.size(); ++i)
-		{
-			const auto& tree = s_Data.treeData[i];
-			std::cout << "Tree " << i << ":\n";
-			std::cout << "  NodePoolPtr: " << tree.NodePoolPtr << "\n";
-			std::cout << "  LeafDataPtr: " << tree.LeafDataPtr << "\n";
-			std::cout << "  PaletteDataPtr: " << tree.PaletteDataPtr << "\n";
-			std::cout << "  AABBMin: (" << tree.Bounds.Min.x << ", " << tree.Bounds.Min.y << ", " << tree.Bounds.Min.z << ", " << tree.Bounds.Min.w << ")\n";
-			std::cout << "  AABBMax: (" << tree.Bounds.Max.x << ", " << tree.Bounds.Max.y << ", " << tree.Bounds.Max.z << ", " << tree.Bounds.Max.w << ")\n";
-		}
-
-		std::cout << "\nGPU Node Pool (" << s_Data.nodeData.size() << " entries):" << std::endl;
-		for (size_t i = 0; i < s_Data.nodeData.size(); ++i)
-		{
-			const auto& node = s_Data.nodeData[i];
-			std::cout << "Node " << i << ": ";
-			std::cout << "PackedData[0]: " << std::bitset<32>(node.PackedData[0]) << " ";
-			std::cout << "PackedData[1]: " << std::bitset<32>(node.PackedData[1]) << " ";
-			std::cout << "PackedData[2]: " << std::bitset<32>(node.PackedData[2]) << std::endl;
-		}
-
-		std::cout << "\nGPU Leaf Data (" << s_Data.leafData.size() << " bytes):" << std::endl;
-		for (size_t i = 0; i < s_Data.leafData.size(); ++i)
-		{
-			if (i % 16 == 0) std::cout << "\n" << i << ": ";
-			std::cout << static_cast<int>(s_Data.leafData[i]) << " ";
-		}
-
-		std::cout << "\n===== Palette Data =====" << std::endl;
-		for (size_t i = 0; i < s_Data.paletteData.size(); ++i)
-		{
-			const auto& color = s_Data.paletteData[i];
-			std::cout << "Index " << i << ": "
-				<< "R=" << color.r << " "
-				<< "G=" << color.g << " "
-				<< "B=" << color.b
-				<< " (Model: " << (i / 256)
-				<< ", Local Index: " << (i % 256) << ")\n";
-			if ((i + 1) % 256 == 0) std::cout << "----- End of Model Palette -----\n";
-		}
-		std::cout << "\n======================================\n";
-	}
-
-	uint8 VoxMemoryAllocator::GetCurrentPaletteSize()
-	{
-		return s_Data.paletteData.size();
-	}
-
-	void VoxMemoryAllocator::Flush()
-	{
-		if (s_Data.isStructureDirty)
-		{
+	void VoxMemoryAllocator::Flush() {
+		if (m_isStructureDirty) {
 			GenerateData();
-			s_Data.isStructureDirty = false;
-			s_Data.isDataDirty = false;
+			m_isStructureDirty = false;
+			m_isDataDirty = false;
 		}
-		else if (s_Data.isDataDirty)
-		{
-			// Partial update of transform matrices
-			for (const UUID& uuid : s_Data.dirtyEntities)
-			{
-				auto it = std::find_if(s_Data.entities.begin(), s_Data.entities.end(),
+		else if (m_isDataDirty) {
+			// Partial transform updates
+			for (auto& uuid : m_dirtyEntities) {
+				auto it = std::find_if(m_entities.begin(), m_entities.end(),
 					[&](Entity& e) { return e.GetUUID() == uuid; });
-
-				if (it != s_Data.entities.end())
-				{
-					const size_t index = std::distance(s_Data.entities.begin(), it);
-					const auto& transform = it->GetComponent<TransformComponent>().GetTransform();
-
-					s_Data.treeData[index].Transform = transform;
-					UpdateStoredTransform(*it, transform);
+				if (it != m_entities.end()) {
+					size_t idx = std::distance(m_entities.begin(), it);
+					auto t = it->GetComponent<TransformComponent>().GetTransform();
+					m_treeData[idx].Transform = t;
+					UpdateStoredTransform(*it, t);
 				}
 			}
-			s_Data.dirtyEntities.clear();
-			s_Data.isDataDirty = false;
+			m_dirtyEntities.clear();
+			m_isDataDirty = false;
 		}
 	}
 
-	void VoxMemoryAllocator::Refresh()
-	{
-		if (s_Data.isStructureDirty)
-		{
+	void VoxMemoryAllocator::Refresh() {
+		if (m_isStructureDirty)
 			GenerateData();
-		}
-		else if (s_Data.isDataDirty)
+		// on data dirty we rely on Flush() partial updates
+	}
+
+	void VoxMemoryAllocator::GenerateData() {
+		m_treeData.clear();
+		m_nodeData.clear();
+		m_leafData.clear();
+		m_paletteData.clear();
+		m_nodeOffset = 0;
+		m_leafOffset = 0;
+		m_lastTransforms.clear();
+		m_dirtyEntities.clear();
+
+		for (auto& entity : m_entities)
 		{
-			// Partial update of transform matrices
-			for (const UUID& uuid : s_Data.dirtyEntities)
-			{
-				auto it = std::find_if(s_Data.entities.begin(), s_Data.entities.end(),
-					[&](Entity& e) { return e.GetUUID() == uuid; });
-
-				if (it != s_Data.entities.end())
-				{
-					const size_t index = std::distance(s_Data.entities.begin(), it);
-					const auto& transform = it->GetComponent<TransformComponent>().GetTransform();
-
-					s_Data.treeData[index].Transform = transform;
-					UpdateStoredTransform(*it, transform);
-				}
-			}
+			AddTree(entity, m_nodeOffset, m_leafOffset);
+			m_lastTransforms[entity.GetUUID()] = entity.GetComponent<TransformComponent>().GetTransform();
 		}
 	}
 
-	// Existing data generation implementation
-	void VoxMemoryAllocator::GenerateData()
-	{
-		s_Data.treeData.clear();
-		s_Data.nodeData.clear();
-		s_Data.leafData.clear();
-		s_Data.paletteData.clear();
-
-		s_Data.nodeOffset = 0;
-		s_Data.leafOffset = 0;
-
-		// Refresh all transform data
-		s_Data.lastTransforms.clear();
-		s_Data.dirtyEntities.clear();
-
-		for (auto& entity : s_Data.entities) {
-			AddTree(entity, s_Data.nodeOffset, s_Data.leafOffset);
-
-			// Refresh stored transform
-			const auto& transform = entity.GetComponent<TransformComponent>().GetTransform();
-			s_Data.lastTransforms[entity.GetUUID()] = transform;
-		}
-	}
-
-	void VoxMemoryAllocator::AddTree(Entity& entity, uint32& nodeOffset, uint32& leafOffset)
-	{
-		SparseVoxelTree tree = entity.GetComponent<VoxelRendererComponent>().SVT;
+	void VoxMemoryAllocator::AddTree(Entity& entity, uint32& nodeOffset, uint32& leafOffset) {
+		auto& comp = entity.GetComponent<VoxelRendererComponent>();
+		SparseVoxelTree& tree = const_cast<SparseVoxelTree&>(comp.SVT);
 		GPUSparseVoxelTree gpuTree;
 
-		// Convert Root Node
-		GPUSparseVoxelTreeNode gpuRoot;
-		gpuRoot.PackedData[0] = (tree.root.IsLeaf << 31) | tree.root.ChildPtr;
-		gpuRoot.PackedData[1] = static_cast<uint32_t>(tree.root.ChildMask);
-		gpuRoot.PackedData[2] = static_cast<uint32_t>(tree.root.ChildMask >> 32);
-		gpuTree.Root = gpuRoot;
+		// Root node
+		GPUSparseVoxelTreeNode rootNode;
+		rootNode.PackedData[0] = (tree.root.IsLeaf << 31) | tree.root.ChildPtr;
+		rootNode.PackedData[1] = static_cast<uint32>(tree.root.ChildMask);
+		rootNode.PackedData[2] = static_cast<uint32>(tree.root.ChildMask >> 32);
+		gpuTree.Root = rootNode;
 
-		// Set AABB and Transform
-		gpuTree.Bounds.Min = Vector4(tree.AABBMin, 0);
-		gpuTree.Bounds.Max = Vector4(tree.AABBMax, 0);
+		// Bounds & transform
+		gpuTree.Bounds.Min = Vector4(tree.AABBMin, 0.0f);
+		gpuTree.Bounds.Max = Vector4(tree.AABBMax, 0.0f);
 		gpuTree.Transform = entity.GetComponent<TransformComponent>().GetTransform();
 
-		// Set NodePool and LeafData pointers
+		// Offsets
 		gpuTree.NodePoolPtr = nodeOffset;
 		gpuTree.LeafDataPtr = leafOffset;
+		gpuTree.PaletteDataPtr = static_cast<uint32>(m_paletteData.size());
 
-		// Set palette
-		gpuTree.PaletteDataPtr = s_Data.paletteData.size();
-		for (int i = 0; i < 256; i++)
-		{
-			const auto& color = tree.voxelMap->palette[i];
-
-			s_Data.paletteData.emplace_back(
-				color.r / 255.0f,
-				color.g / 255.0f,
-				color.b / 255.0f,
-				1.0f
-			);
+		// Palette
+		for (int i = 0; i < 256; ++i) {
+			auto& c = tree.voxelMap->palette[i];
+			m_paletteData.emplace_back(c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, 1.0f);
 		}
 
-		// Set Entity ID
+		// ID & scale
 		gpuTree.EntityID = (uint32)entity;
-
-		// Set Initial Scale
 		gpuTree.InitialScale = tree.initialScale;
+		m_treeData.push_back(gpuTree);
 
-		// Append to GPU Trees
-		s_Data.treeData.push_back(gpuTree);
-
-		// Append Nodes to GPU Pool
-		for (const auto& node : tree.nodePool)
-		{
-			GPUSparseVoxelTreeNode gpuNode;
-			gpuNode.PackedData[0] = (node.IsLeaf << 31) | node.ChildPtr;
-			gpuNode.PackedData[1] = static_cast<uint32_t>(node.ChildMask);
-			gpuNode.PackedData[2] = static_cast<uint32_t>(node.ChildMask >> 32);
-			s_Data.nodeData.push_back(gpuNode);
+		// Nodes
+		for (auto& n : tree.nodePool) {
+			GPUSparseVoxelTreeNode node;
+			node.PackedData[0] = (n.IsLeaf << 31) | n.ChildPtr;
+			node.PackedData[1] = static_cast<uint32>(n.ChildMask);
+			node.PackedData[2] = static_cast<uint32>(n.ChildMask >> 32);
+			m_nodeData.push_back(node);
 		}
 
-		// Append Leaf Data
-		s_Data.leafData.insert(s_Data.leafData.end(), tree.leafData.begin(), tree.leafData.end());
+		// Leaves
+		m_leafData.insert(m_leafData.end(), tree.leafData.begin(), tree.leafData.end());
 
-		// Update offsets
-		nodeOffset += tree.nodePool.size();
-		leafOffset += tree.leafData.size();
+		nodeOffset += static_cast<uint32>(tree.nodePool.size());
+		leafOffset += static_cast<uint32>(tree.leafData.size());
 	}
 }

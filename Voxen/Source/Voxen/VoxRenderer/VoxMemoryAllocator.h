@@ -1,74 +1,77 @@
-#pragma once
+#pragma once  
 
-#include "Voxen/Core/UUID.h"
-#include "Voxen/VoxRenderer/SparseVoxelTree.h"
-#include "Voxen/Scene/Entity.h"
+#include "Voxen/Core/UUID.h"  
+#include "Voxen/VoxRenderer/SparseVoxelTree.h"  
+#include <glm/glm.hpp>  
 
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
+#include <unordered_map>  
+#include <unordered_set>  
+#include <vector>  
 
-namespace Voxen
-{
-    class Entity;
-    struct SparseVoxelTree;
-    struct GPUSparseVoxelTree;
-    struct GPUSparseVoxelTreeNode;
+namespace Voxen  
+{  
+   class Entity;  
+   struct SparseVoxelTree;  
+   struct GPUSparseVoxelTree;  
+   struct GPUSparseVoxelTreeNode;  
 
-    class VoxMemoryAllocator
-    {
-    public:
-        static void Allocate(Entity& entity);
-        static void Deallocate(Entity& entity);
-        static size_t Count();
-        static void Clear();
+   class VoxMemoryAllocator  
+   {  
+   public:  
+       VoxMemoryAllocator() = default;  
+       ~VoxMemoryAllocator() = default;  
 
-        // Transform tracking API
-        static bool HasTransformChanged(Entity& entity, const glm::mat4& currentTransform);
-        static void MarkDirty(Entity& entity);
-        static void UpdateStoredTransform(Entity& entity, const glm::mat4& transform);
+       // Allocation  
+       void Allocate(Entity& entity);  
+       void Deallocate(Entity& entity);  
+       size_t Count() const;  
+       void Clear();  
 
-        // Dirty state checks
-        static bool IsStructureDirty();
-        static bool IsDataDirty();
-        static void Flush();
-        static void Refresh();
+       // Transform tracking API  
+       bool HasTransformChanged(Entity& entity, const glm::mat4& currentTransform) const;  
+       void MarkDirty(Entity& entity);  
+       void UpdateStoredTransform(Entity& entity, const glm::mat4& transform);  
 
-        // Data access
-        static const std::vector<GPUSparseVoxelTree> GetTreeData();
-        static const std::vector<GPUSparseVoxelTreeNode> GetNodeData();
-        static const std::vector<uint32> GetLeafData();
-        static const std::vector<Vector4> GetPaletteData();
+       // Dirty state checks  
+       bool IsStructureDirty() const;  
+       bool IsDataDirty() const;  
+       void Flush();  
+       void Refresh();  
 
-        static void PrintStats();
-        static void PrintMemory();
+       // New method to mark structure dirty  
+       void MarkStructureDirty() { m_isStructureDirty = true; }
+	   void MarkDataDirty() { m_isDataDirty = true; }
 
-        static uint8 GetCurrentPaletteSize();
+       // Data access  
+       const std::vector<GPUSparseVoxelTree>& GetTreeData();  
+       const std::vector<GPUSparseVoxelTreeNode>& GetNodeData();  
+       const std::vector<uint32>& GetLeafData();  
+       const std::vector<Vector4>& GetPaletteData();  
 
-    private:
-        static void GenerateData();
-        static void AddTree(Entity& entity, uint32& nodeOffset, uint32& leafOffset);
+       uint8 GetCurrentPaletteSize() const;  
 
-        struct MemoryAllocatorData
-        {
-            std::vector<Entity> entities;
-            bool isStructureDirty = false;
-            bool isDataDirty = false;
+   private:  
+       // GPU data generation  
+       void GenerateData();  
+       void AddTree(Entity& entity, uint32& nodeOffset, uint32& leafOffset);  
 
-            // Transform tracking
-            std::unordered_map<UUID, glm::mat4> lastTransforms;
-            std::unordered_set<UUID> dirtyEntities;
+       // Member data  
+       std::vector<Entity> m_entities;  
+       bool m_isStructureDirty = false;  
+       bool m_isDataDirty = false;  
 
-            // GPU data
-            std::vector<GPUSparseVoxelTree> treeData;
-            std::vector<GPUSparseVoxelTreeNode> nodeData;
-            std::vector<uint32> leafData;
-            std::vector<Vector4> paletteData;
+       // Transform tracking  
+       std::unordered_map<UUID, glm::mat4> m_lastTransforms;  
+       std::unordered_set<UUID> m_dirtyEntities;  
 
-            uint32 nodeOffset = 0;
-            uint32 leafOffset = 0;
-        };
+       // GPU buffers  
+       std::vector<GPUSparseVoxelTree> m_treeData;  
+       std::vector<GPUSparseVoxelTreeNode> m_nodeData;  
+       std::vector<uint32> m_leafData;  
+       std::vector<Vector4> m_paletteData;  
 
-        static MemoryAllocatorData s_Data;
-    };
+       // Offsets  
+       uint32 m_nodeOffset = 0;  
+       uint32 m_leafOffset = 0;  
+   };  
 }

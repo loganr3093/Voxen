@@ -16,11 +16,11 @@
 namespace Voxen
 {
     Scene::Scene()
-        : m_Name("Untitled")
+        : m_Name("Untitled"), m_Allocator(CreateRef<VoxMemoryAllocator>())
     {
     }
     Scene::Scene(const std::string& sceneName)
-        : m_Name(sceneName)
+        : m_Name(sceneName), m_Allocator(CreateRef<VoxMemoryAllocator>())
     {
     }
 
@@ -34,6 +34,8 @@ namespace Voxen
         }
 
         m_Registry.clear();
+
+        m_Allocator->Clear();
     }
 
     template<typename... Component>
@@ -97,6 +99,8 @@ namespace Voxen
 
         // Copy components (except IDComponent and TagComponent)
         CopyComponent(AllComponents{}, dstSceneRegistry, srcSceneRegistry, enttMap);
+
+        newScene->InitAllocator();
 
         return newScene;
     }
@@ -228,9 +232,9 @@ namespace Voxen
 
             // Check if transform changed
             const glm::mat4 currentTransform = transform.GetTransform();
-            if (VoxMemoryAllocator::HasTransformChanged(entity, currentTransform))
+            if (m_Allocator->HasTransformChanged(entity, currentTransform))
             {
-                VoxMemoryAllocator::MarkDirty(entity);
+                m_Allocator->MarkDirty(entity);
             }
         }
 
@@ -273,6 +277,7 @@ namespace Voxen
 
     void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
     {
+        // Check if transforms have updated
         auto view = m_Registry.view<TransformComponent, VoxelRendererComponent>();
         for (auto entityID : view)
         {
@@ -283,9 +288,9 @@ namespace Voxen
             const glm::mat4 currentTransform = transform.GetTransform();
 
             // Check against last known transform in allocator
-            if (VoxMemoryAllocator::HasTransformChanged(entity, currentTransform))
+            if (m_Allocator->HasTransformChanged(entity, currentTransform))
             {
-                VoxMemoryAllocator::MarkDirty(entity);
+                m_Allocator->MarkDirty(entity);
             }
         }
 
@@ -355,6 +360,23 @@ namespace Voxen
         Renderer::EndScene();
     }
 
+    void Scene::InitAllocator()
+    {
+        // clear any old data
+        m_Allocator->Clear();
+
+        // find every entity with a VoxelRendererComponent and allocate it
+        auto view = m_Registry.view<TransformComponent, VoxelRendererComponent>();
+        for (auto enttID : view)
+        {
+            Entity e{ enttID, this };
+            m_Allocator->Allocate(e);
+        }
+
+        m_Allocator->MarkStructureDirty();
+        m_Allocator->MarkDataDirty();
+    }
+
     // ***********************************
     // Component Added
     // ***********************************
@@ -407,7 +429,7 @@ namespace Voxen
     {
 		Matrix4 transform = entity.GetComponent<TransformComponent>().GetTransform();
 		entity.GetComponent<TransformComponent>().SetTransform(glm::rotate(transform, glm::radians(270.0f), Vector3(1, 0, 0)));
-        VoxMemoryAllocator::Allocate(entity);
+        m_Allocator->Allocate(entity);
     }
 
     template<>
@@ -464,7 +486,7 @@ namespace Voxen
     template<>
     void Scene::OnComponentRemoved<VoxelRendererComponent>(Entity entity, VoxelRendererComponent& component)
     {
-        VoxMemoryAllocator::Deallocate(entity);
+        m_Allocator->Deallocate(entity);
     }
 
     template<>

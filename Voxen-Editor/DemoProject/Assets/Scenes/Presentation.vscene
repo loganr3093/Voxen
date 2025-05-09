@@ -58,7 +58,7 @@ Entities:
     TransformComponent:
       Translation: [-19.3097248, -21.9524918, -66.0064392]
       Rotation: [1.57079899, 0.48755908, 3.14158964]
-      Scale: [1.00001562, 0.999999762, 1.0000217]
+      Scale: [1.00001562, 0.999999762, 1.00002193]
     VoxelRendererComponent:
       ModelPath: Models\horse.vox
   - Entity: 13842260246308600153
@@ -66,7 +66,7 @@ Entities:
       Tag: dragon
     TransformComponent:
       Translation: [-76.1120148, -49.6146431, -276.149567]
-      Rotation: [-1.57079792, -0.777867198, 6.27494899e-07]
-      Scale: [0.999999881, 0.999999523, 0.999999046]
+      Rotation: [-1.5707978, -0.7778669, 5.43828776e-07]
+      Scale: [0.999999881, 0.999999404, 0.999999046]
     VoxelRendererComponent:
       ModelPath: Models\dragon.vox
