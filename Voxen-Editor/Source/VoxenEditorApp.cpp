@@ -18,8 +18,11 @@ namespace Voxen
 	Application* CreateApplication()
 	{
 		ApplicationSpecification spec;
-		spec.Name = "Voxen-Hub";
+		spec.Name = "Voxen-Editor";
 		spec.WorkingDirectory = "./";
+
+		//spec.RendererType = RendererType::Renderer2D;
+		spec.RendererType = RendererType::VoxRenderer;
 
 		return new VoxenEditor(spec);
 	}

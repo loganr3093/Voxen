@@ -38,6 +38,7 @@ project "Voxen"
         "vendor/ImGuizmo",
         "vendor/filewatch",
         "vendor/mono/include",
+        "vendor",
     }
 
     links

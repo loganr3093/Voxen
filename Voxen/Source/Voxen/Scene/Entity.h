@@ -49,9 +49,17 @@ namespace Voxen
 		}
 
 		template<typename T>
+		bool HasComponent() const
+		{
+			return m_Scene->m_Registry.all_of<T>(m_EntityHandle);
+		}
+
+		template<typename T>
 		void RemoveComponent()
 		{
 			VOX_CORE_ASSERT(HasComponent<T>(), "Entity does not have component");
+			T& component = GetComponent<T>();
+			m_Scene->OnComponentRemoved<T>(*this, component);
 			m_Scene->m_Registry.remove<T>(m_EntityHandle);
 		}
 
@@ -71,6 +79,8 @@ namespace Voxen
 		{
 			return !(*this == other);
 		}
+
+		entt::entity GetHandle() const { return m_EntityHandle; }
 	private:
 		entt::entity m_EntityHandle{ entt::null };
 		Scene* m_Scene = nullptr;

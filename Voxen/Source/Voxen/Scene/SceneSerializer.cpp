@@ -5,6 +5,7 @@
 
 #include "Voxen/Scene/Entity.h"
 #include "Voxen/Scene/Components.h"
+#include "Voxen/Project/Project.h"
 
 #include "Voxen/Scripting/ScriptEngine.h"
 
@@ -143,6 +144,32 @@ namespace Voxen
 			out << YAML::EndMap; // SpriteRendererComponent
 		}
 
+		if (entity.HasComponent<VoxelRendererComponent>())
+		{
+			out << YAML::Key << "VoxelRendererComponent";
+			out << YAML::BeginMap; // VoxelRendererComponent
+
+			auto& vrc = entity.GetComponent<VoxelRendererComponent>();
+			std::filesystem::path assetDir = Project::GetAssetDirectory();
+			std::filesystem::path relPath = std::filesystem::relative(vrc.ModelPath, assetDir);
+			out << YAML::Key << "ModelPath" << YAML::Value << relPath.string();
+
+			out << YAML::EndMap; // VoxelRendererComponent
+		}
+
+		if (entity.HasComponent<PointLightComponent>())
+		{
+			out << YAML::Key << "PointLightComponent";
+			out << YAML::BeginMap; // PointLightComponent
+
+			auto& plComponent = entity.GetComponent<PointLightComponent>();
+			out << YAML::Key << "Color" << YAML::Value << plComponent.Color;
+			out << YAML::Key << "Intensity" << YAML::Value << plComponent.Intensity;
+			out << YAML::Key << "Radius" << YAML::Value << plComponent.Radius;
+
+			out << YAML::EndMap; // PointLightComponent
+		}
+
 		out << YAML::EndMap; // Entity
 	}
 
@@ -268,7 +295,6 @@ namespace Voxen
 
 							ScriptFieldInstance& fieldInstance = entityFields[name];
 
-							// TODO(Yan): turn this assert into Hazelnut log warning
 							VOX_CORE_ASSERT(fields.find(name) != fields.end());
 
 							if (fields.find(name) == fields.end())
@@ -305,6 +331,30 @@ namespace Voxen
 			{
 				auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
 				src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
+			}
+
+			auto voxelRendererComponent = entity["VoxelRendererComponent"];
+			if (voxelRendererComponent)
+			{
+				std::string relPathStr = voxelRendererComponent["ModelPath"].as<std::string>();
+				std::filesystem::path relPath(relPathStr);
+
+				std::filesystem::path fullPath = Project::GetAssetFileSystemPath(relPath);
+
+				auto& vrc = deserializedEntity.AddComponent<VoxelRendererComponent>(fullPath.string());
+
+				auto& transformComponent = deserializedEntity.GetComponent<TransformComponent>();
+				Matrix4 transform = transformComponent.GetTransform();
+				transformComponent.SetTransform(glm::rotate(transform, glm::radians(-270.0f), Vector3(1, 0, 0)));
+			}
+
+			auto pointLightComponent = entity["PointLightComponent"];
+			if (pointLightComponent)
+			{
+				auto& plc = deserializedEntity.AddComponent<PointLightComponent>();
+				plc.Color = pointLightComponent["Color"].as<Vector3>();
+				plc.Intensity = pointLightComponent["Intensity"].as<float>();
+				plc.Radius = pointLightComponent["Radius"].as<float>();
 			}
 		}
 

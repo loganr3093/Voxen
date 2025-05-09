@@ -10,17 +10,18 @@
 
 #include "Voxen/ImGui/ImGuiLayer.h"
 
+#include "Voxen/Renderer/Renderer.h"
 #include "Voxen/Renderer/Shader.h"
 #include "Voxen/Renderer/Buffer.h"
 #include "Voxen/Renderer/VertexArray.h"
-#include "Voxen/Renderer/OrthographicCamera.h"
 
 namespace Voxen
 {
 	struct ApplicationSpecification
 	{
 		std::string Name = "Voxen Application";
-		std::string WorkingDirectory;
+		std::string WorkingDirectory = "./";
+		RendererType RendererType = RendererType::VoxRenderer;
 	};
 
 	class Application
@@ -53,12 +54,12 @@ namespace Voxen
 
 		void ExecuteMainThreadQueue();
 	private:
+		static Application* s_Instance;
+
 		ApplicationSpecification m_Specification;
 
 		std::vector<std::function<void()>> m_MainThreadQueue;
 		std::mutex m_MainThreadQueueMutex;
-
-		static Application* s_Instance;
 
 		float m_LastFrameTime = 0.0f;
 		std::unique_ptr<Window> m_Window;

@@ -1,7 +1,9 @@
 #include "voxpch.h"
 #include "Voxen/Scene/Scene.h"
 
-#include "Voxen/Renderer/Renderer2D.h"
+#include "Voxen/Renderer/Renderer.h"
+#include "Voxen/VoxRenderer/VoxMemoryAllocator.h"
+#include "Voxen/VoxRenderer/VoxRenderer.h"
 
 #include "Voxen/Scene/Entity.h"
 #include "Voxen/Scene/Components.h"
@@ -14,33 +16,42 @@
 namespace Voxen
 {
     Scene::Scene()
-        : m_Name("Untitled")
+        : m_Name("Untitled"), m_Allocator(CreateRef<VoxMemoryAllocator>())
     {
     }
     Scene::Scene(const std::string& sceneName)
-        : m_Name(sceneName)
+        : m_Name(sceneName), m_Allocator(CreateRef<VoxMemoryAllocator>())
     {
     }
 
     Scene::~Scene()
     {
+        auto view = m_Registry.view<IDComponent>();
+        for (auto entity : view)
+        {
+            Entity e = { entity, this };
+            DestroyEntity(e);
+        }
+
         m_Registry.clear();
+
+        m_Allocator->Clear();
     }
 
     template<typename... Component>
     static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& enttMap)
     {
         ([&]()
+        {
+            auto view = src.view<Component>();
+            for (auto srcEntity : view)
             {
-                auto view = src.view<Component>();
-                for (auto srcEntity : view)
-                {
-                    entt::entity dstEntity = enttMap.at(src.get<IDComponent>(srcEntity).ID);
+                entt::entity dstEntity = enttMap.at(src.get<IDComponent>(srcEntity).ID);
 
-                    auto& srcComponent = src.get<Component>(srcEntity);
-                    dst.emplace_or_replace<Component>(dstEntity, srcComponent);
-                }
-            }(), ...);
+                auto& srcComponent = src.get<Component>(srcEntity);
+                dst.emplace_or_replace<Component>(dstEntity, srcComponent);
+            }
+        }(), ...);
     }
 
     template<typename... Component>
@@ -89,6 +100,8 @@ namespace Voxen
         // Copy components (except IDComponent and TagComponent)
         CopyComponent(AllComponents{}, dstSceneRegistry, srcSceneRegistry, enttMap);
 
+        newScene->InitAllocator();
+
         return newScene;
     }
 
@@ -116,6 +129,16 @@ namespace Voxen
         {
             VOX_CORE_WARN("Attempting to delete non-existant entity");
             return false;
+        }
+
+        if (entity.HasComponent<VoxelRendererComponent>())
+        {
+            entity.RemoveComponent<VoxelRendererComponent>();
+        }
+
+        if (entity.HasComponent<PointLightComponent>())
+        {
+            entity.RemoveComponent<PointLightComponent>();
         }
 
         m_EntityMap.erase(entity.GetUUID());
@@ -201,7 +224,31 @@ namespace Voxen
             });
         }
 
-        // Render 2D
+        auto voxelView = m_Registry.view<TransformComponent, VoxelRendererComponent>();
+        for (auto entityID : voxelView)
+        {
+            Entity entity = { entityID, this };
+            auto& transform = entity.GetComponent<TransformComponent>();
+
+            // Check if transform changed
+            const glm::mat4 currentTransform = transform.GetTransform();
+            if (m_Allocator->HasTransformChanged(entity, currentTransform))
+            {
+                m_Allocator->MarkDirty(entity);
+            }
+        }
+
+        // Update Point Lights
+        auto lightView = m_Registry.view<TransformComponent, PointLightComponent>();
+        for (auto entityID : lightView)
+        {
+            Entity entity = { entityID, this };
+            auto& transform = entity.GetComponent<TransformComponent>();
+            auto& light = entity.GetComponent<PointLightComponent>();
+            VoxRenderer::UpdatePointLight(entity, transform.Translation, light.Color, light.Intensity, light.Radius);
+        }
+
+        // Renderer
         Camera* mainCamera = nullptr;
         Matrix4 cameraTransform;
         {
@@ -209,7 +256,6 @@ namespace Voxen
             for (auto entity : view)
             {
                 auto [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
-
                 if (camera.Primary)
                 {
                     mainCamera = &camera.Camera;
@@ -221,25 +267,42 @@ namespace Voxen
 
         if (mainCamera)
         {
-            Renderer2D::BeginScene(*mainCamera, cameraTransform);
+            Renderer::BeginScene(*mainCamera, cameraTransform);
 
-            // Draw sprites
-            {
-                auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-                for (auto entity : group)
-                {
-                    auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+            Renderer::RenderScene(shared_from_this());
 
-                    Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
-                }
-            }
-
-            Renderer2D::EndScene();
+            Renderer::EndScene();
         }
     }
 
     void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
     {
+        // Check if transforms have updated
+        auto view = m_Registry.view<TransformComponent, VoxelRendererComponent>();
+        for (auto entityID : view)
+        {
+            Entity entity = { entityID, this };
+            auto& transform = entity.GetComponent<TransformComponent>();
+
+            // Get current transform matrix
+            const glm::mat4 currentTransform = transform.GetTransform();
+
+            // Check against last known transform in allocator
+            if (m_Allocator->HasTransformChanged(entity, currentTransform))
+            {
+                m_Allocator->MarkDirty(entity);
+            }
+        }
+
+        auto lightView = m_Registry.view<TransformComponent, PointLightComponent>();
+        for (auto entityID : lightView)
+        {
+            Entity entity = { entityID, this };
+			auto& transform = entity.GetComponent<TransformComponent>();
+			auto& light = entity.GetComponent<PointLightComponent>();
+            VoxRenderer::UpdatePointLight(entity, transform.Translation, light.Color, light.Intensity, light.Radius);
+        }
+
         RenderScene(camera);
     }
 
@@ -290,21 +353,33 @@ namespace Voxen
 
     void Scene::RenderScene(EditorCamera& camera)
     {
-        Renderer2D::BeginScene(camera);
+        Renderer::BeginScene(camera);
 
-        // Draw sprites
+        Renderer::RenderScene(shared_from_this());
+
+        Renderer::EndScene();
+    }
+
+    void Scene::InitAllocator()
+    {
+        // clear any old data
+        m_Allocator->Clear();
+
+        // find every entity with a VoxelRendererComponent and allocate it
+        auto view = m_Registry.view<TransformComponent, VoxelRendererComponent>();
+        for (auto enttID : view)
         {
-            auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-            for (auto entity : group)
-            {
-                auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
-
-                Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
-            }
+            Entity e{ enttID, this };
+            m_Allocator->Allocate(e);
         }
 
-        Renderer2D::EndScene();
+        m_Allocator->MarkStructureDirty();
+        m_Allocator->MarkDataDirty();
     }
+
+    // ***********************************
+    // Component Added
+    // ***********************************
 
     template<typename T>
     void Scene::OnComponentAdded(Entity entity, T& component)
@@ -347,5 +422,76 @@ namespace Voxen
     template<>
     void Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
     {
+    }
+
+    template<>
+    void Scene::OnComponentAdded<VoxelRendererComponent>(Entity entity, VoxelRendererComponent& component)
+    {
+		Matrix4 transform = entity.GetComponent<TransformComponent>().GetTransform();
+		entity.GetComponent<TransformComponent>().SetTransform(glm::rotate(transform, glm::radians(270.0f), Vector3(1, 0, 0)));
+        m_Allocator->Allocate(entity);
+    }
+
+    template<>
+    void Scene::OnComponentAdded<PointLightComponent>(Entity entity, PointLightComponent& component)
+    {
+        VoxRenderer::AddPointLight(entity, component);
+    }
+
+    // ***********************************
+    // Component Removed
+    // ***********************************
+
+    template<typename T>
+    void Scene::OnComponentRemoved(Entity entity, T& component)
+    {
+        static_assert(sizeof(T) == 0);
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<IDComponent>(Entity entity, IDComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<TransformComponent>(Entity entity, TransformComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<CameraComponent>(Entity entity, CameraComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<TagComponent>(Entity entity, TagComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<ScriptComponent>(Entity entity, ScriptComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<VoxelRendererComponent>(Entity entity, VoxelRendererComponent& component)
+    {
+        m_Allocator->Deallocate(entity);
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<PointLightComponent>(Entity entity, PointLightComponent& component)
+    {
+        VoxRenderer::RemovePointLight(entity);
     }
 }

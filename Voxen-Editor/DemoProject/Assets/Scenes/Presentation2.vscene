@@ -1,0 +1,44 @@
+Scene: Presentation2
+Entities:
+  - Entity: 15910346981547494356
+    TagComponent:
+      Tag: Green Light
+    TransformComponent:
+      Translation: [56.2590179, -69.9909515, -113.582237]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [0, 1, 0]
+      Intensity: 5000
+      Radius: 10000
+  - Entity: 10338357772004980563
+    TagComponent:
+      Tag: Blue Light
+    TransformComponent:
+      Translation: [-58.5075455, 0, -137.011719]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [0, 0, 1]
+      Intensity: 5000
+      Radius: 10000
+  - Entity: 17764633174128486640
+    TagComponent:
+      Tag: Red Light
+    TransformComponent:
+      Translation: [92.0345612, 0.547332764, -172.51825]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    PointLightComponent:
+      Color: [1, 0, 0]
+      Intensity: 5000
+      Radius: 10000
+  - Entity: 13842260246308600153
+    TagComponent:
+      Tag: dragon
+    TransformComponent:
+      Translation: [-66.3354416, -56.6965523, -175.921875]
+      Rotation: [-1.57080221, -0.175327569, 1.17281991e-06]
+      Scale: [0.999999702, 0.999986291, 1.00000465]
+    VoxelRendererComponent:
+      ModelPath: Models\dragon.vox

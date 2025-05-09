@@ -23,9 +23,10 @@
 #include "Voxen/Scene/Components.h"
 
 // Renderer
-#include "Voxen/Renderer/Renderer2D.h"
 #include "Voxen/Renderer/Renderer.h"
-#include "Voxen/Renderer/RenderCommand.h"
+#include "Voxen/Renderer/Renderer2D.h"
+#include "Voxen/Renderer/Renderer2D.h"
+#include "Voxen/VoxRenderer/VoxRenderer.h"
 
 #include "Voxen/Renderer/Shader.h"
 #include "Voxen/Renderer/Framebuffer.h"
@@ -35,6 +36,9 @@
 
 #include "Voxen/Renderer/OrthographicCamera.h"
 #include "Voxen/Renderer/OrthographicCameraController.h"
+
+// Editor
+#include "Voxen/Editor/EditorResources.h"
 
 // Project
 #include "Voxen/Project/Project.h"

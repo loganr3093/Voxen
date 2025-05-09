@@ -34,7 +34,14 @@ namespace Voxen
 			}
 			else
 			{
-				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+				GLenum dataType = GL_UNSIGNED_BYTE;
+
+				if (internalFormat == GL_RGBA16F || internalFormat == GL_R32F)
+					dataType = GL_FLOAT;
+				else if (internalFormat == GL_R32I)
+					dataType = GL_INT;
+
+				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, dataType, nullptr);
 
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -83,6 +90,8 @@ namespace Voxen
 			{
 			case FramebufferTextureFormat::RGBA8:       return GL_RGBA8;
 			case FramebufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
+			case FramebufferTextureFormat::RGBA16F:		return GL_RGBA16F;
+			case FramebufferTextureFormat::R32F:        return GL_R32F;
 			}
 
 			VOX_CORE_ASSERT(false);
@@ -146,6 +155,12 @@ namespace Voxen
 				case FramebufferTextureFormat::RED_INTEGER:
 					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_R32I, GL_RED_INTEGER, m_Specification.Width, m_Specification.Height, i);
 					break;
+				case FramebufferTextureFormat::RGBA16F:
+					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_RGBA16F, GL_RGBA, m_Specification.Width, m_Specification.Height, i);
+					break;
+				case FramebufferTextureFormat::R32F:
+					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_R32F, GL_RED, m_Specification.Width, m_Specification.Height, i);
+					break;
 				}
 			}
 		}
@@ -207,11 +222,21 @@ namespace Voxen
 	{
 		VOX_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
 
+		auto& spec = m_ColorAttachmentSpecifications[attachmentIndex];
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
-		int pixelData;
-		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
-		return pixelData;
 
+		if (spec.TextureFormat == FramebufferTextureFormat::R32F)
+		{
+			float pixelData;
+			glReadPixels(x, y, 1, 1, GL_RED, GL_FLOAT, &pixelData);
+			return static_cast<int>(pixelData * 1000.0f);
+		}
+		else
+		{
+			int pixelData;
+			glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
+			return pixelData;
+		}
 	}
 
 	void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
@@ -219,7 +244,17 @@ namespace Voxen
 		VOX_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
 
 		auto& spec = m_ColorAttachmentSpecifications[attachmentIndex];
-		glClearTexImage(m_ColorAttachments[attachmentIndex], 0,
-			Utils::VoxenFBTextureFormatToGL(spec.TextureFormat), GL_INT, &value);
+		if (spec.TextureFormat == FramebufferTextureFormat::R32F)
+		{
+			float floatValue = static_cast<float>(value);
+			glClearTexImage(m_ColorAttachments[attachmentIndex], 0,
+				GL_RED, GL_FLOAT, &floatValue);
+		}
+		else
+		{
+			glClearTexImage(m_ColorAttachments[attachmentIndex], 0,
+				Utils::VoxenFBTextureFormatToGL(spec.TextureFormat),
+				GL_INT, &value);
+		}
 	}
 }

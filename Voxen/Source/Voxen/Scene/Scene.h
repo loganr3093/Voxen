@@ -5,14 +5,17 @@
 
 #include "Voxen/Renderer/EditorCamera.h"
 
+#include "Voxen/VoxRenderer/VoxMemoryAllocator.h" 
+
 #include <entt.hpp>
 
 namespace Voxen
 {
 	class Entity;
 	class TransformComponent;
+	class VoxMemoryAllocator;
 
-	class Scene
+	class Scene : public std::enable_shared_from_this<Scene>
 	{
 	public:
 		Scene();
@@ -52,9 +55,14 @@ namespace Voxen
 		{
 			return m_Registry.view<Components...>();
 		}
+
+		void InitAllocator();
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
+
+		template<typename T>
+		void OnComponentRemoved(Entity entity, T& component);
 
 		void RenderScene(EditorCamera& camera);
 	private:
@@ -66,8 +74,12 @@ namespace Voxen
 
 		std::unordered_map<UUID, entt::entity> m_EntityMap;
 
+		Ref<VoxMemoryAllocator> m_Allocator;
+
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneHierarchyPanel;
+		friend class Renderer2D;
+		friend class VoxRenderer;
 	};
 }

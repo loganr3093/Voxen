@@ -1,5 +1,5 @@
 Project:
   Name: Demo
-  StartScene: "Scenes/ScriptingExample.vscene"
+  StartScene: "Scenes/Presentation.vscene"
   AssetDirectory: "Assets"
   ScriptModulePath: "Scripts/Binaries/Demo.dll"

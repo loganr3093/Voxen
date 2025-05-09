@@ -56,7 +56,7 @@ namespace Voxen
 		{
 			VOX_PROFILE_SCOPE("glfwCreateWindow");
 #if defined(VOX_DEBUG)
-			if (Renderer::GetAPI() == RendererAPI::API::OpenGL)
+			if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL)
 				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
 			m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);

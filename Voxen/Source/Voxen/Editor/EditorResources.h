@@ -7,6 +7,14 @@ namespace Voxen
 	class EditorResources
 	{
 	public:
+		// Shaders
+		inline static std::filesystem::path FullScreenQuadShader = "Resources/Shaders/FullScreenQuad.glsl";
+		inline static std::filesystem::path RaytraceShader = "Resources/Shaders/Raytrace.glsl";
+		inline static std::filesystem::path SpriteRendererShader = "Resources/Shaders/SpriteRenderer.glsl";
+		inline static std::filesystem::path VoxelRendererShader = "Resources/Shaders/VoxelRenderer.glsl";
+		inline static std::filesystem::path SSAOShader = "Resources/Shaders/SSAO.glsl";
+		inline static std::filesystem::path BlurAOShader = "Resources/Shaders/AOBlur.glsl";
+
 		// Viewport
 		inline static Ref<Texture2D> PlayIcon = nullptr;
 		inline static Ref<Texture2D> StopIcon = nullptr;
@@ -19,6 +27,7 @@ namespace Voxen
 		inline static Ref<Texture2D> VSCFileIcon = nullptr;
 		inline static Ref<Texture2D> LuaFileIcon = nullptr;
 		inline static Ref<Texture2D> BatFileIcon = nullptr;
+		inline static Ref<Texture2D> VoxFileIcon = nullptr;
 
 		static void Init()
 		{
@@ -32,6 +41,7 @@ namespace Voxen
 			VSCFileIcon		= Texture2D::Create("Resources/Icons/ContentBrowser/VSCFileIcon.png");
 			LuaFileIcon		= Texture2D::Create("Resources/Icons/ContentBrowser/LuaFileIcon.png");
 			BatFileIcon		= Texture2D::Create("Resources/Icons/ContentBrowser/BatFileIcon.png");
+			VoxFileIcon		= Texture2D::Create("Resources/Icons/ContentBrowser/VoxFileIcon.png");
 		}
 
 		static void Shutdown()
@@ -48,6 +58,7 @@ namespace Voxen
 			VSCFileIcon.reset();
 			LuaFileIcon.reset();
 			BatFileIcon.reset();
+			VoxFileIcon.reset();
 		}
 	};
 }

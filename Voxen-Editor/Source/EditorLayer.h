@@ -23,7 +23,7 @@ namespace Voxen
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& e) override;
 
-		void OnUpdate(Timestep ts) override;
+		virtual void OnUpdate(Timestep ts) override;
 
 		// Project
 		bool OpenProject();
@@ -49,6 +49,8 @@ namespace Voxen
 
 		void OnScenePlay();
 		void OnSceneStop();
+
+		void CloseScene();
 
 		// UI Panels
 		void UI_Toolbar();
@@ -108,5 +110,13 @@ namespace Voxen
 		// Panels
 		SceneHierarchyPanel m_SceneHierarchyPanel;
 		Scope<ContentBrowserPanel> m_ContentBrowserPanel;
+
+		// Statistics
+		float m_AverageFPS = 0.0f;
+		int m_FrameDropsLastSecond = 0;
+		float m_TimeAccumulator = 0.0f;
+		int m_FrameCounter = 0;
+		int m_FrameDropsCurrent = 0;
+		const float m_FrameDropThreshold = 1.0f / 30.0f;
 	};
 }

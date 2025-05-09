@@ -6,6 +6,8 @@
 
 #include "Voxen/Renderer/Renderer.h"
 
+#include "Voxen/Editor/EditorResources.h"
+
 #include "Voxen/Utilities/PlatformUtils.h"
 
 #include "Voxen/Scripting/ScriptEngine.h"
@@ -30,7 +32,9 @@ namespace Voxen
 		m_Window = Window::Create(WindowProps(m_Specification.Name));
 		m_Window->SetEventCallback(VOX_BIND_EVENT_FN(Application::OnEvent));
 
-		Renderer::Init();
+		EditorResources::Init();
+
+		Renderer::Init(m_Specification.RendererType);
 
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
@@ -38,7 +42,6 @@ namespace Voxen
 
 	Application::~Application()
 	{
-		ScriptEngine::Shutdown();
 	}
 
 	void Application::PushLayer(Layer* layer)

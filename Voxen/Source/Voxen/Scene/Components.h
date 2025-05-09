@@ -4,6 +4,8 @@
 
 #include "Voxen/Scene/SceneCamera.h"
 
+#include "Voxen/VoxRenderer/SparseVoxelTree.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -122,6 +124,29 @@ namespace Voxen
         }
     };
 
+    struct VoxelRendererComponent
+    {
+        SparseVoxelTree SVT;
+        std::filesystem::path ModelPath;
+
+        VoxelRendererComponent() = default;
+        VoxelRendererComponent(const VoxelRendererComponent&) = default;
+        VoxelRendererComponent(const std::filesystem::path modelPath) : ModelPath(modelPath)
+        {
+            SVT = SparseVoxelTree(modelPath);
+        }
+    };
+
+    struct PointLightComponent
+    {
+		Vector3 Color = { 1.0f, 1.0f, 1.0f };
+		float Intensity = 100.0f;
+		float Radius = 10.0f;
+
+        PointLightComponent() = default;
+        PointLightComponent(const PointLightComponent&) = default;
+    };
+
     template<typename... Component>
     struct ComponentGroup
     {
@@ -129,5 +154,5 @@ namespace Voxen
 
     using AllComponents =
         ComponentGroup<TransformComponent, SpriteRendererComponent,
-        CameraComponent, ScriptComponent, NativeScriptComponent>;
+        CameraComponent, ScriptComponent, NativeScriptComponent, VoxelRendererComponent, VoxelRendererComponent>;
 }

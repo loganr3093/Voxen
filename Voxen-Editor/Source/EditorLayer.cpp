@@ -1,6 +1,6 @@
-#include "EditorLayer.h"
+﻿#include "EditorLayer.h"
 
-#include "EditorResources.h"
+#include "Voxen/Editor/EditorResources.h"
 
 #include "Voxen/Scene/SceneSerializer.h"
 
@@ -11,9 +11,12 @@
 #include "Voxen/Scripting/ScriptEngine.h"
 #include "Voxen/Scripting/ScriptBuilder.h"
 
+#include "Voxen/VoxRenderer/VoxMemoryAllocator.h"
+
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -21,6 +24,49 @@
 
 namespace Voxen
 {
+	static std::string FormatBytes(size_t bytes)
+	{
+		const char* units[] = { "B", "KB", "MB", "GB", "TB" };
+		size_t unitIndex = 0;
+		double value = static_cast<double>(bytes);
+		while (value >= 1024 && unitIndex < 4)
+		{
+			value /= 1024;
+			unitIndex++;
+		}
+		char buffer[32];
+		snprintf(buffer, sizeof(buffer), "%.2f %s", value, units[unitIndex]);
+		return buffer;
+	}
+
+	static std::string FormatTime(float ms)
+	{
+		const char* units[] = { "ns", "μs", "ms", "s" };
+		double value = ms;
+		int unitIndex = 2;
+
+		if (value < 1.0)
+		{
+			value *= 1000.0;
+			unitIndex = 1;
+
+			if (value < 1.0)
+			{
+				value *= 1000.0;
+				unitIndex = 0;
+			}
+		}
+		else if (value >= 1000.0)
+		{
+			value /= 1000.0;
+			unitIndex = 3;
+		}
+
+		char buffer[32];
+		snprintf(buffer, sizeof(buffer), "%.2f %s", value, units[unitIndex]);
+		return buffer;
+	}
+
 	static bool s_CreateProjectPopupOpen = false;
 	static bool s_NewScenePopupOpen = false;
 	static bool s_InitializedMono = false;
@@ -44,10 +90,15 @@ namespace Voxen
 	{
 		VOX_PROFILE_FUNCTION();
 
-		EditorResources::Init();
-
 		FramebufferSpecification fbSpec;
-		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
+		fbSpec.Attachments =
+		{
+			FramebufferTextureFormat::RGBA8,		// Color
+			FramebufferTextureFormat::RED_INTEGER,	// Entity ID
+			FramebufferTextureFormat::RGBA16F,		// Normal
+			FramebufferTextureFormat::R32F,			// Depth
+			FramebufferTextureFormat::Depth			// Depth stencil for raster
+		};
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
 		m_Framebuffer = Framebuffer::Create(fbSpec);
@@ -82,8 +133,16 @@ namespace Voxen
 		VOX_PROFILE_FUNCTION();
 
 		EditorResources::Shutdown();
+		ScriptEngine::Shutdown();
 	}
 
+	static Timestep timestep;
+	static int shaderFrameCounter = 0;
+	static std::string formattedVoxelTime = "0.00 ms";
+	static std::string formattedAOTime = "0.00 ms";
+	static std::string formattedBlurAOTime = "0.00 ms";
+	static std::string formattedRenderQuadTime = "0.00 ms";
+	static std::string formattedTotalTime = "0.00 ms";
 	void EditorLayer::OnImGuiRender()
 	{
 		VOX_PROFILE_FUNCTION();
@@ -185,19 +244,219 @@ namespace Voxen
 		m_SceneHierarchyPanel.OnImGuiRender();
 		m_ContentBrowserPanel->OnImGuiRender();
 
-		ImGui::Begin("Render Stats");
+		ImGui::Begin("Statistics");
 
-		std::string name = "None";
-		if (m_HoveredEntity)
-			name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
-		ImGui::Text("Hovered  Entity: %s", name.c_str());
+		ImGui::SeparatorText("Engine");
+		ImGui::Indent();
 
-		auto stats = Renderer2D::GetStats();
-		ImGui::Text("Renderer2D Stats:");
-		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-		ImGui::Text("Quads: %d", stats.QuadCount);
-		ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
-		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+		ImGui::Columns(2, "##engine_stats", false);
+		ImGui::SetColumnWidth(0, 150.0f);
+
+		if (timestep.GetMilliseconds() != 0)
+		{
+			ImGui::Text("Current FPS");
+			ImGui::NextColumn();
+			ImGui::Text("%.2f", 1000.0f / timestep.GetMilliseconds());
+			ImGui::NextColumn();
+		}
+
+		ImGui::Text("Average FPS");
+		ImGui::NextColumn();
+		ImGui::Text("%.2f", m_AverageFPS);
+		ImGui::NextColumn();
+
+		ImGui::Text("Frame Drops (1s)");
+		ImGui::NextColumn();
+		ImGui::Text("%d", m_FrameDropsLastSecond);
+		ImGui::NextColumn();
+
+		ImGui::Columns(1);
+		ImGui::Spacing();
+
+		ImGui::Text("Hovered Entity: %s", m_HoveredEntity ? m_HoveredEntity.GetComponent<TagComponent>().Tag.c_str() : "None");
+		ImGui::Unindent();
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		ImGui::SeparatorText("Renderer");
+		ImGui::Indent();
+
+		// TODO: Add Renderer::GetStats
+		auto stats = VoxRenderer::GetStats(m_EditorScene);
+
+		ImGui::Columns(2, "##count_stats", false);
+		ImGui::SetColumnWidth(0, 150.0f);
+
+		ImGui::Text("Octrees");
+		ImGui::NextColumn();
+		ImGui::Text("%d", stats.treeCount);
+		ImGui::NextColumn();
+
+		ImGui::Text("Nodes");
+		ImGui::NextColumn();
+		ImGui::Text("%d", stats.nodeCount);
+		ImGui::NextColumn();
+
+		ImGui::Text("Leaves");
+		ImGui::NextColumn();
+		ImGui::Text("%d", stats.leafCount);
+		ImGui::NextColumn();
+
+		ImGui::Columns(1);
+		ImGui::Spacing();
+
+		ImGui::Columns(2, "##memory_stats", false);
+		ImGui::SetColumnWidth(0, 150.0f);
+
+		ImGui::Text("Octree Memory");
+		ImGui::NextColumn();
+		ImGui::Text("%s", FormatBytes(stats.TreeSize()).c_str());
+		ImGui::NextColumn();
+
+		ImGui::Text("Node Memory");
+		ImGui::NextColumn();
+		ImGui::Text("%s", FormatBytes(stats.NodeSize()).c_str());
+		ImGui::NextColumn();
+
+		ImGui::Text("Leaf Memory");
+		ImGui::NextColumn();
+		ImGui::Text("%s", FormatBytes(stats.LeafSize()).c_str());
+		ImGui::NextColumn();
+
+		ImGui::Spacing();
+
+		ImGui::Text("Total Memory");
+		ImGui::NextColumn();
+		ImGui::Text("%s", FormatBytes(stats.TotalMemoryUsage()).c_str());
+		ImGui::NextColumn();
+		ImGui::Columns(1);
+
+		ImGui::Unindent();
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		shaderFrameCounter++;
+		if (shaderFrameCounter % 5 == 0)
+		{
+			formattedVoxelTime = FormatTime(stats.VoxelShaderTime);
+			formattedAOTime = FormatTime(stats.AOShaderTime);
+			formattedBlurAOTime = FormatTime(stats.BlurAOShaderTime);
+			formattedRenderQuadTime = FormatTime(stats.RenderQuadTime);
+			formattedTotalTime = FormatTime(stats.VoxelShaderTime + stats.AOShaderTime + stats.BlurAOShaderTime + stats.RenderQuadTime);
+		}
+
+		ImGui::SeparatorText("Shaders");
+		ImGui::Indent();
+
+		ImGui::Columns(2, "##shader_stats", false);
+		ImGui::SetColumnWidth(0, 150.0f);
+
+		// Voxel Shader Time
+		ImGui::Text("Voxel Shader Time");
+		ImGui::NextColumn();
+		ImGui::Text("%s", formattedVoxelTime.c_str());
+		ImGui::NextColumn();
+
+		// AO Shader Time
+		ImGui::Text("AO Shader Time");
+		ImGui::NextColumn();
+		ImGui::Text("%s", formattedAOTime.c_str());
+		ImGui::NextColumn();
+
+		// Blur AO Shader Time
+		ImGui::Text("Blur AO Shader Time");
+		ImGui::NextColumn();
+		ImGui::Text("%s", formattedBlurAOTime.c_str());
+		ImGui::NextColumn();
+
+		// Render Quad Time
+		ImGui::Text("Render Quad Time");
+		ImGui::NextColumn();
+		ImGui::Text("%s", formattedRenderQuadTime.c_str());
+		ImGui::NextColumn();
+
+		// Total Shader Time (you might want to leave an empty column or adjust as needed)
+		ImGui::Text("Total Shader Time");
+		ImGui::NextColumn();
+		ImGui::Text("%s", formattedTotalTime.c_str());
+		ImGui::NextColumn();
+
+		ImGui::Columns(1);
+		ImGui::Unindent();
+
+		ImGui::End();
+
+		ImGui::Begin("Render Settings");
+
+		ImGui::SeparatorText("Lighting");
+		ImGui::Indent();
+		bool lightingEnabled = Voxen::VoxRenderer::IsLightingEnabled();
+		if (ImGui::Checkbox("Enabled", &lightingEnabled))
+		{
+			Voxen::VoxRenderer::SetLightingEnabled(lightingEnabled);
+		}
+
+		ImGui::BeginDisabled(!lightingEnabled);
+		float diffuseStrength = VoxRenderer::GetDiffuseStrength();
+		if (ImGui::SliderFloat("Strength", &diffuseStrength, 0.0f, 3.0f))
+		{
+			// Update the diffuse strength
+			VoxRenderer::SetDiffuseStrength(diffuseStrength);
+		}
+
+		glm::vec3 lightColor = VoxRenderer::GetLightColor();
+		if (ImGui::ColorEdit3("Light Color", glm::value_ptr(lightColor)))
+		{
+			// Update the light color
+			VoxRenderer::SetLightColor(lightColor);
+		}
+		ImGui::Unindent();
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		ImGui::SeparatorText("Ambient Occlusion");
+		ImGui::Indent();
+		bool aoEnabled = Voxen::VoxRenderer::IsAOEnabled();
+		if (ImGui::Checkbox("Enabled##", &aoEnabled))
+		{
+			Voxen::VoxRenderer::SetAOEnabled(aoEnabled);
+		}
+
+		ImGui::BeginDisabled(!aoEnabled);
+		bool aoBlurEnabled = Voxen::VoxRenderer::IsAOBlurEnabled();
+		if (ImGui::Checkbox("AO Blur", &aoBlurEnabled))
+		{
+			Voxen::VoxRenderer::SetAOBlurEnabled(aoBlurEnabled);
+		}
+
+		static float aoStrength = VoxRenderer::GetAOStrength();
+		if (ImGui::SliderFloat("AO Strength", &aoStrength, 0.0f, 3.0f))
+		{
+			// Update the AO strength
+			VoxRenderer::SetAOStrength(aoStrength);
+		}
+		ImGui::EndDisabled();
+		ImGui::EndDisabled();
+		ImGui::Unindent();
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		ImGui::SeparatorText("Debug");
+		ImGui::Indent();
+		bool showNormalsEnabled = Voxen::VoxRenderer::IsShowNormalsEnabled();
+		if (ImGui::Checkbox("Show Normals Enabled", &showNormalsEnabled))
+		{
+			Voxen::VoxRenderer::SetShowNormalsEnabled(showNormalsEnabled);
+		}
+		ImGui::Unindent();
 
 		ImGui::End();
 
@@ -282,6 +541,29 @@ namespace Voxen
 	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		VOX_PROFILE_FUNCTION();
+		timestep = ts;
+
+		// Update FPS and frame drop metrics
+		m_TimeAccumulator += ts.GetSeconds();
+		m_FrameCounter++;
+
+		// Check for frame drops (frame time exceeding threshold)
+		if (ts.GetSeconds() > m_FrameDropThreshold)
+		{
+			m_FrameDropsCurrent++;
+		}
+
+		// Calculate average FPS and reset counters every second
+		if (m_TimeAccumulator >= 0.5f)
+		{
+			m_AverageFPS = static_cast<float>(m_FrameCounter) / m_TimeAccumulator;
+			m_FrameDropsLastSecond = m_FrameDropsCurrent;
+
+			// Reset counters
+			m_TimeAccumulator = 0.0f;
+			m_FrameCounter = 0;
+			m_FrameDropsCurrent = 0;
+		}
 
 		m_ActiveScene->OnViewportResize((uint32)m_ViewportSize.x, (uint32)m_ViewportSize.y);
 
@@ -295,7 +577,6 @@ namespace Voxen
 		}
 
 		// Render
-		Renderer2D::ResetStats();
 		m_Framebuffer->Bind();
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		RenderCommand::Clear();
@@ -305,18 +586,18 @@ namespace Voxen
 
 		switch (m_SceneState)
 		{
-		case SceneState::Edit:
-		{
-			m_EditorCamera.OnUpdate(ts);
+			case SceneState::Edit:
+			{
+				m_EditorCamera.OnUpdate(ts);
 
-			m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
-			break;
-		}
-		case SceneState::Play:
-		{
-			m_ActiveScene->OnUpdateRuntime(ts);
-			break;
-		}
+				m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+				break;
+			}
+			case SceneState::Play:
+			{
+				m_ActiveScene->OnUpdateRuntime(ts);
+				break;
+			}
 		}
 
 		auto [mx, my] = ImGui::GetMousePos();
@@ -331,6 +612,7 @@ namespace Voxen
 		{
 			int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
 			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.get());
+			// VOX_CORE_TRACE("Hovered Entity ID: {0}", pixelData);
 		}
 
 		m_Framebuffer->Unbind();
@@ -486,8 +768,10 @@ namespace Voxen
 
 	void EditorLayer::NewScene(const std::string& sceneName)
 	{
-		m_ActiveScene = CreateRef<Scene>(sceneName);
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		CloseScene();
+
+		m_EditorScene = CreateRef<Scene>(sceneName);
+		m_SceneHierarchyPanel.SetContext(m_EditorScene);
 
 		m_EditorCamera = EditorCamera(45.0f, 1.778f, 0.1, 1000.0f);
 
@@ -495,11 +779,17 @@ namespace Voxen
 		std::filesystem::path sceneDirectory = assetDirectory / "Scenes";
 
 		if (std::filesystem::exists(sceneDirectory))
+		{
 			m_SceneFilePath = sceneDirectory;
+		}
 		else if (std::filesystem::exists(assetDirectory))
+		{
 			m_SceneFilePath = Project::GetAssetDirectory();
+		}
 		else
+		{
 			m_SceneFilePath = std::filesystem::current_path();
+		}
 	}
 
 	bool EditorLayer::OpenScene()
@@ -531,8 +821,7 @@ namespace Voxen
 			}
 		}
 
-		if (m_SceneState == SceneState::Play)
-			OnSceneStop();
+		CloseScene();
 
 		Ref<Scene> newScene = CreateRef<Scene>();
 		SceneSerializer serializer(newScene);
@@ -705,6 +994,13 @@ namespace Voxen
 		m_ActiveScene = m_EditorScene;
 
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+	}
+
+	void EditorLayer::CloseScene()
+	{
+		if (m_SceneState == SceneState::Play)
+			OnSceneStop();
+
 	}
 
 	// UI Panels
@@ -891,8 +1187,21 @@ namespace Voxen
 		const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM");
 		if (payload)
 		{
-			const wchar_t* path = (const wchar_t*)payload->Data;
-			OpenScene(path, true);
+			const wchar_t* pathData = (const wchar_t*)payload->Data;
+			std::filesystem::path filePath = pathData;
+			std::string extension = filePath.extension().string();
+
+			if (extension == ".vscene")
+			{
+				OpenScene(filePath, true);
+			}
+			else if (extension == ".vox")
+			{
+				std::string fileName = filePath.stem().string();
+
+				Entity model = m_EditorScene->CreateEntity(fileName);
+				auto& vrc = model.AddComponent<VoxelRendererComponent>(filePath);
+			}
 		}
 		ImGui::EndDragDropTarget();
 	}

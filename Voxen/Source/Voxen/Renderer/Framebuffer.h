@@ -9,6 +9,8 @@ namespace Voxen
 		// Color
 		RGBA8,
 		RED_INTEGER,
+		RGBA16F,
+		R32F,
 
 		// Depth/stencil
 		DEPTH24STENCIL8,

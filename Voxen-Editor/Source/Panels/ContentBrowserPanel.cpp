@@ -1,6 +1,6 @@
 #include "ContentBrowserPanel.h"
 
-#include "EditorResources.h"
+#include "Voxen/Editor/EditorResources.h"
 
 #include "Voxen/Project/Project.h"
 
@@ -103,6 +103,10 @@ namespace Voxen
 				else if (fileExtension == ".bat")
 				{
 					icon = EditorResources::BatFileIcon;
+				}
+				else if (fileExtension == ".vox")
+				{
+					icon = EditorResources::VoxFileIcon;
 				}
 			}
 

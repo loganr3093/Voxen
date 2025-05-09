@@ -1,0 +1,535 @@
+// Type: Compute Shader
+// Description: Default compute shader for ray tracing a sparse voxel 64-tree.
+// References:
+//  https://dubiousconst282.github.io/2024/10/03/voxel-ray-tracing/
+#version 460 core
+
+// Input
+layout(local_size_x = 16, local_size_y = 16) in;
+
+// Output
+layout(rgba8, binding = 0) writeonly uniform image2D u_OutputColor;
+layout(r32i, binding = 1) writeonly uniform iimage2D u_OutputEntity;
+layout(rgba16f, binding = 2) writeonly uniform image2D u_OutputNormal;
+layout(r32f, binding = 3) writeonly uniform image2D u_OutputDepth;
+
+//*****************************************************************************
+// Structures
+//*****************************************************************************
+
+//*************************************
+// Ray structure
+// - Origin: Ray origin
+// - Direction: Ray direction
+//
+struct Ray
+{
+    vec3 Origin;
+    vec3 Direction;
+};
+
+//*************************************
+// Hit information holder structure
+// - Hit: True if hit
+// - Color: Hit color
+//
+struct HitInfo
+{
+    bool Hit;
+    vec3 Color;
+    float Distance;
+	int EntityID;
+    vec3 Normal;
+};
+
+//*************************************
+// Sparse Voxel 64-Tree Node structure
+// - PackedData[0]: Combines IsLeaf (highest bit) and ChildPtr (lower 31 bits).
+// - PackedData[1]: Lower 32 bits of ChildMask.
+// - PackedData[2]: Upper 32 bits of ChildMask.
+//
+struct Node
+{
+    uint PackedData[3];
+};
+
+//*************************************
+// Axis-aligned bounding box structure
+// - Min: Minimum bounds
+// - Max: Maximum bounds
+struct AABB
+{
+    vec4 Min;
+    vec4 Max;
+};
+
+//*************************************
+// Sparse Voxel 64-Tree structure
+// - Root: Root node of the tree
+// - NodePoolPtr: Offset into the NodePool buffer
+// - LeafDataPtr: Offset into the LeafData buffer
+// - PaletteDataPtr: Offset into the PaletteData buffer
+// - AABB: Bounding box
+// - Transform: Transform matrix
+//
+struct SparseVoxelTree
+{
+    Node Root;
+    uint NodePoolPtr;
+    uint LeafDataPtr;
+    uint PaletteDataPtr;
+    int EntityID;
+    int InitialScale;
+    AABB Bounds;
+    mat4 Transform;
+};
+
+//*****************************************************************************
+// Helper Functions for 64-bit Masks
+//*****************************************************************************
+
+// Returns true if the bit at position 'bitIndex' is set in the 64-bit mask.
+bool IsBitSet(uvec2 mask, uint bitIndex)
+{
+    if (bitIndex < 32u)
+        return ((mask.x >> bitIndex) & 1u) != 0u;
+    else
+        return ((mask.y >> (bitIndex - 32u)) & 1u) != 0u;
+}
+
+// Returns the number of set bits in 'mask' _below_ bit position 'bitIndex'.
+uint Popcnt64Below(uvec2 mask, uint bitIndex)
+{
+    if (bitIndex < 32u)
+    {
+        uint lower = mask.x & ((1u << bitIndex) - 1u);
+        return bitCount(lower);
+    }
+    else
+    {
+        uint lowerCount = bitCount(mask.x);
+        uint upperBits = bitIndex - 32u;
+        uint upper = mask.y & ((1u << upperBits) - 1u);
+        return lowerCount + bitCount(upper);
+    }
+}
+
+//*****************************************************************************
+// Function Declarations
+//*****************************************************************************
+
+// Node Utility Functions
+bool IsLeaf(in Node node);
+uint ChildPtr(in Node node);
+uvec2 ChildMask(in Node node);
+
+// Tree Utility Functions
+HitInfo RayCast(in Ray ray, in SparseVoxelTree tree);
+
+// Tree Traversal Utility Functions (legacy; not used by our new RayCast)
+int GetNodeCellIndex(vec3 pos, int scaleExp);
+vec3 FloorScale(vec3 pos, int scaleExp);
+uint Popcnt64(uvec2 mask);
+
+// General Utility Functions
+vec2 IntersectAABB(in Ray ray, in vec3 AABBMin, in vec3 AABBMax);
+void GetPrimaryRay(out Ray ray);
+vec3 GetSkyColor(in vec3 direction);
+float GetScale(int scaleExp);
+
+//*****************************************************************************
+// Uniforms
+//*****************************************************************************
+
+layout(location = 0) uniform vec2 u_ScreenSize;
+layout(location = 1) uniform mat4 u_ViewProjectionMatrix;
+layout(location = 2) uniform vec3 u_CameraPosition;
+layout(location = 3) uniform int u_NumShapes;
+
+//*****************************************************************************
+// Buffers
+//*****************************************************************************
+
+// Tree buffer (binding = 0)
+layout(std430, binding = 0) buffer TreeBuffer
+{
+    SparseVoxelTree Trees[];
+};
+
+// Node pool buffer (binding = 1)
+layout(std430, binding = 1) buffer NodePoolBuffer
+{
+    Node NodePool[];
+};
+
+// Leaf data buffer (binding = 2)
+layout(std430, binding = 2) buffer LeafDataBuffer
+{
+    uint LeafData[];
+};
+
+layout(std430, binding = 3) buffer PaletteBuffer
+{
+    vec4 Palette[];
+};
+
+//*****************************************************************************
+// Main
+//*****************************************************************************
+
+void main()
+{
+    ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+    if (pixelCoords.x >= int(u_ScreenSize.x) || pixelCoords.y >= int(u_ScreenSize.y))
+    {
+        return;
+    }
+
+    Ray ray;
+    GetPrimaryRay(ray);
+
+    HitInfo closestHit = HitInfo(false, vec3(0.0), 1.0 / 0.0, -1, vec3(0));
+
+    for (int i = 0; i < u_NumShapes; ++i)
+    {
+        SparseVoxelTree tree = Trees[i];
+
+        HitInfo hit = RayCast(ray, tree);
+        if (hit.Hit && hit.Distance < closestHit.Distance)
+            closestHit = hit;
+    }
+
+    // Write the pixel color to the output.
+    vec3 albedo = closestHit.Hit ? closestHit.Color : GetSkyColor(ray.Direction);
+    imageStore(u_OutputColor, pixelCoords, vec4(albedo, 1.0));
+
+	// Write the entity ID to the output.
+	int entityID = closestHit.Hit ? closestHit.EntityID : -1;
+    imageStore(u_OutputEntity, pixelCoords, ivec4(entityID, 0, 0, 0));
+
+	// Write the normal to the output.
+	vec3 normal = closestHit.Hit ? closestHit.Normal : vec3(0.0);
+	imageStore(u_OutputNormal, pixelCoords, vec4(normal, 0.0));
+
+    // Write the depth to the output.
+    float depth;
+    if (closestHit.Hit)
+    {
+        // Calculate the world position of the hit point
+        vec3 worldHitPoint = ray.Origin + closestHit.Distance * ray.Direction;
+        // Transform to clip space using the view-projection matrix
+        vec4 clipPos = u_ViewProjectionMatrix * vec4(worldHitPoint, 1.0);
+        // Perform perspective divide to get NDC coordinates
+        clipPos.xyz /= clipPos.w;
+        // Convert NDC z from [-1, 1] to [0, 1] depth range
+        float ndcZ = clipPos.z;
+        depth = ndcZ * 0.5 + 0.5;
+        // Clamp to valid depth range
+        depth = clamp(depth, 0.0, 1.0);
+    }
+    else
+    {
+        // No hit, set to far plane depth (1.0)
+        depth = 1.0;
+    }
+    imageStore(u_OutputDepth, pixelCoords, vec4(depth, 0.0, 0.0, 0.0));
+}
+
+//*****************************************************************************
+// Function Definitions
+//*****************************************************************************
+
+// Node Utility Functions
+
+//*************************************
+// IsLeaf
+// - node: Node to test
+// - Returns: True if the node is a leaf
+//
+bool IsLeaf(in Node node)
+{
+    // Highest bit (bit 31) is the leaf flag.
+    return (node.PackedData[0] & 0x80000000u) != 0u;
+}
+
+//*************************************
+// ChildPtr
+// - node: Node to get child pointer from
+// - Returns: Child pointer (lower 31 bits)
+//
+uint ChildPtr(in Node node)
+{
+    return node.PackedData[0] & 0x7FFFFFFFu;
+}
+
+//*************************************
+// ChildMask
+// - node: Node to get child mask from
+// - Returns: Child mask as a 64-bit value stored in a uvec2
+//
+uvec2 ChildMask(in Node node)
+{
+    return uvec2(node.PackedData[1], node.PackedData[2]);
+}
+
+//*****************************************************************************
+// RayCast
+// Updated ray casting function that traverses the sparse voxel tree in integer voxel space.
+// This version assumes that the tree was built with an initial scale of 6 (i.e. a 64x64x64 volume)
+// and that the tree’s AABB.Min is at an integer position (e.g. (0,0,0)).
+//*****************************************************************************
+
+HitInfo RayCast(in Ray ray, in SparseVoxelTree tree)
+{
+    // --- Apply inverse transform to bring the ray into the tree's local space ---
+    mat4 inverseTransform = inverse(tree.Transform);
+    vec4 localOriginH = inverseTransform * vec4(ray.Origin, 1.0);
+    vec3 localOrigin = localOriginH.xyz / localOriginH.w;
+    vec3 localDirection = (inverseTransform * vec4(ray.Direction, 0.0)).xyz;
+    Ray localRay = Ray(localOrigin, localDirection);
+
+    // --- Compute intersection with the tree's local AABB ---
+    vec3 boundsMin = tree.Bounds.Min.xyz;
+    vec3 boundsMax = tree.Bounds.Max.xyz;
+    vec3 invDir = 1.0 / localRay.Direction;
+    vec3 t1 = (boundsMin - localRay.Origin) * invDir;
+    vec3 t2 = (boundsMax - localRay.Origin) * invDir;
+    vec3 tMinVec = min(t1, t2);
+    vec3 tMaxVec = max(t1, t2);
+    float tEntry = max(max(tMinVec.x, tMinVec.y), tMinVec.z);
+    float tExit = min(min(tMaxVec.x, tMaxVec.y), tMaxVec.z);
+    if (tExit < 0.0 || tEntry > tExit)
+        return HitInfo(false, vec3(0.0), 1.0 / 0.0, -1, vec3(0));
+
+    // Start at the AABB entry point.
+    float t = (tEntry > 0.0) ? tEntry : 0.0;
+    vec3 rayPos = localRay.Origin + t * localRay.Direction;
+
+    // --- Set up initial tree traversal parameters ---
+    int currentScale = tree.InitialScale;
+    ivec3 nodeOrigin = ivec3(boundsMin);
+    Node node = tree.Root;
+
+    // --- Traverse along the ray (up to 256 steps) ---
+    for (int i = 0; i < 256; i++)
+    {
+        // Determine the size of the current node region.
+        int nodeSize = 1 << currentScale;
+        ivec3 ipos = ivec3(floor(rayPos));
+        // Reset to root if outside current node region
+        if (any(lessThan(ipos, nodeOrigin)) || any(greaterThanEqual(ipos, nodeOrigin + ivec3(nodeSize))))
+        {
+            node = tree.Root;
+            currentScale = tree.InitialScale;
+            nodeOrigin = ivec3(boundsMin);
+        }
+
+        int shift = currentScale - 2;
+        ivec3 localCoord = ipos - nodeOrigin;
+        int cell_x = (localCoord.x >> shift) & 3;
+        int cell_y = (localCoord.y >> shift) & 3;
+        int cell_z = (localCoord.z >> shift) & 3;
+        uint cellIndex = uint(cell_x + cell_y * 4 + cell_z * 16);
+
+        // Descend the tree while a child exists for this cell
+        while (!IsLeaf(node) && IsBitSet(ChildMask(node), cellIndex))
+        {
+            uint childSlot = Popcnt64Below(ChildMask(node), cellIndex);
+            node = NodePool[tree.NodePoolPtr + ChildPtr(node) + childSlot];
+            nodeOrigin += ivec3((int(cellIndex) & 3) << shift,
+                ((int(cellIndex) >> 2) & 3) << shift,
+                ((int(cellIndex) >> 4) & 3) << shift);
+            currentScale -= 2;
+            shift = currentScale - 2;
+            localCoord = ipos - nodeOrigin;
+            cell_x = (localCoord.x >> shift) & 3;
+            cell_y = (localCoord.y >> shift) & 3;
+            cell_z = (localCoord.z >> shift) & 3;
+            cellIndex = uint(cell_x + cell_y * 4 + cell_z * 16);
+        }
+
+        if (IsLeaf(node) && IsBitSet(ChildMask(node), cellIndex))
+        {
+            uint leafDataIndex = tree.LeafDataPtr + ChildPtr(node) + Popcnt64Below(ChildMask(node), cellIndex);
+            uint paletteIndex = tree.PaletteDataPtr + LeafData[leafDataIndex];
+
+            // Calculate hit point in local space
+            vec3 localHitPoint = localRay.Origin + t * localRay.Direction;
+            // Transform to world space
+            vec4 worldHitPointH = tree.Transform * vec4(localHitPoint, 1.0);
+            vec3 worldHitPoint = worldHitPointH.xyz / worldHitPointH.w;
+            // Compute distance from original ray origin
+            float distance = length(worldHitPoint - ray.Origin);
+
+            // Calculate normal
+            ivec3 voxelCoord = ivec3(floor(localHitPoint));
+            vec3 voxelMin = vec3(voxelCoord);
+            vec3 voxelMax = voxelMin + 1.0;
+            vec3 hitInVoxel = localHitPoint - voxelMin;
+
+            vec3 distToMin = hitInVoxel;
+            vec3 distToMax = vec3(1.0) - hitInVoxel;
+
+            float minDist = min(min(min(distToMin.x, distToMin.y), distToMin.z),
+                min(min(distToMax.x, distToMax.y), distToMax.z));
+
+            vec3 normal;
+            if (minDist == distToMin.x)       normal = vec3(-1, 0, 0);
+            else if (minDist == distToMax.x)  normal = vec3(1, 0, 0);
+            else if (minDist == distToMin.y)  normal = vec3(0, -1, 0);
+            else if (minDist == distToMax.y)  normal = vec3(0, 1, 0);
+            else if (minDist == distToMin.z)  normal = vec3(0, 0, -1);
+            else                              normal = vec3(0, 0, 1);
+
+            // Transform normal to world space
+            normal = normalize(mat3(tree.Transform) * normal);
+
+            return HitInfo(true, Palette[paletteIndex].rgb, distance, tree.EntityID, normal);
+        }
+
+        // --- Advance the ray using DDA ---
+        vec3 cellMin = floor(rayPos);
+        vec3 tCandidate;
+        tCandidate.x = (localRay.Direction.x != 0.0) ?
+            ((localRay.Direction.x > 0.0) ? (cellMin.x + 1.0 - rayPos.x) / localRay.Direction.x :
+                (rayPos.x - cellMin.x) / -localRay.Direction.x) : 1e30;
+        tCandidate.y = (localRay.Direction.y != 0.0) ?
+            ((localRay.Direction.y > 0.0) ? (cellMin.y + 1.0 - rayPos.y) / localRay.Direction.y :
+                (rayPos.y - cellMin.y) / -localRay.Direction.y) : 1e30;
+        tCandidate.z = (localRay.Direction.z != 0.0) ?
+            ((localRay.Direction.z > 0.0) ? (cellMin.z + 1.0 - rayPos.z) / localRay.Direction.z :
+                (rayPos.z - cellMin.z) / -localRay.Direction.z) : 1e30;
+
+        float dt = min(min(tCandidate.x, tCandidate.y), tCandidate.z);
+        t += dt + 0.0001;
+        if (t > tExit)
+            break;
+        rayPos = localRay.Origin + t * localRay.Direction;
+    }
+
+    return HitInfo(false, vec3(0.0), 1.0 / 0.0, -1, vec3(0));
+}
+
+//*****************************************************************************
+// Tree Traversal Utility Functions (legacy)
+//*****************************************************************************
+
+//*************************************
+// Returns the cell index within the 4x4x4 node for a given position.
+// This legacy function extracts bits from the float representation.
+// - pos: Position to get cell index for
+// - scaleExp: Current scale exponent
+// - Returns: Cell index
+//
+int GetNodeCellIndex(vec3 pos, int scaleExp)
+{
+    uvec3 cellPos = (floatBitsToUint(pos) >> uint(scaleExp)) & uvec3(3u);
+    return int(cellPos.x + cellPos.z * 4u + cellPos.y * 16u);
+}
+
+//*************************************
+// Floors the coordinate to the current scale by zeroing out the lower scaleExp bits.
+// - pos: Position to floor
+// - scaleExp: Current scale exponent
+// - Returns: Floored position
+//
+vec3 FloorScale(vec3 pos, int scaleExp)
+{
+    uvec3 mask = uvec3(~0u) << uint(scaleExp);
+    return uintBitsToFloat(floatBitsToUint(pos) & mask);
+}
+
+//*************************************
+// GetScale computes the size of the cell at the current level.
+// - scaleExp: Current scale exponent
+// - Returns: Cell scale
+//
+float GetScale(int scaleExp)
+{
+    uint exponent = uint(scaleExp - 23 + 127);
+    return uintBitsToFloat(exponent << 23);
+}
+
+//*************************************
+// Popcnt64
+// - mask: Mask to count bits in
+// - Returns: Number of set bits in the mask
+//
+uint Popcnt64(uvec2 mask)
+{
+    return bitCount(mask.x) + bitCount(mask.y);
+}
+
+//*****************************************************************************
+// General Utility Functions
+//*****************************************************************************
+
+//*************************************
+// IntersectAABB
+// - ray: Ray to test intersection with
+// - AABBMin: Minimum bounds of the AABB
+// - AABBMax: Maximum bounds of the AABB
+// - Returns: tmin and tmax of intersection
+//
+vec2 IntersectAABB(in Ray ray, in vec3 AABBMin, in vec3 AABBMax)
+{
+    vec3 invDir = 1.0 / ray.Direction;
+    vec3 t0 = (AABBMin - ray.Origin) * invDir;
+    vec3 t1 = (AABBMax - ray.Origin) * invDir;
+    vec3 temp = t0;
+    t0 = min(temp, t1);
+    t1 = max(temp, t1);
+    float tmin = max(max(t0.x, t0.y), t0.z);
+    float tmax = min(min(t1.x, t1.y), t1.z);
+    return vec2(tmin, tmax);
+}
+
+//*************************************
+// GetPrimaryRay
+// - ray: Output primary ray
+//
+void GetPrimaryRay(out Ray ray)
+{
+    vec2 texCoords = vec2(gl_GlobalInvocationID.xy) / u_ScreenSize;
+    vec2 ndc = texCoords * 2.0 - 1.0;
+    vec4 clipSpace = vec4(ndc, 1.0, 1.0);
+    mat4 inverseViewProj = inverse(u_ViewProjectionMatrix);
+    vec4 worldSpace = inverseViewProj * clipSpace;
+    worldSpace.xyz /= worldSpace.w;
+    ray.Origin = u_CameraPosition;
+    ray.Direction = normalize(worldSpace.xyz - u_CameraPosition);
+}
+
+//*************************************
+// GetSkyColor
+// - direction: Direction to get sky color for
+// - Returns: Sky color in that direction
+//
+vec3 GetSkyColor(in vec3 direction)
+{
+    // Unity-style gradient parameters
+    const vec3 topColor = vec3(0.2, 0.3, 0.5);      // Darker blue
+    const vec3 bottomColor = vec3(0.6, 0.8, 1.0);   // Lighter blue
+    const vec3 sunColor = vec3(1.0, 0.9, 0.7);      // Warm sun color
+    const float sunRadius = 0.9999;                 // Sun angular radius
+    const float sunPower = 5.0;                     // Sun intensity
+    const float exposure = 1.5;                     // Overall brightness
+    const vec3 sunDirection = normalize(vec3(0.2, 0.65, 0.4));
+
+    // Normalize direction
+    vec3 dir = normalize(direction);
+
+    // Vertical gradient
+    float gradientFactor = clamp(dir.y * 0.5 + 0.5, 0.0, 1.0);
+    vec3 skyColor = mix(bottomColor, topColor, pow(gradientFactor, 0.75));
+
+    // Sun disc
+    float sunDot = dot(dir, sunDirection);
+    float sunIntensity = smoothstep(sunRadius, sunRadius + 0.0001, sunDot);
+    skyColor += sunColor * sunIntensity * sunPower;
+
+    // Apply exposure
+    skyColor = vec3(1.0) - exp(-skyColor * exposure);
+
+    return skyColor;
+}

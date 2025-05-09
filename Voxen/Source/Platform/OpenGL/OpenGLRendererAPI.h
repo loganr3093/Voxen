@@ -12,6 +12,7 @@ namespace Voxen
 
 		virtual void SetClearColor(const Vector4& color) override;
 		virtual void Clear() override;
+		virtual void MemBarrier(MemoryBarrierBit barriers) override;
 
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32 indexCount = 0) override;
 	};

@@ -60,6 +60,11 @@ namespace Voxen
 					auto& cc = camera.AddComponent<CameraComponent>();
 					cc.Primary = primaryExists ? false : true;
 				}
+				if (ImGui::MenuItem("Create Point Light"))
+				{
+					Entity camera = m_Context->CreateEntity("Point Light");
+					auto& plc = camera.AddComponent<PointLightComponent>();
+				}
 
 				ImGui::EndPopup();
 			}
@@ -284,6 +289,7 @@ namespace Voxen
 			DisplayAddComponentEntry<ScriptComponent>("Script");
 			DisplayAddComponentEntry<SpriteRendererComponent>("Sprite Renderer");
 			DisplayAddComponentEntry<CameraComponent>("Camera");
+			DisplayAddComponentEntry<PointLightComponent>("Point Light");
 
 			ImGui::EndPopup();
 		}
@@ -444,6 +450,33 @@ namespace Voxen
 					}
 				}
 			}
+		});
+
+		// Voxel Renderer Component
+		DrawComponent<VoxelRendererComponent>("Voxel Renderer", entity, [](auto& component)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, 100.0f);
+			ImGui::Text("Model Path");
+			ImGui::NextColumn();
+
+			ImGui::PushItemWidth(-1);
+
+			char buffer[256];
+			memset(buffer, 0, sizeof(buffer));
+			strcpy_s(buffer, sizeof(buffer), component.ModelPath.string().c_str());
+			ImGui::InputText("##ModelPath", buffer, sizeof(buffer), ImGuiInputTextFlags_ReadOnly);
+
+			ImGui::PopItemWidth();
+			ImGui::Columns(1);
+		});
+
+		// Point Light Component
+		DrawComponent<PointLightComponent>("Point Light", entity, [](auto& component)
+		{
+			ImGui::ColorEdit3("Color", glm::value_ptr(component.Color));
+			ImGui::DragFloat("Intensity", &component.Intensity, 1.0f, 0.0f, 100000.0f);
+			ImGui::DragFloat("Radius", &component.Radius, 0.1f, 0.1f, 1000.0f);
 		});
 	}
 
