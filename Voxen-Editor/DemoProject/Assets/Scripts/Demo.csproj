@@ -62,6 +62,8 @@
     <Compile Include="Source\Camera.cs" />
     <Compile Include="Source\FlappyVoxel\Bird.cs" />
     <Compile Include="Source\FlappyVoxel\GameCamera.cs" />
+    <Compile Include="Source\FlappyVoxel\Pipe.cs" />
+    <Compile Include="Source\FlappyVoxel\Scorekeep.cs" />
     <Compile Include="Source\Player.cs" />
   </ItemGroup>
   <ItemGroup>

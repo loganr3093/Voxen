@@ -25,7 +25,6 @@
 
 namespace Voxen
 {
-
 	template<typename T>
 	using Scope = std::unique_ptr<T>;
 	template<typename T, typename ... Args>
@@ -41,7 +40,6 @@ namespace Voxen
 	{
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
-
 }
 
 #include "Voxen/Core/Log.h"

@@ -1,39 +1,58 @@
 Scene: Flappy Voxel
 Entities:
-  - Entity: 17924168864502787281
+  - Entity: 17912092302402992821
     TagComponent:
-      Tag: Camera
+      Tag: pipe
     TransformComponent:
-      Translation: [0, 0, 150]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    CameraComponent:
-      Camera:
-        ProjectionType: 0
-        PerspectiveFOV: 1.57079637
-        PerspectiveNear: 0.00999999978
-        PerspectiveFar: 1000
-        OrthographicSize: 10
-        OrthographicNear: -1
-        OrthographicFar: 1
-      Primary: true
-      FixedAspectRatio: false
+      Translation: [230, 200, 0]
+      Rotation: [1.57079637, 1.22173047, 0]
+      Scale: [1, 0.999999762, 3.99998951]
+    ScriptComponent:
+      ClassName: Demo.Pipe
+      ScriptFields:
+        []
+    VoxelRendererComponent:
+      ModelPath: Models\pipe.vox
+  - Entity: 15536008063737346549
+    TagComponent:
+      Tag: lowerPipe0
+    TransformComponent:
+      Translation: [250, -200, 25]
+      Rotation: [-1.57079637, 0, 0]
+      Scale: [1, 0.999994695, 3.99997878]
+    ScriptComponent:
+      ClassName: Demo.Pipe
+      ScriptFields:
+        - Name: baseDistance
+          Type: Float
+          Data: 250
+        - Name: gapDistance
+          Type: Float
+          Data: 100
+        - Name: speed
+          Type: Float
+          Data: 75
+        - Name: startDelay
+          Type: Float
+          Data: 4
+    VoxelRendererComponent:
+      ModelPath: Models\pipe.vox
   - Entity: 13431338089334659578
     TagComponent:
-      Tag: bird
+      Tag: Bird
     TransformComponent:
       Translation: [0, 0, 0]
-      Rotation: [-1.57079637, 0, 0]
-      Scale: [1, 1, 1]
+      Rotation: [-1.57079613, 0, 0]
+      Scale: [1, 0.999999464, 0.999999464]
     ScriptComponent:
       ClassName: Demo.Bird
       ScriptFields:
         - Name: gravity
           Type: Float
-          Data: -50
+          Data: -500
         - Name: jumpForce
           Type: Float
-          Data: 50
+          Data: 150
         - Name: maxRotation
           Type: Float
           Data: 45
@@ -45,3 +64,21 @@ Entities:
           Data: 10
     VoxelRendererComponent:
       ModelPath: Models\bird.vox
+  - Entity: 17924168864502787281
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [0, 0, 140]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Camera:
+        ProjectionType: 0
+        PerspectiveFOV: 1.22173047
+        PerspectiveNear: 0.00999999978
+        PerspectiveFar: 1000
+        OrthographicSize: 10
+        OrthographicNear: -1
+        OrthographicFar: 1
+      Primary: true
+      FixedAspectRatio: false

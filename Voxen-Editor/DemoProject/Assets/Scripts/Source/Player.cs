@@ -11,6 +11,7 @@ namespace Demo
     public class Player : Entity
     {
         private TransformComponent m_Transform;
+
         public float speed = 2;
 
         void OnCreate()

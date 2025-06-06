@@ -15,9 +15,12 @@ namespace Voxen
     // Sparse Voxel 64-Tree Node
     struct [[gnu::packed]] SparseVoxelTreeNode
     {
-        uint32 IsLeaf : 1;     // Indicates if this node is a leaf containing plain voxels.
-        uint32 ChildPtr : 31;  // Absolute offset to array of existing child nodes/voxels.
-        uint64 ChildMask;      // Indicates which children/voxels are present in array.
+        // Bool for if this node is a leaf node.
+        uint32 IsLeaf : 1;    
+        // Offset to array of child nodes.
+        uint32 ChildPtr : 31;  
+        // 64 bools to indicate which children are in the array.
+        uint64 ChildMask;      
     };
 
     class SparseVoxelTree
