@@ -305,6 +305,7 @@ namespace Voxen
         int dispatchX = static_cast<int>(s_Data.ColorRWTexture->GetWidth() / 16);
         int dispatchY = static_cast<int>(s_Data.ColorRWTexture->GetHeight() / 16);
         s_Data.VoxelShader->Dispatch(dispatchX, dispatchY, 1);
+        RenderCommand::MemBarrier(MemoryBarrierBit::ShaderImageAccess);
 
         // Ensure memory is synchronized before rendering
         s_Data.ColorRWTexture->Unbind();
@@ -328,6 +329,7 @@ namespace Voxen
         int dispatchX = static_cast<int>(s_Data.ColorRWTexture->GetWidth() / 16);
         int dispatchY = static_cast<int>(s_Data.ColorRWTexture->GetHeight() / 16);
         s_Data.SSAOShader->Dispatch(dispatchX, dispatchY, 1);
+        RenderCommand::MemBarrier(MemoryBarrierBit::ShaderImageAccess);
     }
 
     void VoxRenderer::RunBlurAOShader()
